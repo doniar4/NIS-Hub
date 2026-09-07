@@ -1,0 +1,45 @@
+{
+  "project": "NIS Library",
+  "version": "0.1",
+  "mvp": [
+    "home",
+    "library",
+    "book_page",
+    "reader",
+    "authentication",
+    "profile",
+    "top_4",
+    "schedule_test_data",
+    "admin",
+    "privacy",
+    "terms"
+  ],
+  "out_of_scope": [
+    "social_feed",
+    "friends",
+    "messaging",
+    "comments",
+    "ratings",
+    "payments",
+    "analytics",
+    "user_book_uploads",
+    "EduPage_scraping"
+  ],
+  "preferred_stack": [
+    "Next.js",
+    "TypeScript",
+    "Tailwind CSS",
+    "Supabase",
+    "Vercel"
+  ],
+  "design_constraints": [
+    "no purple gradients",
+    "no fake metrics",
+    "no fake reviews",
+    "no AI-slop photos",
+    "no vague hero copy",
+    "no cursor animations",
+    "no excessive scroll animations",
+    "no pill-shaped default buttons"
+  ]
+}
