@@ -1,58 +1,40 @@
 @import "tailwindcss";
 
-/*
- * NIS Hub design tokens.
- * Single light theme: neutral paper background, dark ink text,
- * one restrained accent. See docs/design-system.md.
- */
 :root {
-  --color-background: #fafaf9;
-  --color-surface: #ffffff;
-  --color-foreground: #1c1c1a;
-  --color-muted: #5b5b54;
-  --color-border: #dedad1;
-  --color-accent: #2c4a6e;
-  --color-accent-foreground: #ffffff;
-  --color-danger: #a13a3a;
-
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    sans-serif;
-
-  --radius-sm: 4px;
-  --radius-md: 6px;
+  --canvas: #f7f7f4;
+  --ink: #1a1c1a;
+  --muted: #626761;
+  --line: #dedfd9;
+  --line-strong: #b9beb5;
+  --accent: #126c53;
+  --accent-dark: #07513d;
+  --success: #176b4c;
+  --danger: #ae3333;
 }
 
-@theme inline {
-  --color-background: var(--color-background);
-  --color-surface: var(--color-surface);
-  --color-foreground: var(--color-foreground);
-  --color-muted: var(--color-muted);
-  --color-border: var(--color-border);
-  --color-accent: var(--color-accent);
-  --color-accent-foreground: var(--color-accent-foreground);
-  --color-danger: var(--color-danger);
-  --font-sans: var(--font-sans);
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-body {
-  background: var(--color-background);
-  color: var(--color-foreground);
-  font-family: var(--font-sans);
-}
-
-/* Visible keyboard focus everywhere; never remove outline without replacing it. */
-:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--canvas); color: var(--ink); font-family: Arial, Helvetica, sans-serif; }
+::selection { background: #c8e6db; color: var(--ink); }
+a { color: inherit; text-decoration: none; }
+button, input, select { font: inherit; }
+button:not(:disabled), select { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .48; }
+:focus-visible { outline: 3px solid #e29d4d; outline-offset: 3px; }
+.page-title { font-size: clamp(2.25rem, 5vw, 3.25rem); line-height: 1.05; font-weight: 650; letter-spacing: -.045em; }
+.nav-link { transition: color .15s ease; }
+.nav-link:hover { color: var(--ink); }
+.button { display: inline-flex; align-items: center; gap: .5rem; border: 1px solid var(--accent); border-radius: .25rem; background: var(--accent); color: white; padding: .7rem 1rem; font-size: .9rem; font-weight: 650; line-height: 1.25; transition: background .15s ease, border-color .15s ease; }
+.button:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+.button-small { padding: .5rem .8rem; font-size: .82rem; }
+.button-secondary { background: white; border-color: var(--line-strong); color: var(--ink); }
+.button-secondary:hover { background: #f0f1ed; border-color: var(--ink); }
+.notice { border-left: 3px solid var(--accent); background: #ebf5ef; color: #264137; padding: .85rem 1rem; font-size: .9rem; line-height: 1.5; }
+.field-label { display: block; margin-bottom: .45rem; color: var(--muted); font-size: .78rem; font-weight: 700; letter-spacing: .02em; }
+.field { width: 100%; border: 1px solid var(--line-strong); border-radius: .2rem; background: white; color: var(--ink); padding: .68rem .75rem; }
+.field::placeholder { color: #92978f; }
+.reader-paper { min-height: 30rem; border: 1px solid #d8d7cf; background: #fffefa; padding: clamp(2rem, 7vw, 5rem); box-shadow: 0 15px 30px rgba(26, 28, 26, .06); }
+.top-select { display: flex; align-items: center; gap: .75rem; border: 1px solid var(--line); background: white; padding: .4rem .65rem; }
+.top-select > span { display: grid; height: 1.8rem; width: 1.8rem; place-items: center; background: var(--canvas); font-size: .82rem; font-weight: 700; }
+.top-select select { min-width: 0; flex: 1; border: 0; background: transparent; padding: .35rem 0; color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }

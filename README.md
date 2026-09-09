@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NIS Library v0.1
 
-## Getting Started
+Minimal, student-focused digital-library prototype for the NIS Library concept.
 
-First, run the development server:
+## Run locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Verification
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run typecheck
+npm run build
+```
 
-## Learn More
+## Current state
 
-To learn more about Next.js, take a look at the following resources:
+- The routing, responsive interface, local reader test, local profile draft, schedule test UI, legal drafts, and admin safety boundary are implemented.
+- There are no published textbooks, real user accounts, uploaded avatars, real schedules, EduPage access, analytics, or payments.
+- Forms do not send credentials before Supabase is intentionally configured.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Before real users
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Create Supabase schema, Row Level Security policies, private book storage, and separate avatar storage.
+2. Add verified environment variables; never expose a service-role key in the browser.
+3. Replace test schedule data only with a verified and permitted source.
+4. Add only content with confirmed distribution rights.
+5. Complete legal, accessibility, security, and content-rights review.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The initial SQL and connection checklist are provided in [supabase/schema.sql](supabase/schema.sql) and [docs/supabase-setup.md](docs/supabase-setup.md).

@@ -1,24 +1,10 @@
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { BookIcon, CalendarIcon, UserIcon } from "@/components/icons";
+import { ClassPicker } from "@/components/local-demo";
+import { SiteShell } from "@/components/site-shell";
+import { Notice, PageIntro, SectionLink } from "@/components/ui";
+import { testSchedule } from "@/lib/data";
 
-/**
- * Temporary shell placeholder for stage 1 (project shell + design system).
- * The real home/dashboard content is implemented in a later stage
- * per docs/mvp.md section 1.
- */
 export default function Home() {
-  return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-6 px-6 py-16">
-      <div className="border-b border-border pb-6">
-        <h1 className="text-4xl font-semibold tracking-tight">NIS Hub</h1>
-        <p className="mt-2 max-w-md text-base text-muted">
-          Project shell is running. Home, library, and schedule are built in
-          the next stages.
-        </p>
-      </div>
-      <div className="flex gap-3">
-        <Button variant="primary">Primary action</Button>
-        <Button variant="secondary">Secondary action</Button>
-      </div>
-    </main>
-  );
+  return <SiteShell><div className="grid gap-12 lg:grid-cols-[minmax(0,1.25fr)_minmax(17rem,.75fr)] lg:items-end"><PageIntro kicker="Development prototype" title="Библиотека и учебный ритм — в одном спокойном месте.">Первая версия NIS Library: навигация по разрешённым материалам, личный учебный профиль и расписание.</PageIntro><div className="border-l-2 border-[var(--accent)] pl-5"><ClassPicker /><p className="mt-3 text-sm leading-6 text-[var(--muted)]">Выбор сохранится только в этом браузере.</p></div></div><div className="mt-10"><Notice>Это безопасный интерфейсный прототип. Расписание ниже — тестовое, а опубликованных учебников пока нет.</Notice></div><div className="mt-12 grid gap-6 lg:grid-cols-2"><section className="border-t-2 border-[var(--ink)] pt-5"><div className="flex items-center justify-between"><div className="flex items-center gap-3"><CalendarIcon size={21} /><h2 className="text-xl font-semibold tracking-[-0.02em]">Сегодня</h2></div><span className="text-sm text-[var(--muted)]">Тестовые данные</span></div><ol className="mt-5 divide-y divide-[var(--line)]">{testSchedule.map((lesson) => <li className="flex items-center gap-4 py-3" key={lesson.order}><span className="w-6 text-sm font-semibold text-[var(--muted)]">{String(lesson.order).padStart(2, "0")}</span><span className="flex-1 font-medium">{lesson.subject}</span><span className="text-sm text-[var(--muted)]">{lesson.room}</span></li>)}</ol><div className="mt-5"><SectionLink href="/schedule">Открыть расписание</SectionLink></div></section><section className="border-t-2 border-[var(--ink)] pt-5"><div className="flex items-center gap-3"><BookIcon size={21} /><h2 className="text-xl font-semibold tracking-[-0.02em]">Продолжить чтение</h2></div><div className="mt-5 border border-dashed border-[var(--line-strong)] bg-white p-6"><p className="font-medium">Пока нечего продолжать</p><p className="mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">Reader подключён к собственному техническому документу только для проверки интерфейса. Книги появятся после подтверждения прав и подключения Storage.</p><Link className="button button-secondary mt-5" href="/books/demo/read">Открыть тестовый reader</Link></div></section></div><section className="mt-16 border-y border-[var(--line)] py-8"><div className="grid gap-6 sm:grid-cols-3"><Link className="group" href="/library"><BookIcon size={21} /><h2 className="mt-4 font-semibold">Библиотека</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Только проверенные и разрешённые материалы.</p></Link><Link className="group" href="/profile"><UserIcon size={21} /><h2 className="mt-4 font-semibold">Профиль</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Top 4 и настройки будущего аккаунта.</p></Link><Link className="group" href="/privacy"><span className="text-lg font-semibold">§</span><h2 className="mt-4 font-semibold">Приватность</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Черновики политик для прозрачного запуска.</p></Link></div></section></SiteShell>;
 }

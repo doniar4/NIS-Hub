@@ -2,16 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "NIS Hub",
-  description: "A personal study space for NIS students.",
+  title: "NIS Library",
+  description: "Student-focused digital learning space — development prototype.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
-  return (
-    <html lang="en" className="h-full">
-      <body className="flex min-h-full flex-col bg-background text-foreground antialiased">
-        {children}
-      </body>
-    </html>
-  );
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return <html lang="ru"><body>{children}</body></html>;
 }
