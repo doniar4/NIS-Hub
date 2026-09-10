@@ -1,4 +1,4 @@
-# NIS Library v0.1
+# NIS Hub v0.3
 
 Minimal, student-focused digital-library prototype for the NIS Library concept.
 
