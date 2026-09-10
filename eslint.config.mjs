@@ -5,5 +5,6 @@ import nextTypescript from "eslint-config-next/typescript";
 export default defineConfig([
   ...nextVitals,
   ...nextTypescript,
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  // Vendored PDF.js assets are copied from node_modules by predev/prebuild.
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "public/pdfjs/**"]),
 ]);
