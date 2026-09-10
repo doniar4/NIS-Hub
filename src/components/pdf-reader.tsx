@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
-import type { PDFDocumentProxy, PDFDocumentLoadingTask, RenderTask } from "pdfjs-dist";
+import type { PDFDocumentProxy, PDFDocumentLoadingTask, RenderTask } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { saveReading } from "@/app/actions/reading";
+import { isRenderCancellation, reportPdfError } from "@/lib/pdf-reader-errors";
+import { extractPageText } from "@/lib/pdf-page-text";
 
 export function PdfReader({ bookId, initialPage, initialBookmarks }: { bookId: string; initialPage: number; initialBookmarks: number[] }) {
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
@@ -37,9 +39,11 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: { bookId: s
         const response = await fetch(`/api/books/${bookId}/access`, { cache: "no-store", signal: abort.signal });
         if (!response.ok) throw new Error(response.status === 401 ? "Войдите снова, чтобы читать материал." : "PDF недоступен. Возможно, материал снят с публикации или файл ещё не загружен.");
         const { url } = await response.json() as { url: string };
-        const pdfjs = await import("pdfjs-dist");
+        // PDF.js 6's modern bundle assumes new built-ins (e.g. Map
+        // getOrInsertComputed). The matching legacy pair supports Safari 18+.
+        const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
         if (cancelled) return;
-        pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/legacy/build/pdf.worker.min.mjs", import.meta.url).toString();
         // Fetch fully within the short URL lifetime; no later range requests to an expired URL.
         const file = await fetch(url, { signal: abort.signal, cache: "no-store", referrerPolicy: "no-referrer" });
         if (!file.ok) throw new Error("Не удалось получить PDF. Повторите загрузку.");
@@ -51,19 +55,25 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: { bookId: s
         if (cancelled) return;
         setPage(p => Math.min(Math.max(1, p), document.numPages));
         setPdf(document);
-      } catch (reason) {
-        if (!cancelled) { setError(reason instanceof Error ? reason.message : "Не удалось открыть PDF."); setBusy(false); }
+      } catch (reason: unknown) {
+        if (!cancelled) {
+          const detail = reportPdfError("load", reason);
+          setError("Не удалось открыть PDF. Проверьте вход и повторите загрузку." + (detail ? ` ${detail}` : ""));
+          setBusy(false);
+        }
       }
     }
     void load();
-    return () => { cancelled = true; abort.abort(); if (task) void task.destroy(); };
+    return () => { cancelled = true; abort.abort(); if (task) void task.destroy().catch(reason => { reportPdfError("cleanup", reason); }); };
   }, [bookId, attempt]);
 
   useEffect(() => {
     if (!pdf) return;
     let cancelled = false;
     let renderTask: RenderTask | undefined;
+    let canvas: HTMLCanvasElement | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    const textAbort = new AbortController();
     async function render() {
       try {
         const pdfPage = await pdf!.getPage(page);
@@ -72,22 +82,27 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: { bookId: s
         const base = pdfPage.getViewport({ scale: 1 });
         const viewport = pdfPage.getViewport({ scale: Math.min(width / base.width, 1.5) * zoom });
         const ratio = Math.min(window.devicePixelRatio || 1, 2);
-        const canvas = document.createElement("canvas");
+        canvas = document.createElement("canvas");
         canvas.width = Math.floor(viewport.width * ratio);
         canvas.height = Math.floor(viewport.height * ratio);
         canvas.style.width = `${viewport.width}px`;
         canvas.style.height = `${viewport.height}px`;
         canvas.setAttribute("aria-hidden", "true");
+        // v6 prefers canvas. If supplying a canvasContext instead, v6 requires
+        // canvas: null. Use a fresh canvas per job to avoid concurrent reuse.
+        // CSS viewport carries zoom; the additional transform is only for DPR.
         renderTask = pdfPage.render({ canvas, viewport, transform: ratio === 1 ? undefined : [ratio, 0, 0, ratio, 0, 0] });
         await renderTask.promise;
-        const content = await pdfPage.getTextContent();
         if (cancelled) return;
+        const previous = canvasHost.current?.firstElementChild;
         canvasHost.current?.replaceChildren(canvas);
-        setPageText(content.items.map(item => "str" in item ? item.str : "").join(" "));
+        if (previous instanceof HTMLCanvasElement) { previous.width = 0; previous.height = 0; }
+        setPageText("");
         setBusy(false);
         if (savedPage.current !== page) {
           timer = setTimeout(() => {
             saveQueue.current = saveQueue.current.then(async () => {
+              if (cancelled) return;
               const result = await saveReading(bookId, page, "progress");
               if (!cancelled) {
                 if (result.success) savedPage.current = page;
@@ -96,16 +111,42 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: { bookId: s
             }).catch(() => { if (!cancelled) setMessage("Позиция не сохранена: проверьте подключение."); });
           }, 400);
         }
-      } catch {
-        if (!cancelled) { setError("Не удалось отобразить страницу. Попробуйте загрузить PDF снова."); setBusy(false); }
+        // A text-layer failure must not hide a successfully rendered canvas or
+        // stop bookmark/progress controls. Report it as a separate stage.
+        try {
+          const text = await extractPageText(pdfPage, textAbort.signal);
+          if (!cancelled) setPageText(text);
+        } catch (reason: unknown) {
+          if (!cancelled) {
+            reportPdfError("text", reason, page);
+            setPageText("Не удалось извлечь текст этой страницы. PDF доступен для просмотра.");
+          }
+        }
+      } catch (reason: unknown) {
+        if (cancelled || isRenderCancellation(reason)) return;
+        const detail = reportPdfError("render", reason, page);
+        setError("Не удалось отобразить страницу. Попробуйте загрузить PDF снова." + (detail ? ` ${detail}` : ""));
+        setBusy(false);
       }
     }
     void render();
-    return () => { cancelled = true; renderTask?.cancel(); if (timer) clearTimeout(timer); };
+    return () => {
+      cancelled = true;
+      textAbort.abort();
+      renderTask?.cancel();
+      if (timer) clearTimeout(timer);
+      const release = () => {
+        // Keep the last complete frame until its replacement is ready. Free
+        // cancelled/offscreen backing stores after PDF.js has stopped using them.
+        if (canvas && !canvas.isConnected) { canvas.width = 0; canvas.height = 0; }
+      };
+      if (renderTask) void renderTask.promise.then(release, release);
+      else release();
+    };
   }, [pdf, page, width, zoom, bookId]);
 
   function goTo(value: number) {
-    if (pdf && Number.isInteger(value) && value >= 1 && value <= pdf.numPages) { setBusy(true); setPage(value); setMessage(""); }
+    if (pdf && value !== page && Number.isInteger(value) && value >= 1 && value <= pdf.numPages) { setBusy(true); setPage(value); setMessage(""); }
   }
   function toggleBookmark() {
     const currentPage = page;
