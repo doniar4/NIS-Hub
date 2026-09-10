@@ -1,34 +1,30 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
-import { BookIcon, CalendarIcon, UserIcon } from "@/components/icons";
+import { Suspense, type ReactNode } from "react";
+import { getViewer } from "@/lib/auth";
+import { ActionForm } from "@/components/action-form";
+import { logout } from "@/app/actions/auth";
 
-const navigation = [
-  { href: "/library", label: "Библиотека", icon: BookIcon },
-  { href: "/schedule", label: "Расписание", icon: CalendarIcon },
-  { href: "/profile", label: "Профиль", icon: UserIcon },
-];
+async function AccountNav() {
+  const viewer = await getViewer();
+  if (!viewer.user) return <Link className="button button-small" href="/login">Войти</Link>;
+  return <div className="flex items-center gap-3">{viewer.profile?.role === "admin" && <Link className="text-sm underline" href="/admin">Управление</Link>}<ActionForm action={logout} label="Выйти" className="text-sm" /></div>;
+}
 
 export function SiteShell({ children }: { children: ReactNode }) {
-  return (
-    <div className="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
-      <header className="border-b border-[var(--line)] bg-[var(--canvas)]">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-          <Link className="text-base font-semibold tracking-[-0.02em]" href="/">
-            NIS Library
-          </Link>
-          <nav aria-label="Основная навигация" className="hidden items-center gap-6 text-sm text-[var(--muted)] md:flex">
-            {navigation.map(({ href, label }) => <Link className="nav-link" href={href} key={href}>{label}</Link>)}
-          </nav>
-          <Link className="button button-small" href="/login">Войти</Link>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">{children}</main>
-      <footer className="mx-auto mt-8 max-w-6xl border-t border-[var(--line)] px-5 py-8 text-sm text-[var(--muted)] sm:px-8">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row">
-          <p>Демонстрационный прототип. Не содержит опубликованных учебников.</p>
-          <div className="flex gap-5"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/admin">Admin</Link></div>
-        </div>
-      </footer>
-    </div>
-  );
+  return <div className="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
+    <a className="skip-link" href="#main">Перейти к содержимому</a>
+    <header className="border-b border-[var(--line)]">
+      <div className="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-3 sm:px-8">
+        <Link className="text-base font-semibold tracking-[-0.02em]" href="/">NIS Hub</Link>
+        <Suspense fallback={<span className="text-sm">Проверка входа…</span>}><AccountNav /></Suspense>
+      </div>
+      <nav aria-label="Основная навигация" className="mx-auto flex max-w-6xl flex-wrap gap-x-5 px-5 text-sm sm:px-8">
+        {[['/', 'Главная'], ['/library', 'Библиотека'], ['/schedule', 'Расписание'], ['/profile', 'Профиль']].map(([href, label]) => <Link className="nav-link inline-flex min-h-11 items-center" href={href} key={href}>{label}</Link>)}
+      </nav>
+    </header>
+    <main id="main" tabIndex={-1} className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-12">{children}</main>
+    <footer className="mx-auto mt-8 max-w-6xl border-t border-[var(--line)] px-5 py-8 text-sm text-[var(--muted)] sm:px-8">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row"><p>NIS Hub · Версия для тестирования</p><div className="flex flex-wrap gap-5"><Link href="/privacy">Конфиденциальность</Link><Link href="/terms">Условия</Link></div></div>
+    </footer>
+  </div>;
 }
