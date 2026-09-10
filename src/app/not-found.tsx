@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function NotFound() { return <main className="mx-auto max-w-6xl px-6 py-16"><p className="mb-4 text-sm text-[var(--muted)]">NIS Hub · 404</p><h1 className="page-title">Страница не найдена</h1><p className="my-6">Материал отсутствует, снят с публикации или недоступен этому аккаунту.</p><Link className="button" href="/library">В библиотеку</Link></main>; }

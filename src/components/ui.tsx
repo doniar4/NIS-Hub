@@ -7,7 +7,7 @@ export function Eyebrow({ children }: { children: ReactNode }) {
 }
 
 export function PageIntro({ kicker, title, children }: { kicker?: string; title: string; children?: ReactNode }) {
-  return <div className="max-w-2xl"><Eyebrow>{kicker ?? "NIS Library"}</Eyebrow><h1 className="page-title">{title}</h1>{children ? <p className="mt-4 text-base leading-7 text-[var(--muted)]">{children}</p> : null}</div>;
+  return <div className="max-w-2xl"><Eyebrow>{kicker ?? "NIS Hub"}</Eyebrow><h1 className="page-title">{title}</h1>{children ? <div className="mt-4 text-base leading-7 text-[var(--muted)]">{children}</div> : null}</div>;
 }
 
 export function Notice({ children }: { children: ReactNode }) {
@@ -19,5 +19,5 @@ export function SectionLink({ href, children }: { href: string; children: ReactN
 }
 
 export function EmptyState({ title, children, action }: { title: string; children: ReactNode; action?: { href: string; label: string } }) {
-  return <div className="border border-dashed border-[var(--line-strong)] bg-white px-6 py-10 sm:px-8"><h2 className="text-lg font-semibold tracking-[-0.02em]">{title}</h2><p className="mt-2 max-w-xl leading-6 text-[var(--muted)]">{children}</p>{action ? <div className="mt-6"><SectionLink href={action.href}>{action.label}</SectionLink></div> : null}</div>;
+  return <div className="border border-dashed border-[var(--line-strong)] bg-white px-6 py-10 sm:px-8"><h2 className="text-lg font-semibold tracking-[-0.02em]">{title}</h2><div className="mt-2 max-w-xl leading-6 text-[var(--muted)]">{children}</div>{action ? <div className="mt-6"><SectionLink href={action.href}>{action.label}</SectionLink></div> : null}</div>;
 }
