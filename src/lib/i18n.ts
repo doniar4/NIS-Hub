@@ -4,6 +4,7 @@ export type Locale = typeof locales[number];
 export const LOCALE_COOKIE = "nis-locale";
 export function parseLocale(value: unknown): Locale { return value === "kk" || value === "en" ? value : "ru"; }
 const translations = {
+  topDuplicate: ["Этот предмет уже выбран.", "Бұл пән таңдалған.", "This subject is already selected."],
   consentTerms: ["условия использования", "пайдалану шарттарын", "the terms of use"],
   consentPrivacy: ["политикой конфиденциальности", "құпиялық саясатымен", "the privacy policy"],
   "home": [
