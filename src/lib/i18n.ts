@@ -4,9 +4,41 @@ export type Locale = typeof locales[number];
 export const LOCALE_COOKIE = "nis-locale";
 export function parseLocale(value: unknown): Locale { return value === "kk" || value === "en" ? value : "ru"; }
 const translations = {
-  topDuplicate: ["Этот предмет уже выбран.", "Бұл пән таңдалған.", "This subject is already selected."],
-  consentTerms: ["условия использования", "пайдалану шарттарын", "the terms of use"],
-  consentPrivacy: ["политикой конфиденциальности", "құпиялық саясатымен", "the privacy policy"],
+  "avatarFile": [
+    "Файл аватара",
+    "Аватар файлы",
+    "Avatar file"
+  ],
+  "avatarInvalid": [
+    "Выберите корректное JPEG, PNG или WebP до 2 МБ и 16 млн пикселей, без анимации.",
+    "Анимациясыз, 2 МБ және 16 млн пиксельден аспайтын JPEG, PNG немесе WebP таңдаңыз.",
+    "Choose a valid, non-animated JPEG, PNG or WebP up to 2 MiB and 16 million pixels."
+  ],
+  "avatarUploadError": [
+    "Загрузка не удалась. Повторная замена доступна через 60 секунд. Если ошибка сохраняется, проверьте подключение и миграцию аватаров.",
+    "Жүктеу сәтсіз аяқталды. Қайта ауыстыру 60 секундтан кейін қолжетімді. Байланыс пен аватар миграциясын тексеріңіз.",
+    "Upload failed. Replacements require a 60-second interval. If it persists, check the connection and avatar migration."
+  ],
+  "avatarPartial": [
+    "Файл загружен, но профиль не обновлён. Обновите страницу и повторите позже.",
+    "Файл жүктелді, бірақ профиль жаңартылмады. Бетті жаңартып, кейін қайталаңыз.",
+    "The file uploaded, but the profile could not be updated. Refresh and try again later."
+  ],
+  "topDuplicate": [
+    "Этот предмет уже выбран.",
+    "Бұл пән таңдалған.",
+    "This subject is already selected."
+  ],
+  "consentTerms": [
+    "условия использования",
+    "пайдалану шарттарын",
+    "the terms of use"
+  ],
+  "consentPrivacy": [
+    "политикой конфиденциальности",
+    "құпиялық саясатымен",
+    "the privacy policy"
+  ],
   "home": [
     "Главная",
     "Басты бет",
@@ -683,9 +715,9 @@ const translations = {
     "Avatar"
   ],
   "avatarHint": [
-    "JPEG, PNG или WebP до 2 МБ. Изображение будет преобразовано в WebP; новая загрузка заменяет прежнюю.",
-    "2 МБ-қа дейінгі JPEG, PNG немесе WebP. Сурет WebP-ке түрленеді; жаңа сурет алдыңғысын ауыстырады.",
-    "JPEG, PNG or WebP up to 2 MB. The image is converted to WebP; each upload replaces the previous one."
+    "JPEG, PNG или WebP до 2 МБ, без анимации. Квадратный WebP 256×256 заменяет прежний файл. Между заменами — 60 секунд.",
+    "Анимациясыз, 2 МБ-қа дейінгі JPEG, PNG немесе WebP. 256×256 WebP ескі файлды ауыстырады. Ауыстыру аралығы — 60 секунд.",
+    "Non-animated JPEG, PNG or WebP up to 2 MiB. A 256×256 WebP replaces the previous file. Wait 60 seconds between replacements."
   ],
   "avatarUpload": [
     "Сохранить аватар",
@@ -697,20 +729,10 @@ const translations = {
     "Аватар сақталды.",
     "Avatar saved."
   ],
-  "avatarInvalid": [
-    "Выберите корректное статичное изображение JPEG, PNG или WebP до 2 МБ.",
-    "2 МБ-тан аспайтын жарамды статикалық JPEG, PNG немесе WebP таңдаңыз.",
-    "Choose a valid static JPEG, PNG or WebP image up to 2 MB."
-  ],
   "avatarCooldown": [
     "Замена доступна раз в минуту. Если минута прошла, проверьте подключение и миграцию аватаров.",
     "Минутына бір рет ауыстыруға болады. Бір минут өтсе, қосылымды және аватар миграциясын тексеріңіз.",
     "Replacement is available once per minute. If a minute has passed, check the connection and avatar migration."
-  ],
-  "avatarPartial": [
-    "Файл загружен, но профиль не обновлён. Повторите сохранение позже; файл не удалён.",
-    "Файл жүктелді, бірақ профиль жаңармады. Кейінірек қайталаңыз; файл жойылған жоқ.",
-    "The file uploaded, but the profile was not updated. Retry later; the file was not deleted."
   ],
   "avatarUnavailable": [
     "Аватар недоступен",
