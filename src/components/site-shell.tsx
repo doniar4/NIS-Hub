@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeControl } from "@/components/theme-control";
 import { Suspense, type ReactNode } from "react";
 import { getViewer } from "@/lib/auth";
 import { ActionForm } from "@/components/action-form";
@@ -16,7 +17,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
     <header className="border-b border-[var(--line)]">
       <div className="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-3 sm:px-8">
         <Link className="text-base font-semibold tracking-[-0.02em]" href="/">NIS Hub</Link>
-        <Suspense fallback={<span className="text-sm">Проверка входа…</span>}><AccountNav /></Suspense>
+        <ThemeControl /><Suspense fallback={<span className="text-sm">Проверка входа…</span>}><AccountNav /></Suspense>
       </div>
       <nav aria-label="Основная навигация" className="mx-auto flex max-w-6xl flex-wrap gap-x-5 px-5 text-sm sm:px-8">
         {[['/', 'Главная'], ['/library', 'Библиотека'], ['/schedule', 'Расписание'], ['/profile', 'Профиль']].map(([href, label]) => <Link className="nav-link inline-flex min-h-11 items-center" href={href} key={href}>{label}</Link>)}

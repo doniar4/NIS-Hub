@@ -5,7 +5,7 @@ import { Field } from "@/components/fields";
 
 export function AuthForm({ mode, next, configured }: { mode: "login" | "signup"; next: string; configured: boolean }) {
   const signup = mode === "signup";
-  return <ActionForm action={authenticate.bind(null, mode)} disabled={!configured} label={signup ? "Создать аккаунт" : "Войти"} className="mt-8 max-w-md space-y-5 border border-[var(--line)] bg-white p-6 sm:p-8">
+  return <ActionForm action={authenticate.bind(null, mode)} disabled={!configured} label={signup ? "Создать аккаунт" : "Войти"} className="mt-8 max-w-md space-y-5 border border-[var(--line)] bg-[var(--surface)] p-6 sm:p-8">
     <input name="next" type="hidden" value={next} />
     <Field label="Email" name="email" type="email" autoComplete="email" required maxLength={254} />
     <Field label="Пароль" name="password" type="password" autoComplete={signup ? "new-password" : "current-password"} required minLength={8} maxLength={128} />

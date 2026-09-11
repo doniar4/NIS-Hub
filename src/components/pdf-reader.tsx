@@ -170,7 +170,7 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: { bookId: s
       </div>
       <p className="min-h-6 text-sm text-[var(--muted)]" role="status">{busy ? "Загружаем страницу…" : message || `Страница ${page} из ${pdf?.numPages ?? "…"}`}</p>
     </>}
-    <div ref={viewportRef} className="w-full min-w-0 overflow-x-auto border border-[var(--line)] bg-white" aria-busy={busy}><div ref={canvasHost} className="mx-auto w-fit min-h-64" /></div>
+    <div ref={viewportRef} className="w-full min-w-0 overflow-x-auto border border-[var(--line)] bg-[var(--surface)]" aria-busy={busy}><div ref={canvasHost} className="mx-auto w-fit min-h-64" /></div>
     {!busy && !error && <details className="border border-[var(--line)] p-4"><summary className="cursor-pointer text-sm font-semibold">Текст страницы {page}</summary><p className="mt-4 whitespace-pre-wrap leading-7">{pageText || "В этом PDF нет текстового слоя. Для доступности нужен документ с распознанным текстом."}</p></details>}
     {bookmarks.length > 0 && <nav aria-label="Закладки этой книги" className="flex flex-wrap items-center gap-2"><span className="mr-2 text-sm">Закладки:</span>{bookmarks.map(value => <button className="button button-secondary button-small" disabled={!pdf || value > pdf.numPages} key={value} onClick={() => goTo(value)}>Стр. {value}</button>)}</nav>}
   </section>;
