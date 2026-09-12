@@ -2,9 +2,7 @@ import "server-only";
 import { database } from "@/lib/queries";
 import { requireViewer } from "@/lib/auth";
 import { dateSchema, uuid } from "@/lib/validation";
-import type { Lesson } from "@/lib/database.types";
-
-export interface ScheduleSource { getDay(classId: string, date: string): Promise<Lesson[]> }
+import type { ScheduleSource } from "@/lib/schedule-source";
 
 export const databaseSchedule: ScheduleSource = {
   async getDay(classId, date) {

@@ -1,3 +1,4 @@
+import { loadLibraryCatalog } from "@/lib/library";
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
@@ -17,16 +18,17 @@ export const getCatalogOptions = cache(async () => {
   return { classes: classes.data, subjects: subjects.data };
 });
 
-export async function getBooks(filters: { q?: string; subject?: string; classId?: string } = {}) {
+export async function getLibraryBooks() {
   await requireViewer("/library");
   const supabase = await database();
-  let query = supabase.from("books").select("*").eq("publication_status", "published").eq("license_status", "approved").order("title").limit(100);
-  if (filters.q) query = query.ilike("title", `%${filters.q.slice(0,100).replace(/[\\%_]/g, "\\$&")}%`);
-  if (uuid.safeParse(filters.subject).success) query = query.eq("subject_id", filters.subject!);
-  if (uuid.safeParse(filters.classId).success) query = query.eq("class_id", filters.classId!);
-  const result = await query;
-  if (result.error) throw new Error("Не удалось загрузить библиотеку.");
-  return result.data;
+  return loadLibraryCatalog(async (after, size) => {
+    let query = supabase.from("books").select("id,title,class_id,subject_id,language")
+      .eq("publication_status", "published").eq("license_status", "approved").order("id").limit(size);
+    if (after) query = query.gt("id", after);
+    const { data, error } = await query;
+    if (error) throw new Error("Could not load library catalog");
+    return data;
+  });
 }
 
 export async function getBook(id: string) {
