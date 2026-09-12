@@ -25,6 +25,7 @@ export type Database = { public: {
   Functions: {
     is_admin: { Args: Record<string, never>; Returns: boolean };
     save_profile: { Args: { p_name: string; p_class: string | null; p_subjects: string[] }; Returns: undefined };
+    import_schedule: { Args: { p_lessons: Json }; Returns: number };
     save_book: { Args: { p_book: Json; p_source: string; p_note: string }; Returns: string };
   };
   Enums: { profile_role: "student" | "admin"; book_publication_status: Book["publication_status"]; book_license_status: Book["license_status"] };

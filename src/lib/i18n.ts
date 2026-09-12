@@ -4,6 +4,19 @@ export type Locale = typeof locales[number];
 export const LOCALE_COOKIE = "nis-locale";
 export function parseLocale(value: unknown): Locale { return value === "kk" || value === "en" ? value : "ru"; }
 const translations = {
+  importTitle: ["Ручной импорт расписания","Кестені қолмен импорттау","Manual timetable import"],
+  importHint: ["Разрешённый JSON версии 1: до 256 КиБ и 500 уроков. Проверьте все строки. Импорт добавляет или обновляет слоты, но не удаляет пропущенные уроки. Формат описан в docs/schedule-source-research.md.","Рұқсатты 1-нұсқалы JSON: 256 КиБ және 500 сабаққа дейін. Барлық жолды тексеріңіз. Импорт слоттарды қосады не жаңартады, файлда жоқ сабақтарды жоймайды. Формат: docs/schedule-source-research.md.","Authorised version 1 JSON: up to 256 KiB and 500 lessons. Review all rows. Import adds or updates slots; omitted lessons are not deleted. Format: docs/schedule-source-research.md."],
+  importFile: ["JSON-файл расписания","Кестенің JSON файлы","Timetable JSON file"],
+  importPreview: ["Предпросмотр импорта","Импортты алдын ала қарау","Import preview"],
+  importConfirm: ["У меня есть разрешение на использование этих данных; даты, классы и предметы проверены.","Бұл деректерді қолдануға рұқсатым бар; күндер, сыныптар және пәндер тексерілді.","I have permission to use these data and have verified dates, classes and subjects."],
+  importSubmit: ["Импортировать проверенные уроки","Тексерілген сабақтарды импорттау","Import reviewed lessons"],
+  importIds: ["Идентификаторы классов и предметов","Сыныптар мен пәндер идентификаторлары","Class and subject identifiers"],
+  importInvalid: ["Проверьте формат, размер, уникальность слотов, существующие классы/предметы и подтверждение разрешения.","Форматты, көлемді, слоттардың бірегейлігін, бар сыныптар/пәндерді және рұқсатты тексеріңіз.","Check format, size, unique slots, existing classes/subjects and permission confirmation."],
+  importError: ["Не удалось подтвердить импорт. Обновите расписание перед повтором; проверьте связи, права и миграцию. Импорт не удаляет пропущенные уроки.","Импортты растау мүмкін болмады. Қайталамас бұрын кестені жаңартыңыз; байланыстарды, құқықтарды және миграцияны тексеріңіз. Импорт файлда жоқ сабақтарды жоймайды.","Could not confirm import. Refresh the timetable before retrying; check references, permissions and the migration. Import never deletes omitted lessons."],
+  importSaved: ["Уроки импортированы. Пропущенные в файле уроки не удалены.","Сабақтар импортталды. Файлда жоқ сабақтар жойылмады.","Lessons imported. Lessons omitted from the file were not deleted."],
+  adminSession: ["Требуется активная сессия администратора.","Белсенді әкімші сессиясы қажет.","An active administrator session is required."],
+  teacher: ["Учитель","Мұғалім","Teacher"],
+  lesson: ["Урок","Сабақ","Lesson"],
   avatarWait: ["Аватар недавно обновлён. Повторите замену через {seconds} сек.", "Аватар жақында жаңартылды. {seconds} секундтан кейін ауыстырыңыз.", "Avatar recently updated. Try replacing it again in {seconds} seconds."],
   unavailableFilter: ["Недоступный фильтр", "Қолжетімсіз сүзгі", "Unavailable filter"],
   catalogLimitHint: ["Поиск работает только в загруженной части каталога. Если материала нет, обратитесь к оператору.", "Іздеу каталогтың жүктелген бөлігінде ғана жүреді. Материал жоқ болса, операторға хабарласыңыз.", "Search covers only this loaded subset. Contact the operator if a material is missing."],

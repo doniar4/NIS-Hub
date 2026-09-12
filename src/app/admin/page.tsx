@@ -1,3 +1,5 @@
+import { ScheduleImport } from "@/components/schedule-import";
+import { importSchedule } from "@/app/actions/schedule-import";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteShell } from "@/components/site-shell";
@@ -64,5 +66,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         {selected && <div className="mt-10 border-t border-[var(--line)] pt-6"><ActionForm action={deleteAdminRecord} label={section === "books" ? "Переместить в архив" : "Удалить запись"}><input type="hidden" name="entity" value={section} /><input type="hidden" name="id" value={selected.id} /><p className="text-sm text-[var(--muted)]">{section === "books" ? "Книга исчезнет из библиотеки. Файл и закладки сохранятся; публикацию можно восстановить." : "Действие необратимо. Используемые классы и предметы удалить нельзя."}</p><label className="flex items-start gap-3 text-sm"><input className="mt-1" type="checkbox" name="confirm_delete" required />Подтверждаю действие с записью «{rows.find(r => r.id === selected.id)?.name}».</label></ActionForm></div>}
       </section>
     </div>
+    {section === "schedule" && <ScheduleImport action={importSchedule} classes={classes} subjects={subjects}/>}
   </SiteShell>;
 }
