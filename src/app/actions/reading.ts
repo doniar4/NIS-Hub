@@ -17,7 +17,7 @@ export async function saveReading(bookId: string, page: number, mode: "progress"
                 return { error: t.saveError };
         }
         else {
-            const { data: book, error } = await supabase.from("books").select("publication_status,license_status,page_count").eq("id", bookId).maybeSingle();
+            const { data: book, error } = await supabase.from("books").select("publication_status,page_count").eq("id", bookId).maybeSingle();
             if (error || !book || !canReadBook(book) || (book.page_count && page > book.page_count))
                 return { error: t.unavailableBook };
             const value = { profile_id: user.id, book_id: bookId, page_number: page };

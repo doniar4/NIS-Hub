@@ -17,9 +17,8 @@ export const bookSchema = z.object({
   id: optionalId, title: z.string().trim().min(1).max(200), subject_id: uuid, class_id: optionalId,
   author: optionalText(200), publisher: optionalText(200), publication_year: optionalInt(1000, 9999), language: optionalText(40),
   file_path: pdfPathSchema, page_count: optionalInt(1, 100000),
-  license_status: z.enum(["pending_review", "approved", "restricted"]), publication_status: z.enum(["draft", "published", "archived"]),
-  source: z.string().trim().min(1, "Укажите источник.").max(500), permission_note: z.string().trim().min(1, "Укажите основание для размещения.").max(2000),
-}).refine(value => value.publication_status !== "published" || value.license_status === "approved", "Публикация требует подтверждённого права на размещение.");
+  publication_status: z.enum(["draft", "published", "archived"]),
+});
 export const classSchema = z.object({ id: optionalId, name: z.string().trim().min(1).max(40), grade: optionalInt(1,12), section: optionalText(10) });
 export const subjectSchema = z.object({ id: optionalId, name: z.string().trim().min(1).max(100), name_kz: optionalText(100), name_en: optionalText(100), short_name: optionalText(30) });
 export const lessonSchema = z.object({ id: optionalId, class_id: uuid, date: dateSchema, lesson_number: z.coerce.number().int().min(1).max(20), subject_id: uuid, teacher: optionalText(100), room: optionalText(40) });
@@ -29,8 +28,8 @@ export const adminEntitySchema = z.enum(["books", "classes", "subjects", "schedu
 export function safeNext(value: unknown): string {
   return typeof value === "string" && /^\/(?:profile|admin|library|schedule|books\/[0-9a-f-]+(?:\/read)?)$/.test(value) ? value : "/profile";
 }
-export function canReadBook(book: { publication_status: string; license_status: string }) {
-  return book.publication_status === "published" && book.license_status === "approved";
+export function canReadBook(book: { publication_status: string }) {
+  return book.publication_status === "published";
 }
 export function schoolDate(date = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Oral", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);

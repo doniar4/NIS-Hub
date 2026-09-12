@@ -30,11 +30,11 @@ test("book paths, publication and page bounds reject invalid input", () => {
   for (const path of ["../a.pdf", "/a.pdf", "https://example.com/a.pdf", "a.pdf?x=1", "a.exe", "a/../b.pdf"]) assert.equal(pdfPathSchema.safeParse(path).success, false);
   for (const page of [0, -1, 1.5, 100001, "NaN"]) assert.equal(pageSchema.safeParse(page).success, false);
   assert.equal(pageSchema.parse("12"), 12);
-  assert.equal(canReadBook({ publication_status: "published", license_status: "pending_review" }), false);
-  const book = { id: "", title: "Own test document", subject_id: id, class_id: "", author: "", publisher: "", publication_year: "", language: "", file_path: "own.pdf", page_count: "2", publication_status: "published", license_status: "approved", source: "Self-authored", permission_note: "Owner grants test usage" };
+  assert.equal(canReadBook({ publication_status: "published" }), true);
+  const book = { id: "", title: "Own test document", subject_id: id, class_id: "", author: "", publisher: "", publication_year: "", language: "", file_path: "own.pdf", page_count: "2", publication_status: "published",  };
   assert.equal(bookSchema.safeParse(book).success, true);
-  assert.equal(bookSchema.safeParse({ ...book, license_status: "restricted" }).success, false);
-  assert.equal(bookSchema.safeParse({ ...book, permission_note: " " }).success, false);
+  assert.equal(canReadBook({ publication_status: "draft" }), false);
+  assert.equal(canReadBook({ publication_status: "archived" }), false);
 });
 test("calendar dates and school timezone are explicit", () => {
   assert.equal(dateSchema.safeParse("2026-02-30").success, false);
