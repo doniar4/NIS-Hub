@@ -6,10 +6,11 @@ import { once } from "node:events";
 import { resolve,join } from "node:path";
 import { build } from "esbuild";
 import { chromium,webkit,expect } from "@playwright/test";
-import { classes,subjects } from "./browser/fixtures";
+import { books,classes,subjects } from "./browser/fixtures";
 import { parseTimetable } from "../src/lib/timetable-import";
 import { themeBootstrap } from "../src/lib/theme";
-import { dictionaries } from "../src/lib/i18n";
+import { filterBooks, initialLibraryFilters } from "../src/lib/library";
+import { dictionaries, subjectName } from "../src/lib/i18n";
 import { phase4Copy } from "../src/lib/phase4-copy";
 const artifactDir=process.env.NIS_BROWSER_ARTIFACTS || "/private/tmp/nis-phase4-browser-results";
 const id="00000000-0000-4000-8000-000000000030";
@@ -103,6 +104,49 @@ test("Phase 4 Chromium/WebKit production components with isolated transport", {t
         }
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true);
         await page.screenshot({path:join(artifactDir,name+"-weekly-mobile.png"),fullPage:true});assert.deepEqual(errors,[]);await page.close();
+      });
+      await t.test(name+": Home/Schedule subject clicks preserve canonical filters; no teacher on mobile; empty books are normal",async()=>{
+        const page=await browser.newPage({viewport:{width:390,height:844}});
+        const errors:string[]=[];page.on("pageerror",error=>errors.push(error.message));
+        for(const path of ["/home-timetable","/weekly"]){
+          for(const locale of ["ru","kk","en"] as const){
+            await page.goto(origin+path);await page.getByRole("combobox",{name:dictionaries.en.locale,exact:true}).selectOption(locale);
+            const scope=path==="/weekly"?page.getByRole("tabpanel"):page.getByRole("region",{name:"Home timetable"});
+            await expect(scope).not.toContainText("Teacher");
+            await expect(scope).not.toContainText(dictionaries[locale].teacher+":");
+            await expect(scope).toContainText("08:30–10:10");await expect(scope).toContainText("305");
+            const link=scope.getByRole("link",{name:subjectName(subjects[0],locale),exact:true});
+            const href=await link.getAttribute("href");assert.ok(href);
+            const url=new URL(href,origin);
+            assert.equal(url.pathname,"/library");
+            const expected={q:"",classId:classes[0].id,subject:subjects[0].id};
+            assert.deepEqual(initialLibraryFilters(Object.fromEntries(url.searchParams),classes[1].id),expected);
+            const bounds=await link.boundingBox();assert.ok(bounds&&bounds.height>=44);
+            assert.ok((await link.evaluate(element=>getComputedStyle(element).textDecorationLine)).includes("underline"));
+            assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true);
+            if(locale==="kk") await page.getByRole("combobox",{name:dictionaries.kk.theme,exact:true}).selectOption("dark");
+            await page.screenshot({path:join(artifactDir,name+"-"+(path==="/weekly"?"schedule":"home")+"-"+locale+"-mobile.png"),fullPage:true});
+            await link.focus();await page.keyboard.press("Enter");await page.waitForURL("**/library?**");
+            await expect(page.getByRole("combobox",{name:"Subject",exact:true})).toHaveValue(expected.subject);
+            await expect(page.getByRole("combobox",{name:"Class",exact:true})).toHaveValue(expected.classId);
+            await expect(page.getByRole("searchbox")).toHaveValue("");
+            await expect(page.locator("section li")).toHaveCount(filterBooks(books,expected).length);
+            await expect(page.getByRole("alert")).toHaveCount(0);
+          }
+        }
+        // Changing the Schedule class must override the profile default in Library.
+        await page.goto(origin+"/weekly");await page.getByRole("combobox",{name:"Class",exact:true}).selectOption(classes[1].id);
+        await page.getByRole("tab",{name:"Thursday",exact:true}).click();
+        await page.getByRole("tabpanel").getByRole("link",{name:"Mathematics",exact:true}).click();await page.waitForURL("**/library?**");
+        await expect(page.getByRole("combobox",{name:"Class",exact:true})).toHaveValue(classes[1].id);
+        await expect(page.locator("section li")).toHaveCount(filterBooks(books,{q:"",subject:subjects[0].id,classId:classes[1].id}).length);
+        // Biology deliberately has no published books in the fixture catalog.
+        await page.goto(origin+"/weekly");await page.getByRole("tab",{name:"Friday",exact:true}).click();
+        await page.getByRole("tabpanel").getByRole("link",{name:"Biology",exact:true}).click();await page.waitForURL("**/library?**");
+        await expect(page.getByRole("combobox",{name:"Subject",exact:true})).toHaveValue(subjects[2].id);
+        await expect(page.getByRole("heading",{name:dictionaries.en.noMaterials,exact:true})).toBeVisible();
+        await expect(page.getByRole("alert")).toHaveCount(0);
+        assert.deepEqual(errors,[]);await page.close();
       });
       await t.test(name+": small PDF create/publish, explicit replacement and pre-network oversized rejection",async()=>{
         book=null;uploaded=false;const page=await browser.newPage();await page.goto(origin+"/books");await page.waitForLoadState("networkidle");

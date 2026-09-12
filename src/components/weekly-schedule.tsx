@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { ClassRow, SubjectRow, WeeklyLesson } from "@/lib/database.types";
 import { useI18n } from "./locale-provider";
@@ -10,9 +11,12 @@ export function WeeklyLessonList({ lessons, subjects }: { lessons: WeeklyLesson[
   const { locale, t } = useI18n();
   return <ol className="divide-y divide-[var(--line)]">{lessons.map(row => <li key={row.id} className="flex items-start gap-4 py-5">
     <span className="min-w-10 font-semibold" aria-label={t.lesson + " " + lessonRange(row)}>{lessonRange(row)}</span>
-    <div className="min-w-0 flex-1"><h3 className="break-words font-semibold">{subjectName(subjects.find(s => s.id === row.subject_id),locale)}</h3>
+    <div className="min-w-0 flex-1"><h3 className="break-words font-semibold"><Link prefetch={false}
+        href={{ pathname: "/library", query: { subject: row.subject_id, classId: row.class_id } }}
+        className="timetable-subject-link inline-flex min-h-11 items-center">
+        {subjectName(subjects.find(s => s.id === row.subject_id),locale)}
+      </Link></h3>
       {row.start_time && row.end_time && <p className="mt-1 text-sm">{row.start_time.slice(0,5)}–{row.end_time.slice(0,5)}</p>}
-      {row.teacher && <p className="mt-1 break-words text-sm text-[var(--muted)]">{t.teacher}: {row.teacher}</p>}
       {row.room && <p className="mt-1 text-sm">{t.room}: {row.room}</p>}
     </div>
   </li>)}</ol>;

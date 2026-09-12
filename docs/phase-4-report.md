@@ -40,6 +40,8 @@ No public URLs, permanent signed links, persistent private PDF cache or range re
 - Atomic administrator-only import RPC, idempotent updates and no implicit deletion of omitted slots.
 - CSV/TSV upload or paste, downloadable template, robust quoting/BOM/CRLF, bounded payload, existing/localized reference resolution, row-level validation and preview, explicit confirmation and server revalidation.
 - Home uses today's effective blocks for the profile class. Schedule provides local class/day selection, keyboard tabs, one card per double lesson, mobile layout and RU/KZ/EN copy.
+- Follow-up UX: subject labels in the shared Home/Schedule cards are accessible Library links using canonical subject_id and the lesson's class_id. The selected Schedule class overrides the profile default. Existing LibraryBrowser initializes from those filters; no-match subjects use its normal empty state, not an error. Links retain localized labels and avoid prefetch requests.
+- Teacher display is removed from student cards only. SQL, types, teacher import/blank values and admin import preview remain intact. No follow-up migration.
 - New weekly ScheduleSource boundary. No EduPage scraping, credentials, OCR, AI service or paid dependency.
 
 ## Migrations and preservation
@@ -55,14 +57,14 @@ Historical book_rights, books.license_status/enum and date-based schedule rows a
 
 Final required commands (rerun during finalization):
 
-- npm test with NIS_READER_TEST_PDF pointing to the existing local fixture: 49 passing tests, zero skipped.
+- npm test with NIS_READER_TEST_PDF pointing to the existing local fixture: 52 passing tests, zero skipped.
 - npm run typecheck: passed.
 - npm run lint: passed.
 - npm run build: passed (Next.js 16.3.4 production build).
 
 Additional verification during this implementation:
 
-- Phase 4 Chromium/WebKit browser suite: 7 passing tests (parent + six browser cases).
+- Phase 4 Chromium/WebKit browser suite: 9 passing tests (parent + eight browser cases).
 - Existing Phase 3 browser suite: 7 passing tests, including instant library filtering, Top 4, expired-avatar recovery, themes/locales, legal drafts and logged-out access.
 - HTTP smoke against the configured, logged-out production server: 3 passing tests. Tests explicitly support Next 16 streaming redirects and bound request timeouts; default unconfigured mode is retained.
 - Actual signed-access route tested with isolated session/Storage boundaries: authenticated published access without historical approval; logged-out/draft/archive/invalid-path denial; 60-second signing; no-store/no-referrer; sanitized provider failure.
@@ -76,6 +78,7 @@ The existing nis-hub-reader-test.pdf has four actual pages (three content pages 
 
 Completed in isolated Chromium and WebKit with production components:
 
+- Follow-up browser checks click Home and Schedule subjects in all three locales; assert exact subject/class filters, multiple matching books, selected-class override and missing-book empty state. Teacher text is absent, time/room remain, links are keyboard-operable with 44px tap targets, and 390px mobile layouts do not overflow. WebKit mobile Home/Schedule screenshots were visually inspected.
 - Day/class switching changes the view with zero requests and no navigation; keyboard arrows/Home work.
 - CSV and TSV preview/confirm/import, row errors, double blocks, mobile width and RU/KZ/EN.
 - Small PDF create/publish and explicit replacement workflow; oversized file blocked before requests.
@@ -90,7 +93,8 @@ Remaining checks using real sessions (no secrets or signed URLs should be shared
 1. Admin: upload a small permitted PDF, publish without per-book evidence, inspect the single private canonical object, open Reader, then replace with a visibly different PDF using explicit confirmation. Confirm latest content after reload.
 2. Student/logged-out: published material opens only when signed in; draft/archive and file mutation are denied. Archive a test book and confirm a fresh signed-access request is denied; previously issued links can remain valid until their 60-second expiry.
 3. Admin: import a permitted CSV and pasted TSV using actual class/subject names; repeat to confirm no duplicates. Submit an invalid/overlapping batch and verify the previous valid timetable remains. Check Home for today's profile class and Schedule across weekdays.
-4. Live Reader: after signed URL expiry, page/zoom changes retain the loaded PDF; after reload it gets fresh access. Confirm bookmarks and reading position persist in real Supabase.
+4. Home/Schedule: click actual subject names in RU/KZ/EN, including a subject without published books; verify Library filters and selected class, and confirm student cards do not show teacher names.
+5. Live Reader: after signed URL expiry, page/zoom changes retain the loaded PDF; after reload it gets fresh access. Confirm bookmarks and reading position persist in real Supabase.
 
 ## Known limitations and release notes
 
@@ -105,8 +109,8 @@ Remaining checks using real sessions (no secrets or signed URLs should be shared
 
 ## Handoff
 
-Final required checks passed: 49 tests (zero skipped), typecheck, lint and build. The staged 37-file change set passed credential and actual environment-value scanning; no .env.local, key, PDF or screenshot was staged. Implementation commit 4ce2691 was pushed to origin/codex/phase-4-books-schedule.
+Final required checks after the timetable UX follow-up: 52 tests (zero skipped), typecheck, lint and build. The original staged 37-file change set passed credential and actual environment-value scanning; no .env.local, key, PDF or screenshot was staged. Implementation commit 4ce2691 was pushed to origin/codex/phase-4-books-schedule.
 
-PR creation was attempted through the selected GitHub integration, but GitHub returned HTTP 403: Resource not accessible by integration. No PR number was issued; no merge was attempted. GitHub CLI is not installed, so no existing authenticated CLI fallback is available. Opening the PR requires granting the integration Pull requests: write or having the owner create it from the pushed branch. This is an external permission blocker, not an unfinished application workflow.
+Initial PR creation was attempted through the selected GitHub integration, but GitHub returned HTTP 403: Resource not accessible by integration. No PR number was issued; no merge was attempted. GitHub CLI is not installed, so no existing authenticated CLI fallback is available. Opening the PR requires granting the integration Pull requests: write or having the owner create it from the pushed branch. This is an external permission blocker, not an unfinished application workflow.
 
 Do not re-run already applied migrations. Complete the real-session checks above before release.

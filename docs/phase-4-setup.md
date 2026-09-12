@@ -83,6 +83,10 @@ All nine headers are required; optional values may be empty. Additional optional
 - Failed validation/transaction leaves valid schedules intact. No browser-side partial commit loop.
 - Weekly loading is bounded to 10,000 rows in 500-row pages; over-limit fails explicitly, never silently truncates.
 
+Subject names in Home and student Schedule link to /library?subject=<subject_id>&classId=<class_id>. IDs are canonical regardless of the RU/KZ/EN label. Home uses the lesson's profile-class context; Schedule uses the class currently selected, even when it differs from the profile. Clicking navigates to Library's existing initialization/filtering; it does not point to a particular book or duplicate filtering logic. A subject with no matching published books shows Library's normal filtered empty state. Prefetch is disabled, so day/class switching still causes no requests.
+
+Teacher names are not displayed in student timetable cards. The teacher database column, types, CSV/TSV header and stored data remain unchanged; blank teacher values remain accepted. Administrators can still review teacher values in the import preview. No additional migration is needed for these UX changes.
+
 Student Schedule defaults to the profile class and today's school weekday; weekends display Monday of the current week. Day tabs and class changes filter locally without navigation/fetches. Home shows today's effective blocks for the profile class; weekends are empty. Dates use Asia/Oral. Holidays, substitutions and week navigation are not introduced.
 
 ### Screenshots, EduPage and scope
