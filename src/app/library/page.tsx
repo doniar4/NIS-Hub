@@ -14,6 +14,6 @@ export default async function LibraryPage({ searchParams }: {
   const initial = initialLibraryFilters(await searchParams, profile.class_id ?? "");
   const [{ classes, subjects }, catalog] = await Promise.all([getCatalogOptions(), getLibraryBooks()]);
   return <SiteShell><PageIntro kicker={t.materials} title={t.library}>{t.libraryHint}</PageIntro>
-    <LibraryBrowser books={catalog.books} truncated={catalog.truncated} classes={classes} subjects={subjects} initial={initial}/>
+    <LibraryBrowser key={JSON.stringify(initial)} books={catalog.books} truncated={catalog.truncated} classes={classes} subjects={subjects} initial={initial}/>
   </SiteShell>;
 }

@@ -14,6 +14,13 @@ export function LibraryBrowser({ books, classes, subjects, initial, truncated }:
   const [q, setQ] = useState(initial.q);
   const [classId, setClassId] = useState(initial.classId);
   const [subject, setSubject] = useState(initial.subject);
+  const [previousInitial, setPreviousInitial] = useState(initial);
+  // A deliberate server navigation may supply a fresh object with identical
+  // initial values. Reset then, but never on local filter-state updates.
+  if (previousInitial !== initial) {
+    setPreviousInitial(initial);
+    setQ(initial.q); setClassId(initial.classId); setSubject(initial.subject);
+  }
   const filteredBooks = useMemo(() => filterBooks(books, { q, classId, subject })
     .sort((a, b) => a.title.localeCompare(b.title, locale)), [books, q, classId, subject, locale]);
   useEffect(() => {
