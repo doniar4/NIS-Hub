@@ -105,4 +105,8 @@ Remaining checks using real sessions (no secrets or signed URLs should be shared
 
 ## Handoff
 
-The branch is intended for a pull request to main, not automatic merge. Required checks, staged-file/secret inspection and the final commit are performed before pushing. Do not re-run already applied migrations. Complete the real-session checks above before release.
+Final required checks passed: 49 tests (zero skipped), typecheck, lint and build. The staged 37-file change set passed credential and actual environment-value scanning; no .env.local, key, PDF or screenshot was staged. Implementation commit 4ce2691 was pushed to origin/codex/phase-4-books-schedule.
+
+PR creation was attempted through the selected GitHub integration, but GitHub returned HTTP 403: Resource not accessible by integration. No PR number was issued; no merge was attempted. GitHub CLI is not installed, so no existing authenticated CLI fallback is available. Opening the PR requires granting the integration Pull requests: write or having the owner create it from the pushed branch. This is an external permission blocker, not an unfinished application workflow.
+
+Do not re-run already applied migrations. Complete the real-session checks above before release.
