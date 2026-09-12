@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { actionContext } from "@/lib/auth";
 import { getI18n } from "@/lib/i18n-server";
+import { avatarCooldownRemaining } from "@/lib/avatar-policy";
 import { normalizeAvatar, persistAvatar } from "@/lib/avatar";
 import type { ActionState } from "@/lib/action-state";
 
@@ -12,9 +13,19 @@ export async function uploadAvatar(_state: ActionState, form: FormData): Promise
   try { context = await actionContext(); } catch { return { error: t.sessionError }; }
   const file = form.get("avatar");
   if (!(file instanceof File)) return { error: t.avatarInvalid };
+  const { supabase, user } = context;
+  async function remaining() {
+    try {
+      const { data, error } = await supabase.storage.from("avatars").list(user.id, { search: "avatar.webp", limit: 10 });
+      if (error) return 0;
+      return avatarCooldownRemaining(data?.find(object => object.name === "avatar.webp")?.updated_at);
+    } catch { return 0; }
+  }
+  const cooldownMessage = (seconds: number) => t.avatarWait.replace("{seconds}", String(seconds));
+  const wait = await remaining();
+  if (wait) return { error: cooldownMessage(wait) };
   let bytes: Buffer;
   try { bytes = await normalizeAvatar(file); } catch { return { error: t.avatarInvalid }; }
-  const { supabase, user } = context;
   const result = await persistAvatar(user.id, bytes, {
     upload: async (path, data) => {
       const { error } = await supabase.storage.from("avatars").upload(path, data, { upsert: true, contentType: "image/webp", cacheControl: "0" });
@@ -25,7 +36,10 @@ export async function uploadAvatar(_state: ActionState, form: FormData): Promise
       return !error && !!data;
     },
   });
-  if (result === "uploadFailed") return { error: t.avatarUploadError };
+  if (result === "uploadFailed") {
+    const seconds = await remaining();
+    return { error: seconds ? cooldownMessage(seconds) : t.avatarUploadError };
+  }
   revalidatePath("/profile");
   if (result === "profileFailed") return { error: t.avatarPartial };
   return { success: t.avatarSaved };
