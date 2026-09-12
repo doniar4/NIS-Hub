@@ -326,9 +326,9 @@ const translations = {
     "No materials found"
   ],
   "noMaterialsHint": [
-    "Измените фильтры или загляните позже. Здесь появятся опубликованные материалы с подтверждённым правом на размещение.",
-    "Сүзгілерді өзгертіңіз немесе кейінірек кіріңіз. Мұнда жариялауға рұқсаты расталған материалдар көрсетіледі.",
-    "Change the filters or check back later. Only published materials with confirmed distribution rights appear here."
+    "Измените фильтры или загляните позже. Здесь появятся опубликованные администратором материалы школьной коллекции.",
+    "Сүзгілерді өзгертіңіз немесе кейінірек кіріңіз. Мұнда әкімші жариялаған мектеп жинағының материалдары көрсетіледі.",
+    "Change the filters or check back later. Materials from the school collection appear here after administrator publication."
   ],
   "openMaterial": [
     "Открыть материал",

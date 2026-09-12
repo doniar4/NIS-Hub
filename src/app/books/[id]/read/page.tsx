@@ -29,5 +29,5 @@ export default async function ReadPage({ params, searchParams }: {
         throw new Error("Не удалось загрузить настройки чтения.");
     const requested = pageSchema.safeParse((await searchParams).page);
     const startPage = requested.success ? requested.data : progress.data?.page_number ?? 1;
-    return <SiteShell><Link className="text-sm underline" href={`/books/${id}`}>{t.aboutMaterial}</Link><h1 className="section-title mt-6 mb-8">{book.title}</h1><PdfReader bookId={id} initialPage={Math.min(startPage, book.page_count ?? 100000)} initialBookmarks={bookmarks.data.map(b => b.page_number)}/></SiteShell>;
+    return <SiteShell><Link className="text-sm underline" href={`/books/${id}`}>{t.aboutMaterial}</Link><h1 className="section-title mt-6 mb-8">{book.title}</h1><PdfReader key={id} bookId={id} initialPage={Math.min(startPage, book.page_count ?? 100000)} initialBookmarks={bookmarks.data.map(b => b.page_number)}/></SiteShell>;
 }

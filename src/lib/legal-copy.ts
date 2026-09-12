@@ -26,7 +26,7 @@ export const legalCopy = {
       ],
       [
         "Сервисы и расписание",
-        "Работающий внешний сервис — Supabase: Auth, база данных и Storage. Хостинг и регион размещения: [ПОДТВЕРДИТЬ ФАКТИЧЕСКИЕ ДАННЫЕ]; Vercel не заявляется как подключённый сервис. PDF.js и шрифты Reader загружаются с сайта. Автоматической интеграции EduPage нет: администратор может внести разрешённое расписание, включая класс, предмет, дату, урок и, при необходимости, учителя и кабинет."
+        "Работающий внешний сервис — Supabase: Auth, база данных и Storage. Хостинг и регион размещения: [ПОДТВЕРДИТЬ ФАКТИЧЕСКИЕ ДАННЫЕ]; Vercel не заявляется как подключённый сервис. PDF.js и шрифты Reader загружаются с сайта. Автоматической интеграции EduPage нет: администратор может внести разрешённое расписание, через CSV/TSV: класс, предмет, день недели, интервал уроков, время, даты действия и, при необходимости, учителя и кабинет. Историческое расписание по датам сохранено."
       ],
       [
         "Cookies и локальные настройки",
@@ -105,7 +105,7 @@ export const legalCopy = {
       ],
       [
         "Қызметтер және кесте",
-        "Қосылған сыртқы қызмет — Supabase: Auth, деректер базасы және Storage. Хостинг пен орналасу аймағы: [НАҚТЫ ДЕРЕКТЕРДІ РАСТАУ]; Vercel қосылған деп мәлімделмейді. PDF.js және Reader қаріптері сайттан жүктеледі. EduPage автоматты интеграциясы жоқ: әкімші рұқсат етілген сынып, пән, күн, сабақ және қажет болса мұғалім мен кабинет деректерін енгізе алады."
+        "Қосылған сыртқы қызмет — Supabase: Auth, деректер базасы және Storage. Хостинг пен орналасу аймағы: [НАҚТЫ ДЕРЕКТЕРДІ РАСТАУ]; Vercel қосылған деп мәлімделмейді. PDF.js және Reader қаріптері сайттан жүктеледі. EduPage автоматты интеграциясы жоқ: әкімші рұқсатты CSV/TSV арқылы сынып, пән, апта күні, сабақ аралығы, уақыт, қолданылу күндері және қажет болса мұғалім мен кабинет деректерін енгізе алады. Ескі күндік кесте сақталған."
       ],
       [
         "Cookies және жергілікті баптаулар",
@@ -180,11 +180,11 @@ export const legalCopy = {
       ],
       [
         "Purpose and access",
-        "Data supports sign-in, your profile, class selection, bookmarks and reading continuity. Application access rules restrict profiles, avatars and reading history to their owners; infrastructure operators and the service provider may have technical access. Signed-in users can see published, approved materials and timetables."
+        "Data supports sign-in, your profile, class selection, bookmarks and reading continuity. Application access rules restrict profiles, avatars and reading history to their owners; infrastructure operators and the service provider may have technical access. Signed-in users can see published materials and timetables."
       ],
       [
         "Services and timetable",
-        "The connected external service is Supabase: Auth, database and Storage. Hosting provider and region: [CONFIRM ACTUAL DEPLOYMENT]; Vercel is not claimed as a connected service. PDF.js and Reader fonts are served by this site. There is no automatic EduPage integration: an administrator can enter an authorised timetable containing class, subject, date, lesson and optional teacher/room information."
+        "The connected external service is Supabase: Auth, database and Storage. Hosting provider and region: [CONFIRM ACTUAL DEPLOYMENT]; Vercel is not claimed as a connected service. PDF.js and Reader fonts are served by this site. There is no automatic EduPage integration: an administrator can import authorised CSV/TSV containing class, subject, weekday, lesson range, times, effective dates and optional teacher/room information. Historical date-based schedules are retained."
       ],
       [
         "Cookies and local preferences",

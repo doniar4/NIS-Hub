@@ -1,6 +1,8 @@
-# NIS Hub — Phase 3
+# NIS Hub — Phase 4
 
-Student learning hub built on the existing Next.js 16 application. Supabase Auth, PostgreSQL RLS and private Storage back accounts, profiles, approved books, PDF reading, bookmarks and reading progress.
+Phase 4 setup and migration order: [docs/phase-4-setup.md](docs/phase-4-setup.md). Phase 4 replaces per-book approval runtime gates and date-by-date schedule management; earlier phase docs describe historical behavior.
+
+Student learning hub built on the existing Next.js 16 application. Supabase Auth, PostgreSQL RLS and private Storage back accounts, profiles, published school-collection books, PDF reading, bookmarks and reading progress.
 
 ## Local development
 

@@ -1,7 +1,9 @@
 import { z } from "zod";
-import type { Lesson } from "./database.types";
+import type { Lesson, WeeklyLesson } from "./database.types";
 import { dateSchema, uuid } from "./validation";
 export type ScheduleEntry = Pick<Lesson, "class_id" | "date" | "lesson_number" | "subject_id" | "teacher" | "room">;
+export interface WeeklyScheduleSource { getDay(classId: string, date: string): Promise<WeeklyLesson[]> }
+// Legacy import boundary retained for historical date-based data, not the active UI.
 export interface ScheduleSource { getDay(classId: string, date: string): Promise<ScheduleEntry[]> }
 export const SCHEDULE_IMPORT_BYTES = 256 * 1024;
 export const SCHEDULE_IMPORT_LIMIT = 500;

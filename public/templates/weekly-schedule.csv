@@ -1,0 +1,5 @@
+class,weekday,lesson_start,lesson_end,start_time,end_time,subject,teacher,room
+9H,Mon,1,2,08:30,10:10,Mathematics,Teacher Name,305
+9H,Mon,3,4,10:15,11:45,Kazakh language and literature,Teacher Name,231
+9H,Mon,5,6,11:50,13:30,English,Teacher Name,233
+9H,Mon,7,8,13:50,15:20,Geography,Teacher Name,228

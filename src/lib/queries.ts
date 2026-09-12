@@ -23,7 +23,7 @@ export async function getLibraryBooks() {
   const supabase = await database();
   return loadLibraryCatalog(async (after, size) => {
     let query = supabase.from("books").select("id,title,class_id,subject_id,language")
-      .eq("publication_status", "published").eq("license_status", "approved").order("id").limit(size);
+      .eq("publication_status", "published").order("id").limit(size);
     if (after) query = query.gt("id", after);
     const { data, error } = await query;
     if (error) throw new Error("Could not load library catalog");
@@ -35,7 +35,7 @@ export async function getBook(id: string) {
   await requireViewer("/library");
   if (!uuid.safeParse(id).success) return null;
   const supabase = await database();
-  const { data, error } = await supabase.from("books").select("*").eq("id", id).eq("publication_status", "published").eq("license_status", "approved").maybeSingle();
+  const { data, error } = await supabase.from("books").select("*").eq("id", id).eq("publication_status", "published").maybeSingle();
   if (error) throw new Error("Не удалось загрузить материал.");
   return data;
 }
@@ -49,7 +49,7 @@ export async function getReading() {
   ]);
   if (bookmarks.error || progress.error) throw new Error("Не удалось загрузить закладки и историю чтения.");
   const ids = [...new Set([...bookmarks.data, ...progress.data].map(item => item.book_id))];
-  const books = ids.length ? await supabase.from("books").select("id,title").in("id", ids).eq("publication_status","published").eq("license_status","approved") : { data: [], error: null };
+  const books = ids.length ? await supabase.from("books").select("id,title").in("id", ids).eq("publication_status","published") : { data: [], error: null };
   if (books.error) throw new Error("Не удалось загрузить названия материалов.");
   return { bookmarks: bookmarks.data, progress: progress.data, books: books.data ?? [] };
 }
