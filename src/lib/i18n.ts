@@ -4,6 +4,9 @@ export type Locale = typeof locales[number];
 export const LOCALE_COOKIE = "nis-locale";
 export function parseLocale(value: unknown): Locale { return value === "kk" || value === "en" ? value : "ru"; }
 const translations = {
+  avatarWait: ["Аватар недавно обновлён. Повторите замену через {seconds} сек.", "Аватар жақында жаңартылды. {seconds} секундтан кейін ауыстырыңыз.", "Avatar recently updated. Try replacing it again in {seconds} seconds."],
+  unavailableFilter: ["Недоступный фильтр", "Қолжетімсіз сүзгі", "Unavailable filter"],
+  catalogLimitHint: ["Поиск работает только в загруженной части каталога. Если материала нет, обратитесь к оператору.", "Іздеу каталогтың жүктелген бөлігінде ғана жүреді. Материал жоқ болса, операторға хабарласыңыз.", "Search covers only this loaded subset. Contact the operator if a material is missing."],
   "avatarFile": [
     "Файл аватара",
     "Аватар файлы",
