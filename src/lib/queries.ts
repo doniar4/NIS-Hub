@@ -1,3 +1,4 @@
+import { sortClasses } from "./catalog";
 import { loadLibraryCatalog } from "@/lib/library";
 import "server-only";
 import { cache } from "react";
@@ -15,7 +16,7 @@ export const getCatalogOptions = cache(async () => {
   const supabase = await database();
   const [classes, subjects] = await Promise.all([supabase.from("classes").select("*").order("name"), supabase.from("subjects").select("*").order("name")]);
   if (classes.error || subjects.error) throw new Error("Не удалось загрузить классы и предметы.");
-  return { classes: classes.data, subjects: subjects.data };
+  return { classes: sortClasses(classes.data), subjects: subjects.data };
 });
 
 export async function getLibraryBooks() {
