@@ -5,7 +5,7 @@ test("all legal drafts contain current services, storage, persistence, operator 
   for (const copy of Object.values(legalCopy)) {
     assert.equal(copy.privacy.length, 10); assert.equal(copy.terms.length, 9);
     const privacy = copy.privacy.flat().join(" ");
-    for (const term of ["Telegram", "nis-sidebar", "Supabase", "Auth", "Storage", "<uid>/avatar.webp", "Top 4", "nis-theme", "nis-locale", "localStorage", "EMAIL"]) assert.ok(privacy.includes(term), term);
+    for (const term of ["400", "Telegram", "nis-sidebar", "Supabase", "Auth", "Storage", "<uid>/avatar.webp", "Top 4", "nis-theme", "nis-locale", "localStorage", "EMAIL"]) assert.ok(privacy.includes(term), term);
     assert.ok(copy.revision.includes("["));
     for (const [heading, body] of [...copy.privacy, ...copy.terms]) { assert.ok(heading); assert.ok(body.length > 50); }
   }

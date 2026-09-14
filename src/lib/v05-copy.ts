@@ -1,6 +1,6 @@
 import type { Locale } from "./i18n";
 const ru = {
-  support:"Обращения", newTicket:"Новое обращение", ticketsHint:"Опишите проблему без паролей, токенов и личных данных других людей. Это не экстренная служба.",
+  support:"Обращения", newTicket:"Новое обращение", ticketsHint:"Опишите проблему без паролей, токенов и личных данных других людей. Тема, превью до 400 символов и отображаемое имя могут попасть в закрытый Telegram-чат администраторов. Это не экстренная служба.",
   category:"Категория", title:"Тема", description:"Описание", send:"Отправить", reply:"Ответить", status:"Статус", message:"Сообщение", adminReply:"Администратор", studentReply:"Автор",
   categories:{platform:"Платформа",schedule:"Расписание",library:"Книга / библиотека",account:"Аккаунт",data:"Неверные данные",other:"Другое"},
   statuses:{open:"Открыто",in_progress:"В работе",resolved:"Решено",closed:"Закрыто"},
@@ -17,7 +17,7 @@ const ru = {
 };
 type Copy = { [K in keyof typeof ru]: typeof ru[K] extends string ? string : { [P in keyof typeof ru[K]]: string } };
 const kk: Copy = {
-  support:"Өтініштер",newTicket:"Жаңа өтініш",ticketsHint:"Мәселені құпиясөзсіз, токенсіз және өзгенің жеке деректерінсіз сипаттаңыз. Бұл шұғыл көмек қызметі емес.",
+  support:"Өтініштер",newTicket:"Жаңа өтініш",ticketsHint:"Мәселені құпиясөзсіз, токенсіз және өзгенің жеке деректерінсіз сипаттаңыз. Тақырып, 400 таңбаға дейінгі үзінді және көрсетілетін есім әкімшілердің жабық Telegram чатына жіберілуі мүмкін. Бұл шұғыл көмек қызметі емес.",
   category:"Санат",title:"Тақырып",description:"Сипаттама",send:"Жіберу",reply:"Жауап беру",status:"Күйі",message:"Хабарлама",adminReply:"Әкімші",studentReply:"Автор",
   categories:{platform:"Платформа",schedule:"Кесте",library:"Кітап / кітапхана",account:"Аккаунт",data:"Қате деректер",other:"Басқа"},
   statuses:{open:"Ашық",in_progress:"Орындалуда",resolved:"Шешілді",closed:"Жабық"},
@@ -33,7 +33,7 @@ const kk: Copy = {
   scope:"Соңғы 100 жазба көрсетілген. Бұрынғылары келесі беттерде.",older:"Бұрынғы",newer:"Басына",closedHint:"Автор ашық немесе орындалудағы өтінішке ғана жауап бере алады.",noCover:"Мұқаба жүктелмеген",
 };
 const en: Copy = {
-  support:"Support",newTicket:"New ticket",ticketsHint:"Describe the issue without passwords, tokens or other people's personal data. This is not an emergency service.",
+  support:"Support",newTicket:"New ticket",ticketsHint:"Describe the issue without passwords, tokens or other people's personal data. The title, preview of up to 400 characters and display name may be sent to the administrators' restricted Telegram chat. This is not an emergency service.",
   category:"Category",title:"Title",description:"Description",send:"Send",reply:"Reply",status:"Status",message:"Message",adminReply:"Administrator",studentReply:"Author",
   categories:{platform:"Platform",schedule:"Schedule",library:"Library / book",account:"Account",data:"Incorrect data",other:"Other"},
   statuses:{open:"Open",in_progress:"In progress",resolved:"Resolved",closed:"Closed"},

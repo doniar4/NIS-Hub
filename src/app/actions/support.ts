@@ -8,16 +8,26 @@ import {ticketSchema,replySchema,ticketStatuses,persistTicketThenNotify} from "@
 import {getI18n} from "@/lib/i18n-server";
 import {v05Copy} from "@/lib/v05-copy";
 import {notifyNewTicket} from "@/lib/telegram";
+import {createTicketNotice} from "@/lib/telegram-message";
 import type {ActionState} from "@/lib/action-state";
 export async function createTicket(_:ActionState,form:FormData):Promise<ActionState>{
  const {locale}=await getI18n(),t=v05Copy(locale);let id:string;
  try{
-  const {supabase}=await actionContext(),parsed=ticketSchema.safeParse(Object.fromEntries(form));
+  const {supabase,user}=await actionContext(),parsed=ticketSchema.safeParse(Object.fromEntries(form));
   if(!parsed.success)return {error:t.error};
   id=await persistTicketThenNotify(async()=>{
    const {data,error}=await supabase.rpc("create_support_ticket",{p_category:parsed.data.category,p_title:parsed.data.title,p_description:parsed.data.description});
    if(error)throw new Error("Ticket save failed");return data;
-  },ticketId=>notifyNewTicket({id:ticketId,category:parsed.data.category,createdAt:new Date().toISOString()}));
+  },async ticketId=>{
+   // Optional identity enrichment happens only after the ticket commits. Never use form names/email.
+   let displayName:string|null=null;
+   try {
+    const {data,error}=await supabase.from("profiles").select("display_name").eq("id",user.id)
+     .abortSignal(AbortSignal.timeout(1500)).maybeSingle();
+    if(!error)displayName=data?.display_name??null;
+   }catch{/* Missing/unavailable profile must not prevent the notification or saved-ticket redirect. */}
+   return notifyNewTicket(createTicketNotice({id:ticketId,...parsed.data,displayName,createdAt:new Date().toISOString()}));
+  });
  }catch{return {error:t.error};}
  revalidatePath("/support");revalidatePath("/admin");redirect("/support/"+id);
 }
