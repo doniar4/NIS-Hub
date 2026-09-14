@@ -15,7 +15,7 @@ export type SupportMessage = {id:string;ticket_id:string;author_id:string|null;a
 export type SupportStatusEvent = {id:string;ticket_id:string;actor_id:string|null;previous_status:TicketStatus;status:TicketStatus;created_at:string};
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 type Table<Row, Required extends keyof Row> = { Row: Row; Insert: Pick<Row, Required> & Partial<Row>; Update: Partial<Row>; Relationships: [] };
-// Application types for schema.sql and migrations through Phase 4. Historical
+// Application types for schema.sql and migrations through v0.5. Historical
 // rights tables/enums are retained only for schema compatibility. Regenerate from the
 // owner's Supabase project after applying migrations; no cloud schema is assumed.
 export type Database = { public: {

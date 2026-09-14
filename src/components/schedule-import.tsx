@@ -1,5 +1,6 @@
 "use client";
-import { useRef, useState } from "react";
+import {subjectMap,normalizeRoom} from "@/lib/catalog";
+import { useMemo, useRef, useState } from "react";
 import { useI18n } from "./locale-provider";
 import { ActionForm } from "./action-form";
 import { parseScheduleImport, SCHEDULE_IMPORT_BYTES, type ScheduleEntry } from "@/lib/schedule-source";
@@ -9,6 +10,7 @@ import type { FormAction } from "@/lib/action-state";
 
 export function ScheduleImport({ action, classes, subjects }: { action: FormAction; classes: ClassRow[]; subjects: SubjectRow[] }) {
   const { t, locale } = useI18n();
+  const subjectsById=useMemo(()=>subjectMap(subjects),[subjects]);
   const [raw, setRaw] = useState("");
   const [rows, setRows] = useState<ScheduleEntry[]>([]);
   const [failed, setFailed] = useState(false);
@@ -36,7 +38,7 @@ export function ScheduleImport({ action, classes, subjects }: { action: FormActi
         <caption className="sr-only">{t.importPreview}</caption>
         <thead><tr>{[t.date, t.class, t.lesson, t.subject, t.teacher, t.room].map(label => <th scope="col" className="p-2" key={label}>{label}</th>)}</tr></thead>
         <tbody>{rows.map(row => <tr key={row.class_id + row.date + row.lesson_number} className="border-t border-[var(--line)]">
-          {[row.date, classes.find(item => item.id === row.class_id)?.name, row.lesson_number, subjectName(subjects.find(item => item.id === row.subject_id), locale), row.teacher ?? "—", row.room ?? "—"].map((cell, i) => <td className="p-2" key={i}>{cell}</td>)}
+          {[row.date, classes.find(item => item.id === row.class_id)?.name, row.lesson_number, subjectName(subjectsById.get(row.subject_id), locale), row.teacher ?? "—", normalizeRoom(row.room)].map((cell, i) => <td className="p-2" key={i}>{cell}</td>)}
         </tr>)}</tbody>
       </table></div>
       <ActionForm key={raw} action={action} label={t.importSubmit}>

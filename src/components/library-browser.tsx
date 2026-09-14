@@ -59,7 +59,7 @@ export function LibraryBrowser({ books, classes, subjects, initial, truncated }:
     <p role="status" aria-live="polite" aria-atomic="true" className="my-5 text-sm text-[var(--muted)]">{t.results}: {filteredBooks.length}</p>
     {!filteredBooks.length ? <EmptyState title={t.noMaterials}>{t.noMaterialsHint}</EmptyState> :
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filteredBooks.map(book =>
-        <li key={book.id} className="border border-[var(--line)] bg-[var(--surface)] p-6">
+        <li key={book.id} className="library-card border border-[var(--line)] bg-[var(--surface)] p-6">
           <p className="field-label">{subjectName(subjectsById.get(book.subject_id), locale)}</p>
           <h2 className="text-xl font-semibold"><Link prefetch={false} className="underline-offset-4 hover:underline" href={"/books/" + book.id}>{book.title}</Link></h2>
           <p className="mt-3 text-sm text-[var(--muted)]">{[classes.find(item => item.id === book.class_id)?.name, book.language].filter(Boolean).join(" · ")}</p>

@@ -9,7 +9,7 @@ const origin = process.env.NIS_TEST_ORIGIN ?? "http://127.0.0.1:3100";
 const parsed = new URL(origin);
 if (!["localhost", "127.0.0.1"].includes(parsed.hostname)) throw new Error("Smoke tests only run against localhost.");
 test("protected routes redirect without an authenticated session", async () => {
-  for (const path of ["/profile", "/admin", "/library", "/schedule", "/books/00000000-0000-4000-8000-000000000030/read"]) {
+  for (const path of ["/profile", "/admin", "/admin/calendar", "/admin/versions", "/admin/tickets", "/support", "/support/00000000-0000-4000-8000-000000000030", "/library", "/schedule", "/books/00000000-0000-4000-8000-000000000030/read"]) {
     const response = await request(origin + path, { redirect: "manual" });
     const target = configured ? "/login" : "/setup";
     if (response.status === 307) assert.equal(new URL(response.headers.get("location")!, origin).pathname, target);
@@ -36,8 +36,10 @@ test("public pages render; auth availability matches configuration; missing page
     const html = await response.text();
     assert.match(html, /NIS Hub/);
     if (["/login", "/signup"].includes(path)) {
-      if (configured) assert.doesNotMatch(html, /<fieldset[^>]*disabled/);
-      else assert.match(html, /<fieldset[^>]*disabled/);
+      const authForm = html.match(/<form\b[\s\S]*?<\/form>/g)?.find(form => form.includes('name="email"'));
+      assert.ok(authForm, "Authentication form must exist independently of the theme control");
+      if (configured) assert.doesNotMatch(authForm, /<fieldset[^>]*disabled/);
+      else assert.match(authForm, /<fieldset[^>]*disabled/);
     }
   }
   assert.equal((await request(origin + "/nonexistent-page")).status, 404);

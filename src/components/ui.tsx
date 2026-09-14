@@ -7,7 +7,7 @@ export function Eyebrow({ children }: { children: ReactNode }) {
 }
 
 export function PageIntro({ kicker, title, children }: { kicker?: string; title: string; children?: ReactNode }) {
-  return <div className="max-w-2xl"><Eyebrow>{kicker ?? "NIS Hub"}</Eyebrow><h1 className="page-title">{title}</h1>{children ? <div className="mt-4 text-base leading-7 text-[var(--muted)]">{children}</div> : null}</div>;
+  return <div className="page-intro max-w-2xl"><Eyebrow>{kicker ?? "NIS Hub"}</Eyebrow><h1 className="page-title">{title}</h1>{children ? <div className="mt-4 text-base leading-7 text-[var(--muted)]">{children}</div> : null}</div>;
 }
 
 export function Notice({ children }: { children: ReactNode }) {

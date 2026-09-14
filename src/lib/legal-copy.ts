@@ -163,7 +163,7 @@ const baseLegalCopy = {
   "en": {
     "draft": "Draft · not legal advice",
     "intro": "NIS Hub is a beta learning project. These drafts describe the current implementation but require operator details and legal review before public launch.",
-    "revision": "Draft revised: 12 September 2026. Effective date: [SET AFTER REVIEW].",
+    "revision": "Draft revised: 14 September 2026. Effective date: [SET AFTER REVIEW].",
     "privacyTitle": "Privacy Policy",
     "termsTitle": "Terms of Use",
     "privacy": [

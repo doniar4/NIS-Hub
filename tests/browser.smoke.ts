@@ -127,12 +127,12 @@ test("Phase 3 Chromium and WebKit browser verification", { timeout: 180_000 }, a
           const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
           await page.goto(publicApp + "/privacy", { waitUntil: "networkidle" });
           await expect(page.getByRole("heading", { level: 1 })).toHaveText("Политика конфиденциальности");
-          await page.getByLabel("Тема", { exact: true }).selectOption("dark");
+          await page.getByRole("radio", {name:dictionaries.ru.dark,exact:true}).check();
           await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
           await page.reload({ waitUntil: "networkidle" }); await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-          await page.getByLabel("Тема", { exact: true }).selectOption("light");
+          await page.getByRole("radio", {name:dictionaries.ru.light,exact:true}).check();
           await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-          await page.getByLabel("Тема", { exact: true }).selectOption("system");
+          await page.getByRole("radio", {name:dictionaries.ru.system,exact:true}).check();
           await page.emulateMedia({ colorScheme: "dark" });
           await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
           for (const locale of ["kk", "en", "ru"] as const) {
@@ -143,9 +143,15 @@ test("Phase 3 Chromium and WebKit browser verification", { timeout: 180_000 }, a
             await expect(page.getByRole("heading", { level: 1 })).toHaveText({ ru: "Политика конфиденциальности", kk: "Құпиялық саясаты", en: "Privacy Policy" }[locale]);
             await page.goto(publicApp + "/terms", { waitUntil: "networkidle" });
             await expect(page.getByRole("heading", { level: 1 })).toHaveText({ ru: "Условия использования", kk: "Пайдалану шарттары", en: "Terms of Use" }[locale]);
-            await expect(page.getByText(dictionaries[locale].privacy, { exact: true }).first()).toBeVisible();
+            await expect(page.locator(".app-footer").getByRole("link",{name:dictionaries[locale].privacy,exact:true})).toBeVisible();
             await page.goto(publicApp + "/privacy", { waitUntil: "networkidle" });
           }
+          await expect(page.locator("html")).not.toHaveAttribute("data-intro","true");
+          await page.evaluate(()=>{(window as unknown as {documentMarker:string}).documentMarker="retained";});
+          await page.locator(".app-footer").getByRole("link",{name:dictionaries.ru.terms,exact:true}).click();
+          await page.waitForURL("**/terms");
+          assert.equal(await page.evaluate(()=>(window as unknown as {documentMarker:string}).documentMarker),"retained");
+          await expect(page.locator("html")).not.toHaveAttribute("data-intro","true");
           assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
           await page.screenshot({ path: join(artifactDir, name + "-privacy-dark-mobile.png"), fullPage: true });
           await page.goto(publicApp + "/library", { waitUntil: "networkidle" }); await expect(page).toHaveURL(/\/login\?next=/);

@@ -1,3 +1,4 @@
+import {coverPath} from "./book-cover";
 import { sortClasses } from "./catalog";
 import { loadLibraryCatalog } from "@/lib/library";
 import "server-only";
@@ -50,7 +51,10 @@ export async function getReading() {
   ]);
   if (bookmarks.error || progress.error) throw new Error("Не удалось загрузить закладки и историю чтения.");
   const ids = [...new Set([...bookmarks.data, ...progress.data].map(item => item.book_id))];
-  const books = ids.length ? await supabase.from("books").select("id,title").in("id", ids).eq("publication_status","published") : { data: [], error: null };
+  const books = ids.length ? await supabase.from("books").select("id,title,cover_path").in("id", ids).eq("publication_status","published") : { data: [], error: null };
   if (books.error) throw new Error("Не удалось загрузить названия материалов.");
-  return { bookmarks: bookmarks.data, progress: progress.data, books: books.data ?? [] };
+  const catalog=books.data??[], paths=catalog.map(coverPath).filter((path):path is string=>!!path);
+  const covers=paths.length?await supabase.storage.from("book-covers").createSignedUrls(paths,60):{data:[]};
+  const urls=new Map((covers.data??[]).map(row=>[row.path,row.signedUrl]));
+  return { bookmarks: bookmarks.data, progress: progress.data, books: catalog.map(book=>({...book,cover_url:urls.get(coverPath(book)??"")??null})) };
 }

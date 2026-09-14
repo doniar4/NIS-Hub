@@ -1,4 +1,6 @@
-# NIS Hub — Phase 4
+# NIS Hub — v0.5
+
+For the current release, start with [v0.5 deployment setup](docs/v0.5-setup.md), [Telegram setup](docs/support-telegram-setup.md) and [implementation report](docs/v0.5-report.md). Apply the four additive v0.5 migrations before deploying this branch. Finalized Phase 4 data/private access are preserved.
 
 Phase 4 setup and migration order: [docs/phase-4-setup.md](docs/phase-4-setup.md). Phase 4 replaces per-book approval runtime gates and date-by-date schedule management; earlier phase docs describe historical behavior.
 
@@ -55,4 +57,4 @@ Browser checks require OpenSSL for a disposable localhost TLS certificate: produ
 
 ## Release gates
 
-Review [Phase 3 report](docs/phase-3-report.md), [schedule research and JSON format](docs/schedule-source-research.md), migrations and real-session verification. Fill operator/contact/hosting/retention details and obtain legal/content-rights review before public launch. The Phase 3 PR targets `main`; it is not automatically merged.
+Review [Phase 3 report](docs/phase-3-report.md), [schedule research and JSON format](docs/schedule-source-research.md), migrations and real-session verification. Fill operator/contact/hosting/retention details and obtain legal/content-rights review before public launch. The v0.5 PR targets `main`; it is not automatically merged.
