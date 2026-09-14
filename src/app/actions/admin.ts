@@ -40,7 +40,8 @@ export async function deleteAdminRecord(_state: ActionState, form: FormData): Pr
     // (FK restrictions in the Phase 2 migration protect student and schedule data).
     const result = entity.data === "books"
       ? await supabase.from("books").update({ publication_status: "archived" }).eq("id", id.data)
-      : await supabase.from(entity.data === "schedule" ? "weekly_schedule" : entity.data).delete().eq("id", id.data);
+      : entity.data === "schedule" ? await supabase.rpc("delete_weekly_lesson", {p_id:id.data})
+      : await supabase.from(entity.data).delete().eq("id", id.data);
     if (result.error) return { error: "Запись используется в других разделах или недоступна. Сначала измените связанные записи." };
   } catch { return { error: "Для этого действия требуется активная сессия администратора." }; }
   revalidatePath("/", "layout");

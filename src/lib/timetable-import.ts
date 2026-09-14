@@ -1,4 +1,5 @@
 import type { ClassRow, SubjectRow, WeeklyLesson } from "./database.types";
+import { normalizeRoom } from "./catalog";
 import { dateSchema } from "./validation";
 export const TIMETABLE_BYTES = 512 * 1024;
 export const TIMETABLE_ROWS = 1000;
@@ -75,7 +76,7 @@ export function parseTimetable(raw: string, classes: ClassRow[], subjects: Subje
       !timesValid || !datesValid || r.teacher.length > 100 || r.room.length > 40) { fail("values"); return; }
     if (!class_id || !subject_id || !weekday) return;
     valid.push({ row: number, entry: { class_id, subject_id, weekday, lesson_start, lesson_end, start_time: r.start_time || null,
-      end_time: r.end_time || null, teacher: r.teacher || null, room: r.room || null,
+      end_time: r.end_time || null, teacher: r.teacher || null, room: normalizeRoom(r.room) || null,
       effective_from: r.effective_from || null, effective_to: r.effective_to || null } });
   });
   for (let i = 0; i < valid.length; i++) {

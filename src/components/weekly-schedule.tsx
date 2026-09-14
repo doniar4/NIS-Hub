@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { type CalendarDay, dayReasons } from "@/lib/school-calendar";
+import { v05Copy } from "@/lib/v05-copy";
 import { normalizeRoom, subjectMap, sortClasses } from "@/lib/catalog";
 import { useMemo, useState } from "react";
 import type { ClassRow, SubjectRow, WeeklyLesson } from "@/lib/database.types";
@@ -23,12 +25,13 @@ export function WeeklyLessonList({ lessons, subjects }: { lessons: WeeklyLesson[
     </div>
   </li>)}</ol>;
 }
-export function WeeklyScheduleBrowser({ lessons, classes, subjects, initialClassId, date }: { lessons: WeeklyLesson[]; classes: ClassRow[]; subjects: SubjectRow[]; initialClassId: string; date: string }) {
+export function WeeklyScheduleBrowser({ lessons, classes, subjects, initialClassId, date, nonSchoolDays = [] }: { lessons: WeeklyLesson[]; classes: ClassRow[]; subjects: SubjectRow[]; initialClassId: string; date: string; nonSchoolDays?: CalendarDay[] }) {
   const { locale, t } = useI18n(); const p = phase4Copy(locale); const week = schoolWeek(date);
   const [classId,setClassId] = useState(initialClassId);
   const [weekday,setWeekday] = useState(week.weekday >= 1 && week.weekday <= 5 ? week.weekday : 1);
   const selectedDate = week.dates[weekday - 1];
-  const filtered = useMemo(() => weeklyDay(lessons,classId,weekday,selectedDate), [lessons,classId,weekday,selectedDate]);
+  const reasons = dayReasons(selectedDate,nonSchoolDays,locale);
+  const filtered = useMemo(() => weeklyDay(lessons,classId,weekday,schoolWeek(date).dates[weekday-1]), [lessons,classId,weekday,date]);
   return <section className="mt-8">
     <label className="block max-w-xs"><span className="field-label">{t.class}</span><select className="field" value={classId} onChange={event => setClassId(event.target.value)}>
       <option value="">{t.notSelected}</option>{sortClasses(classes).map(row => <option key={row.id} value={row.id}>{row.name}</option>)}
@@ -44,7 +47,7 @@ export function WeeklyScheduleBrowser({ lessons, classes, subjects, initialClass
     <section role="tabpanel" id="weekly-panel" aria-labelledby={"day-"+weekday} tabIndex={0}>
       <h2 className="section-title">{p.weekdays[weekday-1]} · {selectedDate}</h2>
       <p className="sr-only" role="status">{p.weekdays[weekday-1]}: {filtered.length}</p>
-      {filtered.length ? <WeeklyLessonList lessons={filtered} subjects={subjects}/> : <div className="mt-5"><EmptyState title={classId ? t.noLessons : t.chooseClass}>{classId ? t.noLessonsHint : t.chooseClassHint}</EmptyState></div>}
+      {reasons.length ? <div className="calendar-notice"><h3>{v05Copy(locale).offDay}</h3><ul>{reasons.map(reason=><li key={reason}>{reason}</li>)}</ul></div> : filtered.length ? <WeeklyLessonList lessons={filtered} subjects={subjects}/> : <div className="mt-5"><EmptyState title={classId ? t.noLessons : t.chooseClass}>{classId ? t.noLessonsHint : t.chooseClassHint}</EmptyState></div>}
     </section>
   </section>;
 }

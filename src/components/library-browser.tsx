@@ -1,4 +1,5 @@
 "use client";
+import { subjectMap } from "@/lib/catalog";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "./locale-provider";
@@ -11,6 +12,7 @@ export function LibraryBrowser({ books, classes, subjects, initial, truncated }:
   books: LibraryBook[]; classes: ClassRow[]; subjects: SubjectRow[]; initial: LibraryFilters; truncated: boolean;
 }) {
   const { t, locale } = useI18n();
+  const subjectsById = useMemo(()=>subjectMap(subjects),[subjects]);
   const [q, setQ] = useState(initial.q);
   const [classId, setClassId] = useState(initial.classId);
   const [subject, setSubject] = useState(initial.subject);
@@ -58,7 +60,7 @@ export function LibraryBrowser({ books, classes, subjects, initial, truncated }:
     {!filteredBooks.length ? <EmptyState title={t.noMaterials}>{t.noMaterialsHint}</EmptyState> :
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filteredBooks.map(book =>
         <li key={book.id} className="border border-[var(--line)] bg-[var(--surface)] p-6">
-          <p className="field-label">{subjectName(subjects.find(item => item.id === book.subject_id), locale)}</p>
+          <p className="field-label">{subjectName(subjectsById.get(book.subject_id), locale)}</p>
           <h2 className="text-xl font-semibold"><Link prefetch={false} className="underline-offset-4 hover:underline" href={"/books/" + book.id}>{book.title}</Link></h2>
           <p className="mt-3 text-sm text-[var(--muted)]">{[classes.find(item => item.id === book.class_id)?.name, book.language].filter(Boolean).join(" · ")}</p>
           <Link prefetch={false} className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold underline" href={"/books/" + book.id}

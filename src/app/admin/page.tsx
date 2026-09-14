@@ -1,3 +1,7 @@
+import { AdminOverview } from "@/components/admin-overview";
+import { subjectMap } from "@/lib/catalog";
+import { v05Copy } from "@/lib/v05-copy";
+import { getNonSchoolDays } from "@/lib/calendar-queries";
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -23,10 +27,14 @@ const tabs = [["books", "Материалы"], ["classes", "Классы"], ["su
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ entity?: string; id?: string }> }) {
   await requireAdmin();
   const params = await searchParams, { locale } = await getI18n(), p = phase4Copy(locale);
+  if (!params.entity) return <AdminOverview/>;
+  const v=v05Copy(locale);
   const entity = adminEntitySchema.safeParse(params.entity ?? "books");
   if (!entity.success || (params.id && !uuid.safeParse(params.id).success)) notFound();
   const section = entity.data, db = await database();
   const { classes, subjects } = await getCatalogOptions();
+  const subjectsById=subjectMap(subjects);
+  const nonSchoolDays=section==="schedule"?await getNonSchoolDays():[];
   const booksResult = section === "books" ? await db.from("books").select("*").order("title").limit(200) : { data: [], error: null };
   if (booksResult.error) throw new Error(p.bookError);
   const books = booksResult.data;
@@ -43,10 +51,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const rows = section === "books" ? books.map(b => ({ id: b.id, name: b.title, detail: p[b.publication_status] }))
     : section === "classes" ? classes.map(c => ({ id: c.id, name: c.name, detail: "" }))
     : section === "subjects" ? subjects.map(s => ({ id: s.id, name: s.name, detail: "" }))
-    : lessons.map(l => ({ id: l.id, name: classes.find(c => c.id === l.class_id)?.name+" · "+p.shortDays[l.weekday-1]+" · "+lessonRange(l), detail: subjectName(subjects.find(s=>s.id===l.subject_id),locale)+" · "+(l.effective_from||"…")+" — "+(l.effective_to||"…") }));
+    : lessons.map(l => ({ id: l.id, name: classes.find(c => c.id === l.class_id)?.name+" · "+p.shortDays[l.weekday-1]+" · "+lessonRange(l), detail: subjectName(subjectsById.get(l.subject_id),locale)+" · "+(l.effective_from||"…")+" — "+(l.effective_to||"…") }));
   return <SiteShell><PageIntro kicker="Администратор" title="Управление">Изменения сохраняются в базе. Содержимое раздела доступно только администратору.</PageIntro>
-    <nav className="my-8 flex flex-wrap gap-3" aria-label="Разделы управления">{tabs.map(([key,label]) => <Link key={key} aria-current={section===key ? "page" : undefined} className={"button "+(section===key ? "" : "button-secondary")} href={"/admin?entity="+key}>{label}</Link>)}</nav>
-    {section==="schedule" && <><WeeklyScheduleBrowser lessons={lessons} classes={classes} subjects={subjects} initialClassId={lesson?.class_id ?? classes[0]?.id ?? ""} date={schoolDate()}/><WeeklyImport classes={classes} subjects={subjects} lessons={lessons} action={importWeeklySchedule}/></>}
+    <Link className="text-link" href="/admin">{v.dashboard}</Link><nav className="my-8 flex flex-wrap gap-3" aria-label="Разделы управления">{tabs.map(([key,label]) => <Link key={key} aria-current={section===key ? "page" : undefined} className={"button "+(section===key ? "" : "button-secondary")} href={"/admin?entity="+key}>{label}</Link>)}</nav>
+    {section==="schedule" && <><WeeklyScheduleBrowser lessons={lessons} classes={classes} subjects={subjects} initialClassId={lesson?.class_id ?? classes[0]?.id ?? ""} date={schoolDate()} nonSchoolDays={nonSchoolDays}/><div id="import"/><WeeklyImport classes={classes} subjects={subjects} lessons={lessons} action={importWeeklySchedule}/></>}
     <div className="mt-10 grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
       <section><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="section-title">Записи</h2><Link className="text-sm underline" href={"/admin?entity="+section}>Создать запись</Link></div>
         {section==="books" && <p className="my-4 text-sm text-[var(--muted)]">Показано до 200 записей (по названию).</p>}

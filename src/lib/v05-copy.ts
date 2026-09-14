@@ -1,0 +1,51 @@
+import type { Locale } from "./i18n";
+const ru = {
+  support:"Обращения", newTicket:"Новое обращение", ticketsHint:"Опишите проблему без паролей, токенов и личных данных других людей. Это не экстренная служба.",
+  category:"Категория", title:"Тема", description:"Описание", send:"Отправить", reply:"Ответить", status:"Статус", message:"Сообщение", adminReply:"Администратор", studentReply:"Автор",
+  categories:{platform:"Платформа",schedule:"Расписание",library:"Книга / библиотека",account:"Аккаунт",data:"Неверные данные",other:"Другое"},
+  statuses:{open:"Открыто",in_progress:"В работе",resolved:"Решено",closed:"Закрыто"},
+  saved:"Сохранено.", error:"Не удалось сохранить. Проверьте данные и доступ; при частых отправках подождите минуту.", empty:"Пока нет записей.", all:"Все", openCount:"Открытые обращения", unread:"Ожидают ответа администратора",
+  previous:"Предыдущий учебный день", next:"Следующий учебный день", nearest:"Показать ближайший учебный день", todayOff:"Сегодня занятий нет", offDay:"Неучебный день",
+  preview:"Просмотр другого дня", today:"Сегодня", backToday:"Вернуться к сегодня", skipped:"Пропущены неучебные дни", weekend:"Выходные", noNearby:"Учебный день не найден в пределах 366 дней.",
+  dayTypes:{holiday:"Праздник",vacation:"Каникулы",cancelled:"Занятия отменены",other:"Другой неучебный день"},
+  calendar:"Неучебные дни", from:"Начало", to:"Конец", reason:"Причина", type:"Тип", add:"Добавить", remove:"Удалить", confirm:"Подтверждаю действие с выбранной записью.",
+  versions:"Версии расписания", imports:"Импорт CSV/TSV", recent:"Последние импорты / изменения", restore:"Восстановить эту версию", restoreHint:"Всё недельное расписание будет заменено снимком. История сохранится. При изменении активной версии обновите страницу и сравните снова.",
+  active:"Активная", historical:"Историческая", added:"Добавлено", removed:"Удалено", changed:"Изменено", room:"Кабинет", time:"Время", subject:"Предмет", block:"Блок / срок / учитель", compare:"Изменения относительно предыдущей версии", restoreCompare:"Что изменится при восстановлении",
+  dashboard:"Управление NIS Hub", dashboardHint:"Материалы, учебный календарь и обращения — в отдельных разделах.", books:"Книги", schedule:"Недельное расписание", catalog:"Классы и предметы",
+  menu:"Меню", close:"Закрыть меню", collapse:"Свернуть боковую панель", expand:"Развернуть боковую панель", search:"Поиск в библиотеке", searchGo:"Искать", greeting:"Здравствуйте", tagline:"Небольшой шаг сегодня — новые возможности завтра.",
+  scope:"Показаны последние 100 записей. Более старые доступны постранично.", older:"Ранее", newer:"К началу", closedHint:"Ответы автора доступны только в открытом обращении или в работе.", noCover:"Обложка не загружена",
+};
+type Copy = { [K in keyof typeof ru]: typeof ru[K] extends string ? string : { [P in keyof typeof ru[K]]: string } };
+const kk: Copy = {
+  support:"Өтініштер",newTicket:"Жаңа өтініш",ticketsHint:"Мәселені құпиясөзсіз, токенсіз және өзгенің жеке деректерінсіз сипаттаңыз. Бұл шұғыл көмек қызметі емес.",
+  category:"Санат",title:"Тақырып",description:"Сипаттама",send:"Жіберу",reply:"Жауап беру",status:"Күйі",message:"Хабарлама",adminReply:"Әкімші",studentReply:"Автор",
+  categories:{platform:"Платформа",schedule:"Кесте",library:"Кітап / кітапхана",account:"Аккаунт",data:"Қате деректер",other:"Басқа"},
+  statuses:{open:"Ашық",in_progress:"Орындалуда",resolved:"Шешілді",closed:"Жабық"},
+  saved:"Сақталды.",error:"Сақтау мүмкін болмады. Деректер мен рұқсатты тексеріңіз; жиі жіберсеңіз, бір минут күтіңіз.",empty:"Әзірге жазба жоқ.",all:"Барлығы",openCount:"Ашық өтініштер",unread:"Әкімші жауабын күтуде",
+  previous:"Алдыңғы оқу күні",next:"Келесі оқу күні",nearest:"Ең жақын оқу күнін көрсету",todayOff:"Бүгін сабақ жоқ",offDay:"Оқу емес күн",
+  preview:"Басқа күнді қарау",today:"Бүгін",backToday:"Бүгінге оралу",skipped:"Өткізілген оқу емес күндер",weekend:"Демалыс күндері",noNearby:"366 күн ішінде оқу күні табылмады.",
+  dayTypes:{holiday:"Мереке",vacation:"Каникул",cancelled:"Сабақ тоқтатылды",other:"Басқа оқу емес күн"},
+  calendar:"Оқу емес күндер",from:"Басталуы",to:"Аяқталуы",reason:"Себеп",type:"Түрі",add:"Қосу",remove:"Жою",confirm:"Таңдалған жазбаға әрекетті растаймын.",
+  versions:"Кесте нұсқалары",imports:"CSV/TSV импорты",recent:"Соңғы импорттар / өзгерістер",restore:"Осы нұсқаны қалпына келтіру",restoreHint:"Бүкіл апталық кесте сақталған нұсқамен ауысады. Тарих сақталады. Белсенді нұсқа өзгерсе, бетті жаңартып, қайта салыстырыңыз.",
+  active:"Белсенді",historical:"Бұрынғы",added:"Қосылды",removed:"Жойылды",changed:"Өзгерді",room:"Кабинет",time:"Уақыт",subject:"Пән",block:"Блок / мерзім / мұғалім",compare:"Алдыңғы нұсқамен салыстыру",restoreCompare:"Қалпына келтіргенде өзгеретіндер",
+  dashboard:"NIS Hub басқару",dashboardHint:"Материалдар, оқу күнтізбесі және өтініштер — бөлек бөлімдерде.",books:"Кітаптар",schedule:"Апталық кесте",catalog:"Сыныптар мен пәндер",
+  menu:"Мәзір",close:"Мәзірді жабу",collapse:"Бүйірлік тақтаны жинау",expand:"Бүйірлік тақтаны ашу",search:"Кітапханадан іздеу",searchGo:"Іздеу",greeting:"Сәлеметсіз бе",tagline:"Бүгінгі шағын қадам — ертеңгі жаңа мүмкіндік.",
+  scope:"Соңғы 100 жазба көрсетілген. Бұрынғылары келесі беттерде.",older:"Бұрынғы",newer:"Басына",closedHint:"Автор ашық немесе орындалудағы өтінішке ғана жауап бере алады.",noCover:"Мұқаба жүктелмеген",
+};
+const en: Copy = {
+  support:"Support",newTicket:"New ticket",ticketsHint:"Describe the issue without passwords, tokens or other people's personal data. This is not an emergency service.",
+  category:"Category",title:"Title",description:"Description",send:"Send",reply:"Reply",status:"Status",message:"Message",adminReply:"Administrator",studentReply:"Author",
+  categories:{platform:"Platform",schedule:"Schedule",library:"Library / book",account:"Account",data:"Incorrect data",other:"Other"},
+  statuses:{open:"Open",in_progress:"In progress",resolved:"Resolved",closed:"Closed"},
+  saved:"Saved.",error:"Could not save. Check your input and access; wait a minute if sending frequently.",empty:"No records yet.",all:"All",openCount:"Open tickets",unread:"Awaiting an administrator reply",
+  previous:"Previous school day",next:"Next school day",nearest:"Show nearest school day",todayOff:"No lessons today",offDay:"Non-school day",
+  preview:"Previewing another day",today:"Today",backToday:"Back to today",skipped:"Skipped non-school days",weekend:"Weekend",noNearby:"No school day found within 366 days.",
+  dayTypes:{holiday:"Holiday",vacation:"Vacation",cancelled:"Lessons cancelled",other:"Other non-school day"},
+  calendar:"Non-school days",from:"Start",to:"End",reason:"Reason",type:"Type",add:"Add",remove:"Delete",confirm:"I confirm this action on the selected record.",
+  versions:"Schedule versions",imports:"CSV/TSV import",recent:"Recent imports / changes",restore:"Restore this version",restoreHint:"The entire weekly timetable will be replaced by this snapshot. History is retained. If the active version changes, reload and compare again.",
+  active:"Active",historical:"Historical",added:"Added",removed:"Removed",changed:"Changed",room:"Room",time:"Time",subject:"Subject",block:"Block / dates / teacher",compare:"Changes from the previous version",restoreCompare:"Changes if restored",
+  dashboard:"Manage NIS Hub",dashboardHint:"Materials, the school calendar and support — in dedicated sections.",books:"Books",schedule:"Weekly timetable",catalog:"Classes and subjects",
+  menu:"Menu",close:"Close menu",collapse:"Collapse sidebar",expand:"Expand sidebar",search:"Search the library",searchGo:"Search",greeting:"Hello",tagline:"A small step today. A new possibility tomorrow.",
+  scope:"Showing the latest 100 records. Older records are available on following pages.",older:"Older",newer:"Back to newest",closedHint:"Authors can reply only while a ticket is open or in progress.",noCover:"No cover uploaded",
+};
+export const v05Copy = (locale: Locale): Copy => ({ru,kk,en})[locale];
