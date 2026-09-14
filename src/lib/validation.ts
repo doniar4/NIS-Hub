@@ -26,7 +26,7 @@ export const adminEntitySchema = z.enum(["books", "classes", "subjects", "schedu
 
 // A closed redirect allowlist also rejects protocol-relative URLs and encodings.
 export function safeNext(value: unknown): string {
-  return typeof value === "string" && /^\/(?:profile|admin|library|schedule|books\/[0-9a-f-]+(?:\/read)?)$/.test(value) ? value : "/profile";
+  return typeof value === "string" && /^\/(?:profile|admin|library|schedule|support(?:\/[0-9a-f-]+)?|books\/[0-9a-f-]+(?:\/read)?)$/.test(value) ? value : "/profile";
 }
 export function canReadBook(book: { publication_status: string }) {
   return book.publication_status === "published";

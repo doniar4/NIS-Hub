@@ -8,6 +8,11 @@ export type Lesson = { id: string; class_id: string; date: string; lesson_number
 export type WeeklyLesson = { id: string; class_id: string; weekday: number; lesson_start: number; lesson_end: number; start_time: string | null; end_time: string | null; subject_id: string; teacher: string | null; room: string | null; effective_from: string | null; effective_to: string | null; created_at: string; updated_at: string };
 export type NonSchoolDay = {id:string;start_date:string;end_date:string;type:"holiday"|"vacation"|"cancelled"|"other";label:string;created_by:string|null;created_at:string};
 export type ScheduleVersion = {id:string;created_at:string;created_by:string|null;source_type:"baseline"|"csv_tsv"|"delete"|"restore";row_count:number;note:string;status:"active"|"superseded";previous_id:string|null;restored_from:string|null;snapshot:Json};
+export type TicketCategory = "platform"|"schedule"|"library"|"account"|"data"|"other";
+export type TicketStatus = "open"|"in_progress"|"resolved"|"closed";
+export type SupportTicket = {id:string;owner_id:string;category:TicketCategory;title:string;description:string;status:TicketStatus;created_at:string;updated_at:string;last_user_message_at:string;last_admin_message_at:string|null;needs_admin_reply:boolean};
+export type SupportMessage = {id:string;ticket_id:string;author_id:string|null;author_role:"student"|"admin";body:string;created_at:string};
+export type SupportStatusEvent = {id:string;ticket_id:string;actor_id:string|null;previous_status:TicketStatus;status:TicketStatus;created_at:string};
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 type Table<Row, Required extends keyof Row> = { Row: Row; Insert: Pick<Row, Required> & Partial<Row>; Update: Partial<Row>; Relationships: [] };
 // Application types for schema.sql and migrations through Phase 4. Historical
@@ -17,6 +22,9 @@ export type Database = { public: {
   Tables: {
     schedule_import_batches: Table<ScheduleVersion, "source_type"|"row_count"|"status"|"snapshot">;
     non_school_days: Table<NonSchoolDay, "start_date"|"end_date"|"type"|"label">;
+    support_tickets: Table<SupportTicket, "owner_id"|"category"|"title"|"description">;
+    support_messages: Table<SupportMessage, "ticket_id"|"author_role"|"body">;
+    support_status_events: Table<SupportStatusEvent, "ticket_id"|"previous_status"|"status">;
     profiles: Table<Profile, "id">;
     classes: Table<ClassRow, "name">;
     subjects: Table<SubjectRow, "name">;
@@ -30,6 +38,9 @@ export type Database = { public: {
   };
   Views: Record<string, never>;
   Functions: {
+    create_support_ticket: {Args:{p_category:string;p_title:string;p_description:string};Returns:string};
+    reply_support_ticket: {Args:{p_ticket:string;p_body:string};Returns:string};
+    set_support_status: {Args:{p_ticket:string;p_status:string};Returns:undefined};
     is_admin: { Args: Record<string, never>; Returns: boolean };
     save_profile: { Args: { p_name: string; p_class: string | null; p_subjects: string[] }; Returns: undefined };
     delete_weekly_lesson: {Args:{p_id:string};Returns:undefined};
