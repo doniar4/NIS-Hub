@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useId } from "react";
 import { parseTheme, resolvedTheme, THEME_KEY, type Theme } from "@/lib/theme";
 
 export function ThemeControl({ labels = { theme: "Тема", light: "Светлая", dark: "Тёмная", system: "Системная" } }: { labels?: Record<"theme" | Theme, string> }) {
+  const name=useId(),indicator=useRef<HTMLSpanElement>(null);
   const [theme, setTheme] = useState<Theme>("system");
   const [ready, setReady] = useState(false);
   const preference = useRef<Theme>("system");
@@ -22,12 +23,13 @@ export function ThemeControl({ labels = { theme: "Тема", light: "Светл�
   }, []);
   function change(value: string) {
     const selected = parseTheme(value);
+    if(selected!==theme && !matchMedia("(prefers-reduced-motion: reduce)").matches) indicator.current?.animate([{clipPath:"inset(0 0 round 5px)"},{clipPath:"inset(0 14% round 12px)",offset:.5},{clipPath:"inset(0 0 round 5px)"}],{duration:280,easing:"ease-in-out"});
     preference.current = selected;
     setTheme(selected);
     try { localStorage.setItem(THEME_KEY, selected); } catch { /* No persistence available. */ }
     const effective = resolvedTheme(selected, matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.dataset.theme = effective;
-    document.documentElement.style.colorScheme = effective;
+    document.documentElement.setAttribute("data-theme",effective);
+    document.documentElement.style.setProperty("color-scheme",effective);
   }
-  return <label className="flex items-center gap-2 text-sm"><span>{labels.theme}</span><select aria-label={labels.theme} className="field !w-auto !py-2" disabled={!ready} value={theme} onChange={e => change(e.target.value)}><option value="light">{labels.light}</option><option value="dark">{labels.dark}</option><option value="system">{labels.system}</option></select></label>;
+  return <fieldset className="theme-switch" role="radiogroup" aria-label={labels.theme} disabled={!ready}><legend className="sr-only">{labels.theme}</legend><span ref={indicator} className="theme-indicator" aria-hidden="true" style={{left:"calc(4px + "+(["light","dark","system"].indexOf(theme))+" * (100% - 8px) / 3)"}}/>{(["light","dark","system"] as const).map(value=><label key={value}><input type="radio" name={name} value={value} checked={theme===value} onChange={()=>change(value)}/><span>{labels[value]}</span></label>)}</fieldset>;
 }

@@ -1,10 +1,11 @@
+import {supportLegalCopy} from "./support-legal-copy";
 import type { Locale } from "./i18n";
 type LegalCopy = { draft: string; intro: string; revision: string; privacyTitle: string; termsTitle: string; privacy: [string, string][]; terms: [string, string][] };
-export const legalCopy = {
+const baseLegalCopy = {
   "ru": {
     "draft": "Черновик · не юридическая консультация",
     "intro": "NIS Hub — тестовый учебный проект. Эти тексты описывают текущую реализацию, но требуют заполнения реквизитов и юридической проверки до публичного запуска.",
-    "revision": "Редакция черновика: 12.09.2026. Дата вступления в силу: [УКАЗАТЬ ПОСЛЕ ПРОВЕРКИ].",
+    "revision": "Редакция черновика: 14.09.2026. Дата вступления в силу: [УКАЗАТЬ ПОСЛЕ ПРОВЕРКИ].",
     "privacyTitle": "Политика конфиденциальности",
     "termsTitle": "Условия использования",
     "privacy": [
@@ -83,7 +84,7 @@ export const legalCopy = {
   "kk": {
     "draft": "Жоба · заңгерлік кеңес емес",
     "intro": "NIS Hub — сынақтағы оқу жобасы. Бұл мәтіндер қазіргі жұмысты сипаттайды; көпшілікке іске қоспас бұрын деректемелер толтырылып, заңгер тексеруі керек.",
-    "revision": "Жоба редакциясы: 12.09.2026. Күшіне ену күні: [ТЕКСЕРУДЕН КЕЙІН КӨРСЕТУ].",
+    "revision": "Жоба редакциясы: 14.09.2026. Күшіне ену күні: [ТЕКСЕРУДЕН КЕЙІН КӨРСЕТУ].",
     "privacyTitle": "Құпиялық саясаты",
     "termsTitle": "Пайдалану шарттары",
     "privacy": [
@@ -162,7 +163,7 @@ export const legalCopy = {
   "en": {
     "draft": "Draft · not legal advice",
     "intro": "NIS Hub is a beta learning project. These drafts describe the current implementation but require operator details and legal review before public launch.",
-    "revision": "Draft revised: 12 September 2026. Effective date: [SET AFTER REVIEW].",
+    "revision": "Draft revised: 14 September 2026. Effective date: [SET AFTER REVIEW].",
     "privacyTitle": "Privacy Policy",
     "termsTitle": "Terms of Use",
     "privacy": [
@@ -239,3 +240,7 @@ export const legalCopy = {
     ]
   }
 } satisfies Record<Locale, LegalCopy>;
+export const legalCopy = Object.fromEntries(Object.entries(baseLegalCopy).map(([key,copy])=>{
+ const locale=key as Locale;
+ return [locale,{...copy,privacy:[...copy.privacy,supportLegalCopy[locale].privacy],terms:[...copy.terms,supportLegalCopy[locale].terms]}];
+})) as Record<Locale,LegalCopy>;

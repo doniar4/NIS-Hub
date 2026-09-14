@@ -15,6 +15,8 @@ test("missing config is safe; partial, privileged and non-origin configs fail cl
 });
 test("redirects use a closed local allowlist", () => {
   assert.equal(safeNext("/library"), "/library");
+  assert.equal(safeNext("/support"), "/support");
+  assert.equal(safeNext("/support/"+id), "/support/"+id);
   assert.equal(safeNext(`/books/${id}/read`), `/books/${id}/read`);
   for (const input of ["//evil.com", "https://evil.com", "/\\evil.com", "/%2f%2fevil.com", "/admin?next=https://evil.com", ["/admin"], null]) assert.equal(safeNext(input), "/profile");
 });

@@ -92,7 +92,7 @@ test("Phase 4 Chromium/WebKit production components with isolated transport", {t
           await expect(page.getByRole("tab",{name:phase4Copy(locale).weekdays[0],exact:true})).toBeVisible();
         }
         const p=phase4Copy("en"),d=dictionaries.en;
-        for(const theme of ["light","dark","system"]){await page.getByRole("combobox",{name:d.theme,exact:true}).selectOption(theme);}
+        for(const theme of ["light","dark","system"]){await page.getByRole("radio",{name:d[theme as "light"|"dark"|"system"],exact:true}).check();}
         const raw="class,weekday,lesson_start,lesson_end,start_time,end_time,subject,teacher,room\n"+classes[0].name+",Fri,7,8,13:50,15:20,"+subjects[0].name+",Teacher,228";
         await page.getByRole("textbox",{name:p.paste}).fill(raw.replace(classes[0].name,"TYPO"));await page.getByRole("button",{name:p.preview}).click();
         await expect(page.getByRole("alert")).toContainText(p.class);await expect(page.getByRole("button",{name:p.import,exact:true})).toHaveCount(0);
@@ -124,7 +124,7 @@ test("Phase 4 Chromium/WebKit production components with isolated transport", {t
             const bounds=await link.boundingBox();assert.ok(bounds&&bounds.height>=44);
             assert.ok((await link.evaluate(element=>getComputedStyle(element).textDecorationLine)).includes("underline"));
             assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true);
-            if(locale==="kk") await page.getByRole("combobox",{name:dictionaries.kk.theme,exact:true}).selectOption("dark");
+            if(locale==="kk") await page.getByRole("radio",{name:dictionaries.kk.dark,exact:true}).check();
             await page.screenshot({path:join(artifactDir,name+"-"+(path==="/weekly"?"schedule":"home")+"-"+locale+"-mobile.png"),fullPage:true});
             await link.focus();await page.keyboard.press("Enter");await page.waitForURL("**/library?**");
             await expect(page.getByRole("combobox",{name:"Subject",exact:true})).toHaveValue(expected.subject);
@@ -187,7 +187,7 @@ test("Phase 4 Chromium/WebKit production components with isolated transport", {t
         await expect(page.getByRole("button",{name:dictionaries.en.removeBookmark,exact:true})).toBeEnabled();
         await expect.poll(()=>reading.page).toBe(3);assert.deepEqual(reading.bookmarks,[3]);
         const d=dictionaries.en;await page.getByRole("combobox",{name:d.locale,exact:true}).selectOption("kk");
-        await page.getByRole("combobox",{name:dictionaries.kk.theme,exact:true}).selectOption("dark");
+        await page.getByRole("radio",{name:dictionaries.kk.dark,exact:true}).check();
         await expect(page.locator("canvas")).toBeVisible();
         assert.equal(requests.slice(mark).filter(r=>r==="GET /fixture.pdf").length,1);
         assert.equal(requests.slice(mark).filter(r=>r==="GET /api/books/"+id+"/access").length,1);

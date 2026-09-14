@@ -1,0 +1,2 @@
+// Runs in the initial document only. A client route transition does not execute this head script.
+export const experienceBootstrap = `(()=>{try{document.documentElement.dataset.sidebar=localStorage.getItem("nis-sidebar")==="collapsed"?"collapsed":"expanded";}catch{}if(!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.dataset.intro="true";setTimeout(()=>delete document.documentElement.dataset.intro,900);}})();`;

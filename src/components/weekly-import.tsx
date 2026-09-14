@@ -1,5 +1,6 @@
 "use client";
-import { useRef, useState, useTransition } from "react";
+import { subjectMap, normalizeRoom } from "@/lib/catalog";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { useI18n } from "./locale-provider";
 import { phase4Copy } from "@/lib/phase4-copy";
 import { parseTimetable, TIMETABLE_BYTES, type ImportPreview } from "@/lib/timetable-import";
@@ -8,6 +9,7 @@ import { subjectName } from "@/lib/i18n";
 import type { ClassRow, SubjectRow, WeeklyLesson } from "@/lib/database.types";
 import type { ActionState, FormAction } from "@/lib/action-state";
 export function WeeklyImport({ classes, subjects, lessons = [], action }: { classes: ClassRow[]; subjects: SubjectRow[]; lessons?: WeeklyLesson[]; action: FormAction }) {
+  const subjectsById=useMemo(()=>subjectMap(subjects),[subjects]);
   const { locale, t } = useI18n(); const p = phase4Copy(locale);
   const [raw,setRaw] = useState(""), [preview,setPreview] = useState<ImportPreview | null>(null);
   const [state,setState] = useState<ActionState>({}), [confirmed,setConfirmed] = useState(false);
@@ -36,7 +38,7 @@ export function WeeklyImport({ classes, subjects, lessons = [], action }: { clas
             <tbody>{preview.lessons.map((row,index) => <tr key={index} className="border-t border-[var(--line)]">
               <td className="p-2">{classes.find(c=>c.id===row.class_id)?.name}</td><td className="p-2">{p.shortDays[row.weekday-1]}</td>
               <td className="p-2">{lessonRange(row)}<br/>{row.start_time}–{row.end_time}{(row.effective_from || row.effective_to) && <p>{row.effective_from || "…"} — {row.effective_to || "…"}</p>}</td>
-              <td className="p-2">{subjectName(subjects.find(s=>s.id===row.subject_id),locale)}</td><td className="p-2">{row.teacher}</td><td className="p-2">{row.room}</td>
+              <td className="p-2">{subjectName(subjectsById.get(row.subject_id),locale)}</td><td className="p-2">{row.teacher}</td><td className="p-2">{normalizeRoom(row.room)}</td>
             </tr>)}</tbody>
           </table>
         </div>

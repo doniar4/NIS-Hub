@@ -1,4 +1,6 @@
 import "server-only";
+import { getNonSchoolDays } from "./calendar-queries";
+import { isSchoolDay } from "./school-calendar";
 import { requireViewer } from "./auth";
 import { database } from "./queries";
 import type { WeeklyLesson } from "./database.types";
@@ -26,7 +28,7 @@ export async function getWeeklySchedule(classId?: string) {
 export const weeklyDatabaseSchedule: WeeklyScheduleSource = {
   async getDay(classId, date) {
     const weekday = schoolWeek(date).weekday;
-    if (weekday < 1 || weekday > 5) return [];
+    if (weekday < 1 || weekday > 5 || !isSchoolDay(date,await getNonSchoolDays())) return [];
     return weeklyDay(await getWeeklySchedule(classId), classId, weekday, date);
   },
 };

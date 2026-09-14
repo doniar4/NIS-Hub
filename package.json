@@ -13,6 +13,7 @@
     "test": "node --import tsx --test tests/*.test.ts",
     "test:browser": "node --import tsx --test tests/browser.smoke.ts",
     "test:browser:phase4": "node --import tsx --test tests/phase4-browser.smoke.ts",
+    "test:browser:v05": "node --import tsx --test tests/v05-browser.smoke.ts",
     "test:http": "node --import tsx --test tests/http.smoke.ts"
   },
   "dependencies": {
