@@ -20,7 +20,7 @@ function Harness() {
   const controls = <PreferenceControls localeAction={async value => { const selected = parseLocale(value); setLocale(selected); document.documentElement.lang = selected; return { ok: true }; }}/>;
   return <LocaleProvider locale={locale}><main className="mx-auto max-w-6xl p-6"><h1 className="page-title mb-8">Phase 3 isolated component fixture</h1>{controls}
     {location.pathname === "/library" ? <>
-      <button onClick={() => { history.replaceState(history.state, "", "/library"); setInitial({ q: "", classId: "", subject: "" }); }}>Simulate fresh route props</button>
+      <button onClick={() => { history.replaceState(history.state, "", "/library"); setInitial({ q: "", grade: "", subject: "" }); }}>Simulate fresh route props</button>
       <LibraryBrowser key={JSON.stringify(initial)} initial={initial} books={books} classes={classes} subjects={subjects} truncated={false}/>
     </> : <>
       <form className="my-8" onSubmit={event => { event.preventDefault(); setSubmission(JSON.stringify(new FormData(event.currentTarget).getAll("subjects"))); }}>

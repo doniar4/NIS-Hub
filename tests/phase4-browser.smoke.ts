@@ -119,8 +119,8 @@ test("Phase 4 Chromium/WebKit production components with isolated transport", {t
             const href=await link.getAttribute("href");assert.ok(href);
             const url=new URL(href,origin);
             assert.equal(url.pathname,"/library");
-            const expected={q:"",classId:classes[0].id,subject:subjects[0].id};
-            assert.deepEqual(initialLibraryFilters(Object.fromEntries(url.searchParams),classes[1].id),expected);
+            const expected={q:"",grade:String(classes[0].grade),subject:subjects[0].id};
+            assert.deepEqual(initialLibraryFilters(Object.fromEntries(url.searchParams),String(classes[1].grade)),expected);
             const bounds=await link.boundingBox();assert.ok(bounds&&bounds.height>=44);
             assert.ok((await link.evaluate(element=>getComputedStyle(element).textDecorationLine)).includes("underline"));
             assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true);
@@ -128,7 +128,7 @@ test("Phase 4 Chromium/WebKit production components with isolated transport", {t
             await page.screenshot({path:join(artifactDir,name+"-"+(path==="/weekly"?"schedule":"home")+"-"+locale+"-mobile.png"),fullPage:true});
             await link.focus();await page.keyboard.press("Enter");await page.waitForURL("**/library?**");
             await expect(page.getByRole("combobox",{name:"Subject",exact:true})).toHaveValue(expected.subject);
-            await expect(page.getByRole("combobox",{name:"Class",exact:true})).toHaveValue(expected.classId);
+            await expect(page.getByRole("combobox",{name:"Grade",exact:true})).toHaveValue(expected.grade);
             await expect(page.getByRole("searchbox")).toHaveValue("");
             await expect(page.locator("section li")).toHaveCount(filterBooks(books,expected).length);
             await expect(page.getByRole("alert")).toHaveCount(0);
@@ -138,8 +138,8 @@ test("Phase 4 Chromium/WebKit production components with isolated transport", {t
         await page.goto(origin+"/weekly");await page.getByRole("combobox",{name:"Class",exact:true}).selectOption(classes[1].id);
         await page.getByRole("tab",{name:"Thursday",exact:true}).click();
         await page.getByRole("tabpanel").getByRole("link",{name:"Mathematics",exact:true}).click();await page.waitForURL("**/library?**");
-        await expect(page.getByRole("combobox",{name:"Class",exact:true})).toHaveValue(classes[1].id);
-        await expect(page.locator("section li")).toHaveCount(filterBooks(books,{q:"",subject:subjects[0].id,classId:classes[1].id}).length);
+        await expect(page.getByRole("combobox",{name:"Grade",exact:true})).toHaveValue(String(classes[1].grade));
+        await expect(page.locator("section li")).toHaveCount(filterBooks(books,{q:"",subject:subjects[0].id,grade:String(classes[1].grade)}).length);
         // Biology deliberately has no published books in the fixture catalog.
         await page.goto(origin+"/weekly");await page.getByRole("tab",{name:"Friday",exact:true}).click();
         await page.getByRole("tabpanel").getByRole("link",{name:"Biology",exact:true}).click();await page.waitForURL("**/library?**");
@@ -152,7 +152,9 @@ test("Phase 4 Chromium/WebKit production components with isolated transport", {t
         book=null;uploaded=false;const page=await browser.newPage();await page.goto(origin+"/books");await page.waitForLoadState("networkidle");
         await page.getByRole("textbox",{name:"Title",exact:true}).fill("Reader test");
         await page.getByRole("combobox",{name:"Subject",exact:true}).selectOption(subjects[0].id);
-        await page.getByRole("combobox",{name:"Publication",exact:true}).selectOption("published");
+        await page.getByRole("combobox",{name:"Grade",exact:true}).selectOption("9");
+        await page.getByRole("combobox",{name:"Book publication (all editions)",exact:true}).selectOption("published");
+        await page.getByRole("combobox",{name:"Edition publication",exact:true}).selectOption("published");
         await page.getByLabel("PDF file",{exact:true}).setInputFiles({name:"test.pdf",mimeType:"application/pdf",buffer:pdf});
         const mark=requests.length;await page.getByRole("button",{name:"Save material",exact:true}).click();
         await expect(page.getByText("Material saved.",{exact:true})).toBeVisible();
@@ -179,8 +181,9 @@ test("Phase 4 Chromium/WebKit production components with isolated transport", {t
         // Actual dark ink exists, not merely an empty canvas element.
         assert.ok(await page.locator("canvas").evaluate((element)=>{const c=element as HTMLCanvasElement;const data=c.getContext("2d")!.getImageData(0,0,c.width,c.height).data;let ink=0;for(let i=0;i<data.length;i+=4)if(data[i+3]&&data[i]<180)ink++;return ink>100;}));
         await next.click();await expect(next).toBeEnabled();await next.click();await expect(next).toBeEnabled();
-        await expect(page.getByRole("spinbutton")).toHaveValue("3");
-        await page.getByRole("combobox",{name:dictionaries.en.zoom}).selectOption("1.5");
+        await expect(page.getByRole("spinbutton")).toHaveAttribute("placeholder","3");
+        await page.getByRole("button",{name:"Zoom in",exact:true}).click();
+        await page.getByRole("button",{name:"Zoom in",exact:true}).click();
         await expect(next).toBeEnabled();
         await page.locator("summary").click();await expect(page.locator("details p")).not.toBeEmpty();
         await page.getByRole("button",{name:dictionaries.en.addBookmark,exact:true}).click();
@@ -193,7 +196,7 @@ test("Phase 4 Chromium/WebKit production components with isolated transport", {t
         assert.equal(requests.slice(mark).filter(r=>r==="GET /api/books/"+id+"/access").length,1);
         await page.screenshot({path:join(artifactDir,name+"-reader.png")});
         await page.reload();await expect(page.getByRole("button",{name:d.next,exact:true})).toBeEnabled({timeout:30000});
-        await expect(page.getByRole("spinbutton")).toHaveValue("3");await expect(page.getByRole("button",{name:d.removeBookmark,exact:true})).toBeEnabled();
+        await expect(page.getByRole("spinbutton")).toHaveAttribute("placeholder","3");await expect(page.getByRole("button",{name:d.removeBookmark,exact:true})).toBeEnabled();
         assert.equal(requests.slice(mark).filter(r=>r==="GET /fixture.pdf").length,2);assert.deepEqual(errors,[]);await page.close();
       });
     }finally{await browser.close();}

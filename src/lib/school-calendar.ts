@@ -32,5 +32,5 @@ export function schoolDayJump(date: string, direction: -1|1, days: CalendarDay[]
 }
 export function formatSchoolDate(date: string, locale: Locale) {
   return new Intl.DateTimeFormat(locale==="kk"?"kk-KZ":locale==="ru"?"ru-RU":"en-GB",
-    {day:"numeric",month:"long",year:"numeric",timeZone:"UTC"}).format(new Date(date+"T12:00:00Z"));
+    {weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"UTC"}).format(new Date(date+"T12:00:00Z"));
 }

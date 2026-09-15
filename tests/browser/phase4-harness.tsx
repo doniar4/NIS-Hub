@@ -28,8 +28,8 @@ function Harness() {
     <h1 className="page-title">Phase 4 component verification</h1>
     <PreferenceControls localeAction={async value=>{ const selected=parseLocale(value); setLocale(selected); document.documentElement.lang=selected;return {ok:true}; }}/>
     {location.pathname==="/library" ? <LibraryBrowser books={books} classes={classes} subjects={subjects} truncated={false}
-      initial={initialLibraryFilters(Object.fromEntries(new URLSearchParams(location.search)),classes[0].id)}/>
-      : location.pathname==="/home-timetable" ? <section aria-label="Home timetable"><WeeklyLessonList lessons={lessons.filter(row=>row.weekday===1 && row.class_id===classes[0].id)} subjects={subjects}/></section>
+      initial={initialLibraryFilters(Object.fromEntries(new URLSearchParams(location.search)),String(classes[0].grade))}/>
+      : location.pathname==="/home-timetable" ? <section aria-label="Home timetable"><WeeklyLessonList grade={classes[0].grade} lessons={lessons.filter(row=>row.weekday===1 && row.class_id===classes[0].id)} subjects={subjects}/></section>
       : location.pathname==="/weekly" ? <><WeeklyScheduleBrowser lessons={lessons} classes={classes} subjects={subjects} initialClassId={classes[0].id} date="2026-09-07"/>
       <WeeklyImport classes={classes} subjects={subjects} lessons={lessons} action={async(_s,form)=>{
         const response=await fetch("/fixture/import",{method:"POST",body:String(form.get("timetable"))});const result=await response.json();setMessage(result.success||result.error);return result;

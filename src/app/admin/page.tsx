@@ -43,6 +43,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const selectedBook = section === "books" && params.id ? await db.from("books").select("*").eq("id",params.id).maybeSingle() : { data: null, error: null };
   if (selectedBook.error) throw new Error(p.bookError);
   const book = selectedBook.data ?? undefined;
+  const variantResult=book?await db.from("book_variants").select("*").eq("book_id",book.id).order("created_at"):{data:[],error:null};
+  if(variantResult.error)throw new Error(p.bookError);
   const lessons = section === "schedule" ? await getWeeklySchedule() : [];
   const classRow = section === "classes" ? classes.find(c => c.id === params.id) : undefined;
   const subject = section === "subjects" ? subjects.find(s => s.id === params.id) : undefined;
@@ -62,11 +64,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <ul className="max-h-[40rem] overflow-auto divide-y divide-[var(--line)]">{rows.map(row => <li className="py-4" key={row.id}><Link className="block break-words font-semibold underline underline-offset-4" href={"/admin?entity="+section+"&id="+row.id}>{row.name}</Link>{row.detail && <p className="mt-1 text-sm text-[var(--muted)]">{row.detail}</p>}</li>)}</ul>{!rows.length && <p>{v.empty}</p>}
       </section>
       <section key={section+"-"+(params.id ?? "new")}><h2 className="section-title mb-6">{selected ? a.edit : a.new}</h2>
-        {section==="books" && <BookEditor id={book?.id ?? randomUUID()} book={book} classes={classes} subjects={subjects} action={saveBook}/>}
+        {section==="books" && <BookEditor id={book?.id ?? randomUUID()} book={book} variants={variantResult.data} classes={classes} subjects={subjects} action={saveBook}/>}
         {(section==="classes" || section==="subjects") && <ActionForm action={saveAdminRecord} label={a.save}>
           <input type="hidden" name="entity" value={section}/><input type="hidden" name="id" value={params.id ?? ""}/>
           {section==="classes" ? <><Field label={a.className} name="name" required maxLength={40} defaultValue={classRow?.name ?? ""}/><Field label={a.grade} name="grade" type="number" min={1} max={12} defaultValue={classRow?.grade ?? ""}/><Field label={a.section} name="section" maxLength={10} defaultValue={classRow?.section ?? ""}/></>
-            : <><Field label={a.subjectName} name="name" required maxLength={100} defaultValue={subject?.name ?? ""}/><Field label={a.kazakh} name="name_kz" maxLength={100} defaultValue={subject?.name_kz ?? ""}/><Field label={a.english} name="name_en" maxLength={100} defaultValue={subject?.name_en ?? ""}/><Field label={a.short} name="short_name" maxLength={30} defaultValue={subject?.short_name ?? ""}/></>}
+            : <><Field label={a.subjectName} name="name" required maxLength={100} defaultValue={subject?.name ?? ""}/><Field label="Русский" name="name_ru" required maxLength={100} defaultValue={subject?.name_ru??subject?.name??""}/><Field label={a.kazakh} name="name_kz" required maxLength={100} defaultValue={subject?.name_kz ?? ""}/><Field label={a.english} name="name_en" required maxLength={100} defaultValue={subject?.name_en ?? ""}/><Field label={a.short} name="short_name" maxLength={30} defaultValue={subject?.short_name ?? ""}/></>}
         </ActionForm>}
         {section==="schedule" && <p>{p.csvHint}</p>}
         {selected && <div className="mt-10 border-t border-[var(--line)] pt-6"><ActionForm action={deleteAdminRecord} label={section==="books" ? a.archive : v.remove}>

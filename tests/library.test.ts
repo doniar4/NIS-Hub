@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { filterBooks, initialLibraryFilters, libraryFilterUrl, loadLibraryCatalog, type LibraryBook } from "../src/lib/library";
 const books: LibraryBook[] = Array.from({ length: 525 }, (_, i) => ({
   id: String(i).padStart(6, "0"), title: i % 2 ? "Алгебра " + i : "Physics " + i,
-  class_id: i % 3 ? "class-a" : "class-b", subject_id: i % 2 ? "math" : "physics", language: "original",
+  grade: i % 3 ? 9 : 10, subject_id: i % 2 ? "math" : "physics", language: "original",
 }));
 test("initial catalog loads beyond 100 in bounded pages; cap is explicit and failures propagate", async () => {
   const calls: number[] = [];
@@ -16,16 +16,16 @@ test("initial catalog loads beyond 100 in bounded pages; cap is explicit and fai
   await assert.rejects(loadLibraryCatalog(async () => [books[1], books[0]]), /pagination/);
 });
 test("filters are case-insensitive with exact IDs; reset restores every loaded book", () => {
-  const result = filterBooks(books, { q: " АЛГЕБРА ", classId: "class-a", subject: "math" });
-  assert.ok(result.length > 100); assert.ok(result.every(book => book.title.startsWith("Алгебра") && book.class_id === "class-a"));
-  assert.equal(filterBooks(books, { q: "", classId: "class", subject: "" }).length, 0);
-  assert.equal(filterBooks(books, { q: "", classId: "", subject: "" }).length, 525);
-  assert.equal(filterBooks(books, { q: "%", classId: "", subject: "" }).length, 0);
+  const result = filterBooks(books, { q: " АЛГЕБРА ", grade: "9", subject: "math" });
+  assert.ok(result.length > 100); assert.ok(result.every(book => book.title.startsWith("Алгебра") && book.grade === 9));
+  assert.equal(filterBooks(books, { q: "", grade: "class", subject: "" }).length, 0);
+  assert.equal(filterBooks(books, { q: "", grade: "", subject: "" }).length, 525);
+  assert.equal(filterBooks(books, { q: "%", grade: "", subject: "" }).length, 0);
 });
 test("query state restores; explicit reset overrides profile class and preserves unrelated URL data", () => {
-  assert.deepEqual(initialLibraryFilters({}, "class-a"), { q: "", classId: "class-a", subject: "" });
-  const state = { q: "Алгебра & test", classId: "", subject: "math" };
+  assert.deepEqual(initialLibraryFilters({}, "9"), { q: "", grade: "9", subject: "" });
+  const state = { q: "Алгебра & test", grade: "", subject: "math" };
   const url = libraryFilterUrl("https://local.test/library?utm=test#books", state);
   assert.ok(url.includes("utm=test")); assert.ok(url.endsWith("#books"));
-  assert.deepEqual(initialLibraryFilters(Object.fromEntries(new URL(url, "https://local.test").searchParams), "class-a"), state);
+  assert.deepEqual(initialLibraryFilters(Object.fromEntries(new URL(url, "https://local.test").searchParams), "9"), state);
 });

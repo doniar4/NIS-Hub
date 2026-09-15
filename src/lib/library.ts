@@ -1,25 +1,26 @@
 import type { Book } from "./database.types";
-export type LibraryBook = Pick<Book, "id" | "title" | "class_id" | "subject_id" | "language">;
-export type LibraryFilters = { q: string; classId: string; subject: string };
+export type LibraryBook = Pick<Book, "id" | "title" | "grade" | "subject_id">;
+export type LibraryFilters = { q: string; grade: string; subject: string };
 export const LIBRARY_PAGE_SIZE = 200;
 export const LIBRARY_BOOK_LIMIT = 5000;
-export function initialLibraryFilters(params: Record<string, string | string[] | undefined>, defaultClass = ""): LibraryFilters {
+export function initialLibraryFilters(params: Record<string, string | string[] | undefined>, defaultGrade = ""): LibraryFilters {
   return { q: typeof params.q === "string" ? params.q.slice(0, 100) : "",
-    classId: typeof params.classId === "string" ? params.classId.slice(0, 128) : defaultClass,
+    grade: typeof params.grade === "string" ? params.grade.slice(0, 128) : defaultGrade,
     subject: typeof params.subject === "string" ? params.subject.slice(0, 128) : "" };
 }
-export function filterBooks(books: LibraryBook[], { q, classId, subject }: LibraryFilters): LibraryBook[] {
+export function filterBooks(books: LibraryBook[], { q, grade, subject }: LibraryFilters): LibraryBook[] {
   const search = q.trim().toLocaleLowerCase();
   return books.filter(book => (!search || book.title.toLocaleLowerCase().includes(search))
-    && (!classId || book.class_id === classId) && (!subject || book.subject_id === subject));
+    && (!grade || String(book.grade) === grade) && (!subject || book.subject_id === subject));
 }
 export function libraryFilterUrl(currentUrl: string, filters: LibraryFilters): string {
   const url = new URL(currentUrl);
   for (const key of ["q", "subject"] as const) {
     if (filters[key]) url.searchParams.set(key, filters[key]); else url.searchParams.delete(key);
   }
-  // Empty explicitly means all classes, even after reload with a profile default.
-  url.searchParams.set("classId", filters.classId);
+  // Empty explicitly means all grades, even after reload with a profile default.
+  url.searchParams.delete("classId");
+  url.searchParams.set("grade", filters.grade);
   return url.pathname + url.search + url.hash;
 }
 // Server initialization only; callback returns unique ascending IDs.

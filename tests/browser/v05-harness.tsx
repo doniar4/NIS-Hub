@@ -44,7 +44,7 @@ function Harness(){
  path==="/schedule"?<WeeklyScheduleBrowser lessons={lessons} subjects={subjects} classes={classes} initialClassId={classes[0].id} date={date} nonSchoolDays={days}/>:
  path==="/versions"?<ScheduleDiff before={lessons} after={lessons.map(row=>({...row,room:"307"}))} subjects={subjects} classes={classes} locale={locale}/>:
  <><div className="home-greeting"><BotanicalLines className="greeting-botanical"/><PageIntro title={t.greeting+", Amina"} kicker={classes[0].name}>{t.tagline}</PageIntro></div><div className="home-panels mt-10 grid gap-6 xl:grid-cols-[1.15fr_1fr]">
- <div className="surface-card home-panel"><HomeTimetable lessons={lessons} subjects={subjects} classId={classes[0].id} today={date} nonSchoolDays={days}/></div>
+ <div className="surface-card home-panel"><HomeTimetable grade={classes[0].grade} lessons={lessons} subjects={subjects} classId={classes[0].id} today={date} nonSchoolDays={days}/></div>
  <section className="surface-card home-panel"><h2 className="section-title">Continue reading</h2><div className="reading-item mt-5"><BookCover title="Mathematics · 7" url={null}/><div><h3 className="font-semibold">Mathematics · 7</h3><p>Page 12</p></div></div></section></div></>}
  </AppFrame></LocaleProvider>;
 }

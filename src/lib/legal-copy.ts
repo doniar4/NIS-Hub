@@ -5,7 +5,7 @@ const baseLegalCopy = {
   "ru": {
     "draft": "Черновик · не юридическая консультация",
     "intro": "NIS Hub — тестовый учебный проект. Эти тексты описывают текущую реализацию, но требуют заполнения реквизитов и юридической проверки до публичного запуска.",
-    "revision": "Редакция черновика: 14.09.2026. Дата вступления в силу: [УКАЗАТЬ ПОСЛЕ ПРОВЕРКИ].",
+    "revision": "Редакция черновика: 15.09.2026. Дата вступления в силу: [УКАЗАТЬ ПОСЛЕ ПРОВЕРКИ].",
     "privacyTitle": "Политика конфиденциальности",
     "termsTitle": "Условия использования",
     "privacy": [
@@ -42,8 +42,12 @@ const baseLegalCopy = {
         "Профиль можно исправить в интерфейсе, закладки — удалить, аватар — заменить. Самообслуживания для удаления аккаунта и автоматической очистки по сроку пока нет. Запрос на получение или удаление данных нужно передать оператору через контакт выше после его заполнения. Оператор проверяет принадлежность аккаунта, удаляет аккаунт и связанные записи, отдельно удаляет аватар через Storage API и проверяет сроки журналов/резервных копий. Конкретные сроки хранения и ответа: [УСТАНОВИТЬ ДО ЗАПУСКА]."
       ],
       [
-        "Учащиеся и изменения",
-        "Аудитория включает несовершеннолетних. Не добавляйте лишние персональные данные и изображения других людей без необходимых прав. Оператор должен определить применимые возрастные условия, участие родителей/школы и основания обработки до запуска. Этот черновик не подтверждает соответствие каким-либо законам. Изменения будут отражены в дате редакции; порядок уведомления ещё должен быть определён."
+        "Совершеннолетняя аудитория",
+        "Сервис предназначен для совершеннолетних пользователей (18+), как подтвердил владелец. Оператор должен обеспечить соответствующее ограничение доступа перед включением Gemini; технической проверки возраста в приложении нет. Не добавляйте лишние персональные данные или изображения других людей. Этот черновик не подтверждает юридическое соответствие."
+      ],
+      [
+        "Gemini AI Study · beta",
+        "AI Study необязателен и выключен до настройки оператором. По вашему запросу сервер отправляет Google Gemini только текст выбранных страниц, режим и язык ответа — не профиль, email, токены, подписанные URL или всю книгу. На бесплатном тарифе содержимое может использоваться Google для улучшения сервисов и проверяться людьми; не выбирайте конфиденциальные данные. Администратор один раз извлекает текст PDF по страницам в Supabase. Кэш ответа хранит владельца, вариант учебника, диапазон, режим, язык, хэш источника, ответ и время; счётчик ограничивает попытки генерации. Замена источника делает старый кэш недействительным. Оператор должен установить срок хранения и удалять кэш при запросах на удаление данных. AI может ошибаться: сверяйте выводы с цитатами и указанными страницами."
       ]
     ],
     "terms": [
@@ -53,7 +57,7 @@ const baseLegalCopy = {
       ],
       [
         "Аккаунт",
-        "Берегите пароль и доступ к email, не передавайте аккаунт другим и не выдавайте себя за другого человека. Возрастные условия и порядок участия родителей/школы необходимо определить перед публичным запуском. О подозрении на компрометацию сообщайте оператору без передачи пароля или токенов."
+        "Берегите пароль и доступ к email, не передавайте аккаунт другим и не выдавайте себя за другого человека. Доступ предназначен для совершеннолетних (18+). О подозрении на компрометацию сообщайте оператору без передачи пароля или токенов."
       ],
       [
         "Допустимое использование",
@@ -78,13 +82,17 @@ const baseLegalCopy = {
       [
         "Стоимость, изменения и данные",
         "Платежей и подписок нет; правила возврата не применяются к несуществующим покупкам. Будущие платные функции потребуют отдельных условий. Эти условия остаются черновиком: дата вступления в силу и порядок уведомления об изменениях ещё не утверждены. Обработка данных описана в политике конфиденциальности."
+      ],
+      [
+        "Совершеннолетняя аудитория",
+        "Сервис предназначен для совершеннолетних пользователей (18+), как подтвердил владелец. Оператор должен обеспечить соответствующее ограничение доступа перед включением Gemini; технической проверки возраста в приложении нет. Не добавляйте лишние персональные данные или изображения других людей. Этот черновик не подтверждает юридическое соответствие."
       ]
     ]
   },
   "kk": {
     "draft": "Жоба · заңгерлік кеңес емес",
     "intro": "NIS Hub — сынақтағы оқу жобасы. Бұл мәтіндер қазіргі жұмысты сипаттайды; көпшілікке іске қоспас бұрын деректемелер толтырылып, заңгер тексеруі керек.",
-    "revision": "Жоба редакциясы: 14.09.2026. Күшіне ену күні: [ТЕКСЕРУДЕН КЕЙІН КӨРСЕТУ].",
+    "revision": "Жоба редакциясы: 15.09.2026. Күшіне ену күні: [ТЕКСЕРУДЕН КЕЙІН КӨРСЕТУ].",
     "privacyTitle": "Құпиялық саясаты",
     "termsTitle": "Пайдалану шарттары",
     "privacy": [
@@ -121,8 +129,12 @@ const baseLegalCopy = {
         "Профильді өзгертуге, бетбелгіні жоюға және аватарды ауыстыруға болады. Аккаунтты өздігінен жою және мерзім бойынша автоматты тазарту әзірше жоқ. Деректерді алу не жою өтінішін жоғарыдағы байланыс толтырылғаннан кейін операторға жіберіңіз. Оператор аккаунт иесін тексеріп, аккаунт пен байланысқан жазбаларды жояды, аватарды Storage API арқылы бөлек өшіреді және журналдар мен резервтік көшірмелер мерзімін тексереді. Сақтау және жауап беру мерзімдері: [ІСКЕ ҚОСАР АЛДЫНДА БЕЛГІЛЕУ]."
       ],
       [
-        "Оқушылар және өзгерістер",
-        "Аудиторияда кәмелетке толмағандар бар. Артық жеке деректерді және басқа адамдардың суреттерін тиісті құқықсыз қоспаңыз. Оператор жас талаптарын, ата-ана/мектеп қатысуын және өңдеу негіздерін іске қосар алдында анықтауы керек. Бұл жоба заң талаптарына сәйкестікті растамайды. Өзгерістер редакция күнімен белгіленеді; хабарлау тәртібі әлі анықталуы керек."
+        "Кәмелетке толған аудитория",
+        "Иесінің растауы бойынша сервис кәмелетке толған (18+) пайдаланушыларға арналған. Gemini іске қосылғанға дейін оператор қолжетімділікті тиісінше шектеуі керек; қолданба жасты техникалық тексермейді. Артық жеке деректер мен басқа адамдардың суреттерін қоспаңыз. Бұл жоба заң талаптарына сәйкестікті растамайды."
+      ],
+      [
+        "Gemini AI Study · beta",
+        "AI Study міндетті емес және оператор баптағанша өшірулі. Сұрауыңыз бойынша сервер Google Gemini-ге тек таңдалған беттердің мәтінін, режимді және жауап тілін жібереді; профиль, email, токендер, қолтаңбалы URL немесе бүкіл кітап жіберілмейді. Тегін тарифте Google мазмұнды сервисті жетілдіру үшін пайдалануы және адамдар тексеруі мүмкін; құпия деректерді таңдамаңыз. Әкімші PDF мәтінін бет бойынша бір рет Supabase-ке шығарады. Жауап кэшінде иесі, оқулық нұсқасы, аралық, режим, тіл, дереккөз хэші, жауап пен уақыт сақталады; санауыш генерация талпыныстарын шектейді. Дереккөз өзгерсе, ескі кэш жарамсыз болады. Оператор сақтау мерзімін белгілеп, деректерді жою өтініштерінде кэшті өшіруі керек. AI қателесуі мүмкін: нәтижені дәйексөздер және көрсетілген беттермен салыстырыңыз."
       ]
     ],
     "terms": [
@@ -132,7 +144,7 @@ const baseLegalCopy = {
       ],
       [
         "Аккаунт",
-        "Құпиясөз бен email қолжетімділігін қорғаңыз, аккаунтты бермеңіз және өзіңізді басқа адам ретінде көрсетпеңіз. Жас талаптары мен ата-ана/мектеп қатысу тәртібі жария іске қосуға дейін анықталуы керек. Қауіп туралы операторға құпиясөз бен токенді бермей хабарлаңыз."
+        "Құпиясөз бен email қолжетімділігін қорғаңыз, аккаунтты бермеңіз және өзіңізді басқа адам ретінде көрсетпеңіз. Қолжетімділік кәмелетке толғандарға (18+) арналған. Қауіп туралы операторға құпиясөз бен токенді бермей хабарлаңыз."
       ],
       [
         "Рұқсатты пайдалану",
@@ -157,6 +169,10 @@ const baseLegalCopy = {
       [
         "Құны, өзгерістер және деректер",
         "Төлемдер мен жазылымдар жоқ; жоқ сатып алуларға қайтарым ережесі қолданылмайды. Болашақ ақылы функцияларға бөлек шарттар қажет. Бұл шарттар жоба күйінде: күшіне ену күні мен өзгерісті хабарлау тәртібі бекітілмеген. Деректерді өңдеу құпиялық саясатында сипатталған."
+      ],
+      [
+        "Кәмелетке толған аудитория",
+        "Иесінің растауы бойынша сервис кәмелетке толған (18+) пайдаланушыларға арналған. Gemini іске қосылғанға дейін оператор қолжетімділікті тиісінше шектеуі керек; қолданба жасты техникалық тексермейді. Артық жеке деректер мен басқа адамдардың суреттерін қоспаңыз. Бұл жоба заң талаптарына сәйкестікті растамайды."
       ]
     ]
   },
@@ -200,8 +216,12 @@ const baseLegalCopy = {
         "You can edit your profile, remove bookmarks and replace your avatar. Self-service account deletion and automatic time-based cleanup are not implemented. Request access to or deletion of your data from the operator using the contact above once completed. The operator must verify account ownership, delete the account and dependent records, separately remove the avatar through the Storage API, and check log/backup retention. Retention and response periods: [SET BEFORE LAUNCH]."
       ],
       [
-        "Students and changes",
-        "The audience includes minors. Avoid unnecessary personal information and images of other people without the required rights. Before launch, the operator must determine age requirements, parent/school involvement and grounds for processing. This draft does not claim legal compliance. Revisions will carry an updated date; the notification process still needs to be established."
+        "Adult audience",
+        "The owner confirmed an adult (18+) audience. The operator must enforce appropriate access restrictions before enabling Gemini; the application does not technically verify age. Do not add unnecessary personal data or other people's images. This draft does not certify legal compliance."
+      ],
+      [
+        "Gemini AI Study · beta",
+        "AI Study is optional and off until configured by the operator. On request, the server sends Google Gemini only selected page text, mode and response language — not your profile, email, tokens, signed URLs or the whole book. Free-tier content may be used by Google to improve services and reviewed by humans; do not select confidential data. An admin extracts PDF text once per page into Supabase. The response cache stores its owner, edition, range, mode, locale, source hash, response and timestamp; a counter limits generation attempts. Replacing the source invalidates old cache entries. The operator must set retention periods and remove cached responses for data-deletion requests. AI can be wrong: compare claims with quotations and the indicated pages."
       ]
     ],
     "terms": [
@@ -211,7 +231,7 @@ const baseLegalCopy = {
       ],
       [
         "Accounts",
-        "Protect your password and email access, do not share your account or impersonate another person. Age requirements and parent/school participation must be defined before public launch. Report suspected compromise to the operator without sharing passwords or tokens."
+        "Protect your password and email access, do not share your account or impersonate another person. Access is intended for adults (18+). Report suspected compromise to the operator without sharing passwords or tokens."
       ],
       [
         "Acceptable use",
@@ -236,6 +256,10 @@ const baseLegalCopy = {
       [
         "Cost, changes and data",
         "There are no payments or subscriptions; refund terms do not apply to nonexistent purchases. Any future paid features require separate terms. These terms remain a draft: the effective date and change-notification process are not established. Data processing is described in the Privacy Policy."
+      ],
+      [
+        "Adult audience",
+        "The owner confirmed an adult (18+) audience. The operator must enforce appropriate access restrictions before enabling Gemini; the application does not technically verify age. Do not add unnecessary personal data or other people's images. This draft does not certify legal compliance."
       ]
     ]
   }

@@ -1,4 +1,5 @@
 "use client";
+import {classGrade,librarySubjectHref} from "@/lib/book-model";
 import {SubjectMotif} from "./subject-motif";
 import Link from "next/link";
 import { type CalendarDay, dayReasons } from "@/lib/school-calendar";
@@ -11,18 +12,19 @@ import { phase4Copy } from "@/lib/phase4-copy";
 import { subjectName } from "@/lib/i18n";
 import { weeklyDay, lessonRange, schoolWeek } from "@/lib/weekly-schedule";
 import { EmptyState } from "./ui";
-export function WeeklyLessonList({ lessons, subjects }: { lessons: WeeklyLesson[]; subjects: SubjectRow[] }) {
+export function WeeklyLessonList({ lessons, subjects, grade=null }: { lessons: WeeklyLesson[]; subjects: SubjectRow[];grade?:number|null }) {
   const { locale, t } = useI18n();
   const subjectsById = useMemo(() => subjectMap(subjects), [subjects]);
   return <ol className="divide-y divide-[var(--line)]">{lessons.map(row => <li key={row.id} className="timetable-row flex items-start gap-4 py-5">
     <SubjectMotif subject={subjectsById.get(row.subject_id)}/>
-    <span className="min-w-10 font-semibold" aria-label={t.lesson + " " + lessonRange(row)}>{lessonRange(row)}</span>
-    <div className="min-w-0 flex-1"><h3 className="break-words font-semibold"><Link prefetch={false}
-        href={{ pathname: "/library", query: { subject: row.subject_id, classId: row.class_id } }}
+    
+    <div className="min-w-0 flex-1"><h3 className="break-words text-lg font-semibold"><Link prefetch={false}
+        href={librarySubjectHref(row.subject_id,grade)}
         className="timetable-subject-link inline-flex min-h-11 items-center">
         {subjectName(subjectsById.get(row.subject_id),locale)}
       </Link></h3>
-      {row.start_time && row.end_time && <p className="mt-1 text-sm">{row.start_time.slice(0,5)}–{row.end_time.slice(0,5)}</p>}
+      {row.start_time && row.end_time && <p className="mt-1 text-lg font-semibold tabular-nums">{row.start_time.slice(0,5)}–{row.end_time.slice(0,5)}</p>}
+      <p className="mt-2 text-sm text-[var(--muted)]">{t.lesson} {lessonRange(row)}</p>
       {row.room && <p className="mt-1 text-sm">{t.room}: {normalizeRoom(row.room)}</p>}
     </div>
   </li>)}</ol>;
@@ -49,7 +51,7 @@ export function WeeklyScheduleBrowser({ lessons, classes, subjects, initialClass
     <section role="tabpanel" id="weekly-panel" aria-labelledby={"day-"+weekday} tabIndex={0}>
       <h2 className="section-title">{p.weekdays[weekday-1]} · {selectedDate}</h2>
       <p className="sr-only" role="status">{p.weekdays[weekday-1]}: {reasons.length ? 0 : filtered.length}</p>
-      {reasons.length ? <div className="calendar-notice"><h3>{v05Copy(locale).offDay}</h3><ul>{reasons.map(reason=><li key={reason}>{reason}</li>)}</ul></div> : filtered.length ? <WeeklyLessonList lessons={filtered} subjects={subjects}/> : <div className="mt-5"><EmptyState title={classId ? t.noLessons : t.chooseClass}>{classId ? t.noLessonsHint : t.chooseClassHint}</EmptyState></div>}
+      {reasons.length ? <div className="calendar-notice"><h3>{v05Copy(locale).offDay}</h3><ul>{reasons.map(reason=><li key={reason}>{reason}</li>)}</ul></div> : filtered.length ? <WeeklyLessonList lessons={filtered} subjects={subjects} grade={classGrade(classes.find(c=>c.id===classId))}/> : <div className="mt-5"><EmptyState title={classId ? t.noLessons : t.chooseClass}>{classId ? t.noLessonsHint : t.chooseClassHint}</EmptyState></div>}
     </section>
   </section>;
 }

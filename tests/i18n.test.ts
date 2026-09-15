@@ -12,5 +12,5 @@ test("all locales have complete, nonempty central dictionaries", () => {
 test("subject translations use stored metadata with explicit fallback", () => {
   const subject = { name:"Математика", name_kz:"Математика", name_en:"Mathematics" };
   assert.equal(subjectName(subject, "en"), "Mathematics");
-  assert.equal(subjectName({...subject,name_kz:" "},"kk"),"Математика");
+  assert.equal(subjectName({...subject,name_kz:" "},"kk"),"Пән");
 });

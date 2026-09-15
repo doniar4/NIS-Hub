@@ -9,5 +9,5 @@ export const subjects: SubjectRow[] = [20, 21, 22, 23].map((n, i) => ({
 }));
 export const books: LibraryBook[] = Array.from({ length: 125 }, (_, i) => ({
   id: fixtureClass(100 + i), title: i % 2 ? "Алгебра " + i : "Physics " + i,
-  class_id: classes[i % 3 ? 0 : 1].id, subject_id: subjects[i % 2 ? 0 : 1].id, language: "Original metadata",
+  grade: classes[i % 3 ? 0 : 1].grade, subject_id: subjects[i % 2 ? 0 : 1].id, language: "Original metadata",
 }));

@@ -58,18 +58,18 @@ test("Phase 3 Chromium and WebKit browser verification", { timeout: 180_000 }, a
       try {
         await t.test(name + ": instant filtering changes DOM and URL with ZERO requests or document navigation", async () => {
           const page = await browser.newPage({ viewport: { width: 1000, height: 780 } });
-          await page.goto(origin + "/library?q=алгебра&classId=" + classes[0].id + "&subject=" + subjects[0].id);
+          await page.goto(origin + "/library?q=алгебра&grade=" + classes[0].grade + "&subject=" + subjects[0].id);
           await expect(page.getByRole("searchbox")).toHaveValue("алгебра");
-          await expect(page.getByRole("combobox", { name: "Class", exact: true })).toHaveValue(classes[0].id);
-          await expect(page.locator("section li")).toHaveCount(books.filter(book => book.title.startsWith("Алгебра") && book.class_id === classes[0].id).length);
+          await expect(page.getByRole("combobox", { name: "Grade", exact: true })).toHaveValue(String(classes[0].grade));
+          await expect(page.locator("section li")).toHaveCount(books.filter(book => book.title.startsWith("Алгебра") && book.grade === classes[0].grade).length);
           await page.waitForLoadState("networkidle");
           const requests: string[] = []; page.on("request", request => requests.push(request.method() + " " + new URL(request.url()).pathname));
           await page.evaluate(() => { (window as unknown as { fixtureDocument: string }).fixtureDocument = "unchanged"; });
           await page.getByRole("searchbox").fill("Physics");
           await expect(page.getByRole("heading", { name: "No materials found" })).toBeVisible();
           await page.getByRole("combobox", { name: "Subject", exact: true }).selectOption("");
-          await page.getByRole("combobox", { name: "Class", exact: true }).selectOption(classes[1].id);
-          await expect(page.locator("section li")).toHaveCount(books.filter(book => book.title.startsWith("Physics") && book.class_id === classes[1].id).length);
+          await page.getByRole("combobox", { name: "Grade", exact: true }).selectOption(String(classes[1].grade));
+          await expect(page.locator("section li")).toHaveCount(books.filter(book => book.title.startsWith("Physics") && book.grade === classes[1].grade).length);
           assert.ok(page.url().includes("q=Physics"));
           await page.getByRole("button", { name: "Reset filters" }).focus();
           await page.keyboard.press("Enter");

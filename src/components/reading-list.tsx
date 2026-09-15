@@ -11,7 +11,7 @@ export async function ReadingList({bookmarks=false}:{bookmarks?:boolean}){
  const book=books.get(entry.book_id);
  return <li className="reading-item py-5" key={entry.book_id+"-"+entry.page_number}>
  {!bookmarks&&book&&<BookCover key={book.cover_url} title={book.title} url={book.cover_url}/>}
- <div>{book?<Link className="text-link font-semibold" href={"/books/"+book.id+"/read?page="+entry.page_number}>{book.title}</Link>:<p>{t.unavailableBook}</p>}
+ <div>{book?<Link className="text-link font-semibold" href={"/books/"+book.book_id+"/read?variant="+book.id+"&page="+entry.page_number}>{book.title} · {book.language}</Link>:<p>{t.unavailableBook}</p>}
  <p className="text-sm text-[var(--muted)]">{t.page} {entry.page_number}</p>
  {bookmarks&&<BookmarkRemove bookId={entry.book_id} page={entry.page_number}/>}</div></li>;
  })}</ul>;

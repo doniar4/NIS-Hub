@@ -6,8 +6,8 @@ import { weeklyDay, schoolWeek } from "@/lib/weekly-schedule";
 import { v05Copy } from "@/lib/v05-copy";
 import { useI18n } from "./locale-provider";
 import { WeeklyLessonList } from "./weekly-schedule";
-export function HomeTimetable({lessons,subjects,classId,today,nonSchoolDays}:{
-  lessons:WeeklyLesson[];subjects:SubjectRow[];classId:string;today:string;nonSchoolDays:CalendarDay[]
+export function HomeTimetable({lessons,subjects,classId,today,nonSchoolDays,grade=null}:{
+  lessons:WeeklyLesson[];subjects:SubjectRow[];classId:string;today:string;nonSchoolDays:CalendarDay[];grade?:number|null
 }) {
   const {locale,t}=useI18n(), p=v05Copy(locale);
   const [date,setDate]=useState(today);
@@ -30,6 +30,6 @@ export function HomeTimetable({lessons,subjects,classId,today,nonSchoolDays}:{
     </div>
     {date!==today && <button type="button" className="text-link" onClick={()=>{setDate(today);setJump(null);}}>{p.backToday}</button>}
     {reasons.length ? <div className="py-5"><h3 className="font-semibold">{date===today?p.todayOff:p.offDay}</h3><ul>{reasons.map(reason=><li key={reason}>{reason}</li>)}</ul><button className="button button-secondary mt-4" onClick={()=>navigate(1)}>{p.nearest}</button></div>
-      : rows.length ? <WeeklyLessonList lessons={rows} subjects={subjects}/> : <p className="py-6 text-[var(--muted)]">{classId?t.noToday:t.chooseProfileClass}</p>}
+      : rows.length ? <WeeklyLessonList lessons={rows} subjects={subjects} grade={grade}/> : <p className="py-6 text-[var(--muted)]">{classId?t.noToday:t.chooseProfileClass}</p>}
   </section>;
 }

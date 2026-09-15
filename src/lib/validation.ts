@@ -20,7 +20,7 @@ export const bookSchema = z.object({
   publication_status: z.enum(["draft", "published", "archived"]),
 });
 export const classSchema = z.object({ id: optionalId, name: z.string().trim().min(1).max(40), grade: optionalInt(1,12), section: optionalText(10) });
-export const subjectSchema = z.object({ id: optionalId, name: z.string().trim().min(1).max(100), name_kz: optionalText(100), name_en: optionalText(100), short_name: optionalText(30) });
+export const subjectSchema = z.object({ id: optionalId, name: z.string().trim().min(1).max(100), name_ru: z.string().trim().min(1).max(100), name_kz: z.string().trim().min(1).max(100), name_en: z.string().trim().min(1).max(100), short_name: optionalText(30) });
 export const lessonSchema = z.object({ id: optionalId, class_id: uuid, date: dateSchema, lesson_number: z.coerce.number().int().min(1).max(20), subject_id: uuid, teacher: optionalText(100), room: optionalText(40) });
 export const adminEntitySchema = z.enum(["books", "classes", "subjects", "schedule"]);
 

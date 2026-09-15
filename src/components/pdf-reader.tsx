@@ -1,19 +1,24 @@
 "use client";
+import {readerKeyDelta,readerScale} from "@/lib/reader-controls";
+import {v051Copy} from "@/lib/v051-copy";
 import { useI18n } from "@/components/locale-provider";
 import { useEffect, useRef, useState, useTransition } from "react";
 import type { PDFDocumentProxy, PDFDocumentLoadingTask, RenderTask } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { saveReading } from "@/app/actions/reading";
 import { isRenderCancellation, reportPdfError } from "@/lib/pdf-reader-errors";
 import { extractPageText } from "@/lib/pdf-page-text";
-export function PdfReader({ bookId, initialPage, initialBookmarks }: {
-    bookId: string;
+export function PdfReader({ bookId, variantId = bookId, initialPage, initialBookmarks }: {
+    bookId: string; variantId?:string;
     initialPage: number;
     initialBookmarks: number[];
 }) {
-    const { t } = useI18n();
+    const { t,locale } = useI18n(); const v=v051Copy(locale);
     const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
     const [page, setPage] = useState(initialPage);
     const [zoom, setZoom] = useState(1);
+    const [fit,setFit]=useState<"width"|"page">("width");
+    const [height,setHeight]=useState(650);
+    const [jump,setJump]=useState("");
     const [width, setWidth] = useState(600);
     const [attempt, setAttempt] = useState(0);
     const [error, setError] = useState<{ key: "loadPdfError" | "renderPdfError"; detail: string } | null>(null);
@@ -29,6 +34,17 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: {
     const canvasHost = useRef<HTMLDivElement>(null);
     const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
     const savedPage = useRef<number | null>(null);
+    useEffect(()=>{
+      const resize=()=>setHeight(Math.max(200,window.innerHeight-220));
+      resize();window.addEventListener("resize",resize);return()=>window.removeEventListener("resize",resize);
+    },[]);
+    useEffect(()=>{
+      const key=(event:KeyboardEvent)=>{
+        const delta=readerKeyDelta(event);if(!delta||!pdf||busy||error)return;
+        event.preventDefault();setPage(current=>Math.max(1,Math.min(pdf.numPages,current+delta)));setMessage("");
+      };
+      window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key);
+    },[pdf,busy,error]);
     useEffect(() => {
         const element = viewportRef.current;
         if (!element)
@@ -43,7 +59,7 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: {
         const abort = new AbortController();
         async function load() {
             try {
-                const response = await fetch(`/api/books/${bookId}/access`, { cache: "no-store", signal: abort.signal });
+                const response = await fetch(`/api/books/${bookId}/access?variant=${variantId}`, { cache: "no-store", signal: abort.signal });
                 if (!response.ok)
                     throw new Error(response.status === 401 ? "Войдите снова, чтобы читать материал." : "PDF недоступен. Возможно, материал снят с публикации или файл ещё не загружен.");
                 const { url } = await response.json() as {
@@ -82,7 +98,7 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: {
         void load();
         return () => { cancelled = true; abort.abort(); if (task)
             void task.destroy().catch(reason => { reportPdfError("cleanup", reason); }); };
-    }, [bookId, attempt]);
+    }, [bookId, variantId, attempt]);
     useEffect(() => {
         if (!pdf)
             return;
@@ -98,7 +114,7 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: {
                     return;
                 setBusy(true);
                 const base = pdfPage.getViewport({ scale: 1 });
-                const viewport = pdfPage.getViewport({ scale: Math.min(width / base.width, 1.5) * zoom });
+                const viewport = pdfPage.getViewport({ scale: readerScale(width,height,base.width,base.height,fit,zoom) });
                 const ratio = Math.min(window.devicePixelRatio || 1, 2);
                 canvas = document.createElement("canvas");
                 canvas.width = Math.floor(viewport.width * ratio);
@@ -127,7 +143,7 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: {
                         saveQueue.current = saveQueue.current.then(async () => {
                             if (cancelled)
                                 return;
-                            const result = await saveReading(bookId, page, "progress");
+                            const result = await saveReading(bookId, page, "progress",variantId);
                             if (!cancelled) {
                                 if (result.success)
                                     savedPage.current = page;
@@ -179,7 +195,7 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: {
             else
                 release();
         };
-    }, [pdf, page, width, zoom, bookId]);
+    }, [pdf, page, width, height, fit, zoom, bookId, variantId]);
     function goTo(value: number) {
         if (pdf && value !== page && Number.isInteger(value) && value >= 1 && value <= pdf.numPages) {
             setBusy(true);
@@ -192,7 +208,7 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: {
         const removing = bookmarks.includes(currentPage);
         startTransition(async () => {
             try {
-                const result = await saveReading(bookId, currentPage, removing ? "remove" : "bookmark");
+                const result = await saveReading(bookId, currentPage, removing ? "remove" : "bookmark",variantId);
                 setMessage(result.error ?? result.success ?? "");
                 if (result.success)
                     setBookmarks(values => removing ? values.filter(value => value !== currentPage) : [...values, currentPage].sort((a, b) => a - b));
@@ -204,17 +220,23 @@ export function PdfReader({ bookId, initialPage, initialBookmarks }: {
     }
     return <section aria-label={t.reader} className="space-y-5">
     {error ? <div className="form-error" role="alert"><p>{t[error.key]} {error.detail}</p><button className="button button-secondary mt-4" onClick={() => { setPdf(null); setError(null); setBusy(true); setAttempt(a => a + 1); }}>{t.reloadPdf}</button></div> : <>
-      <div className="flex flex-wrap items-end gap-3">
-        <button className="button button-secondary" disabled={!pdf || page <= 1 || busy} onClick={() => goTo(page - 1)}>{t.previous}</button>
-        <label className="w-28"><span className="field-label">{t.page}{pdf ? ` / ${pdf.numPages}` : ""}</span><input className="field" aria-label={t.pageNumber} type="number" min={1} max={pdf?.numPages ?? 1} value={page} disabled={!pdf} onChange={event => goTo(Number(event.target.value))}/></label>
-        <button className="button button-secondary" disabled={!pdf || page >= pdf.numPages || busy} onClick={() => goTo(page + 1)}>{t.next}</button>
-        <label><span className="field-label">{t.zoom}</span><select className="field" value={zoom} disabled={!pdf} onChange={event => setZoom(Number(event.target.value))}>{[0.75, 1, 1.25, 1.5, 2].map(value => <option key={value} value={value}>{Math.round(value * 100)}%</option>)}</select></label>
-        <button className="button" disabled={!pdf || busy || pending} aria-pressed={bookmarks.includes(page)} onClick={toggleBookmark}>{pending ? t.saving : bookmarks.includes(page) ? t.removeBookmark : t.addBookmark}</button>
-      </div>
+
       <p className="min-h-6 text-sm text-[var(--muted)]" role="status">{busy ? t.loadingPage : message || `${t.page} ${page} ${t.of} ${pdf?.numPages ?? "…"}`}</p>
     </>}
     <div ref={viewportRef} className="w-full min-w-0 overflow-x-auto border border-[var(--line)] bg-[var(--surface)]" aria-busy={busy}><div ref={canvasHost} className="mx-auto w-fit min-h-64"/></div>
     {!busy && !error && <details className="border border-[var(--line)] p-4"><summary className="cursor-pointer text-sm font-semibold">{t.pageText + " "}{page}</summary><p className="mt-4 whitespace-pre-wrap leading-7">{textFailed ? t.textPdfError : pageText || t.noText}</p></details>}
     {bookmarks.length > 0 && <nav aria-label={t.bookBookmarks} className="flex flex-wrap items-center gap-2"><span className="mr-2 text-sm">{t.bookmarks}</span>{bookmarks.map(value => <button className="button button-secondary button-small" disabled={!pdf || value > pdf.numPages} key={value} onClick={() => goTo(value)}>{t.page + " "}{value}</button>)}</nav>}
+    {!error&&<div className="reader-controls sticky bottom-0 z-20 flex flex-wrap items-end gap-2 border border-[var(--line)] bg-[var(--surface)] p-3" style={{paddingBottom:"max(0.75rem, env(safe-area-inset-bottom))"}}>
+ <button className="button button-secondary" disabled={!pdf||page<=1||busy} onClick={()=>goTo(page-1)}>{t.previous}</button>
+ <span className="self-center tabular-nums" aria-live="polite">{page} / {pdf?.numPages??"…"}</span>
+ <button className="button button-secondary" disabled={!pdf||page>=pdf.numPages||busy} onClick={()=>goTo(page+1)}>{t.next}</button>
+ <form className="flex items-end gap-2" onSubmit={event=>{event.preventDefault();goTo(Number(jump));setJump("");}}>
+ <label className="w-24"><span className="field-label">{t.page}</span><input className="field" aria-label={t.pageNumber} type="number" min={1} max={pdf?.numPages??1} placeholder={String(page)} value={jump} disabled={!pdf} onChange={event=>setJump(event.target.value)}/></label>
+ <button className="button button-secondary" disabled={!pdf}>{v.jump}</button></form>
+ <div className="flex items-center gap-2"><button className="button button-secondary" aria-label={v.zoomOut} disabled={!pdf||zoom<=0.5} onClick={()=>setZoom(z=>Math.max(0.5,z-0.25))}>−</button><span className="text-sm tabular-nums">{Math.round(zoom*100)}%</span><button className="button button-secondary" aria-label={v.zoomIn} disabled={!pdf||zoom>=3} onClick={()=>setZoom(z=>Math.min(3,z+0.25))}>+</button></div>
+ <button className="button button-secondary" disabled={!pdf} aria-pressed={fit==="width"&&zoom===1} onClick={()=>{setFit("width");setZoom(1);}}>{v.fitWidth}</button>
+ <button className="button button-secondary" disabled={!pdf} aria-pressed={fit==="page"&&zoom===1} onClick={()=>{setFit("page");setZoom(1);}}>{v.fitPage}</button>
+ <button className="button" disabled={!pdf||busy||pending} aria-pressed={bookmarks.includes(page)} onClick={toggleBookmark}>{pending?t.saving:bookmarks.includes(page)?t.removeBookmark:t.addBookmark}</button>
+ </div>}
   </section>;
 }
