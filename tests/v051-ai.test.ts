@@ -32,10 +32,11 @@ test("Gemini transport sends only selected text with safe headers; timeouts/quot
   assert.deepEqual(JSON.parse(request.contents[0].parts[0].text),{pages});
   assert.ok(!String(init?.body).includes(id(30)));assert.equal(request.tools,undefined);
   return Response.json({candidates:[{finishReason:"STOP",content:{parts:[{text:JSON.stringify(response)}]}}]});
+ });
  assert.deepEqual(await provider.generate(input,pages),response);assert.equal(calls,1);
  for(const status of [429,500])await assert.rejects(geminiProvider({key:"fixture",model:"gemini-test",timeoutMs:100},async()=>new Response("Sensitive provider body",{status})).generate(input,pages),
-  (e:unknown)=>e instanceof StudyProviderError&&e.code===(status===429?"quota":"failed")&&!e.message.includes("Sensitive"));
- await assert.rejects(geminiProvider({key:"fixture",model:"gemini-test",timeoutMs:10},async(_u,init)=>new Promise((_resolve,reject)=>init?.signal?.addEventListener("abort",()=>reject(new Error("timeout"))))).generate(input,pages),{message:"failed"});
+  (e:unknown)=>e instanceof StudyProviderError&&e.code===(status===429?"provider_quota":"failed")&&!e.message.includes("Sensitive"));
+ await assert.rejects(geminiProvider({key:"fixture",model:"gemini-test",timeoutMs:10},async(_u,init)=>new Promise((_resolve,reject)=>init?.signal?.addEventListener("abort",()=>reject(new Error("timeout"))))).generate(input,pages),{message:"timeout"});
  await assert.rejects(geminiProvider({key:"fixture",model:"gemini-test",timeoutMs:100},async()=>Response.json({candidates:[]})).generate(input,pages),{message:"failed"});
 });
 test("Real SQL: extraction once, protected pages/cache, atomic quota, failed attempts, source replacement invalidation",async()=>{

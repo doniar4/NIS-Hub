@@ -23,7 +23,7 @@ export function AiStudyPanel({variantId,totalPages,initialPage,config}:{variantI
  <label><span className="field-label">{p.to}</span><input className="field" type="number" min={Number(start)||1} max={Math.min(totalPages??1000,(Number(start)||1)+config.maxPages-1)} required value={end} onChange={e=>{setEnd(e.target.value);setResult(null);}}/></label></div>
  <label className="block"><span className="field-label">{p.ai}</span><select className="field" value={mode} onChange={e=>{setMode(e.target.value as StudyInput["mode"]);setResult(null);}}>{STUDY_MODES.map(value=><option key={value} value={value}>{p.modes[value]}</option>)}</select></label>
  <button className="button w-full">{pending?p.working:p.generate}</button></fieldset></form>
- {pending&&<p role="status">{p.working}</p>}{result?.error&&<p role="alert">{result.error==="quota"?p.quota:result.error==="unavailable"?p.unavailable:result.error==="disabled"?p.aiDisabled:p.aiError}</p>}
+ {pending&&<p role="status">{p.working}</p>}{result?.error&&<p role="alert">{result.error==="configuration"?p.aiConfiguration:result.error==="timeout"?p.aiTimeout:result.error==="busy"?p.aiBusy:result.error==="provider_quota"?p.aiProviderQuota:result.error==="quota"?p.quota:result.error==="unavailable"?p.unavailable:result.error==="disabled"?p.aiDisabled:p.aiError}</p>}
  {result?.response&&result.source&&<section className="space-y-4" aria-label={p.ai}>
  <p className="font-semibold">{p.source}: {t.pages} {result.source.start}–{result.source.end}</p>
  {result.cached&&<p className="text-sm">{p.cached}</p>}{result.response.insufficient&&<p>{p.insufficient}</p>}
