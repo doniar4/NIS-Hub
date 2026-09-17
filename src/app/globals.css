@@ -539,6 +539,20 @@ html[data-intro] .greeting-botanical,html[data-intro] .line-ornament { animation
  .home-greeting .page-intro {padding-right:0;} .greeting-botanical {right:0;width:150px;opacity:.12;}
  .sidebar-legal a {min-height:44px;} .app-main {padding:1.25rem 1rem;}
 }
-@media(prefers-reduced-motion:reduce) {
- *,*::before,*::after {animation:none!important;transition:none!important;}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .motion-controls {
+    display: none;
+  }
+}
 }

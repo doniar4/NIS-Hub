@@ -1,11 +1,188 @@
-import type {Locale} from "./i18n";
-const copy={
-<<<<<<< HEAD
-ru:{aiConfiguration:"AI недоступен: администратору нужно проверить модель и ключ Gemini.",aiTimeout:"Gemini не ответил вовремя. Попробуйте меньший диапазон страниц.",aiBusy:"Такой запрос уже выполняется. Подождите немного и повторите.",aiProviderQuota:"Лимит сервиса Gemini достигнут. Повторите позже или обратитесь к администратору.",extractReady:"Текст сохранён",grade:"Параллель",allGrades:"Все параллели",edition:"Язык учебника",editionHint:"Язык учебника не меняет язык интерфейса.",ru:"Русский",kz:"Қазақша",en:"English",und:"Язык не указан",newEdition:"Добавить вариант",logicalStatus:"Публикация книги (все варианты)",editionStatus:"Публикация варианта",fitWidth:"По ширине",fitPage:"Страница целиком",jump:"Перейти",zoomIn:"Увеличить",zoomOut:"Уменьшить",extract:"Извлечь текст для AI",extractHint:"Один раз для каждого PDF. Скан без текстового слоя не поддерживается.",ai:"AI Study · beta",aiDisabled:"AI Study не включён оператором.",aiConsent:"В Gemini отправляется только выбранный текст учебника. Не выбирайте конфиденциальные данные. Ответ может содержать ошибки — сверяйтесь с источником.",from:"Со страницы",to:"По страницу",generate:"Подготовить",working:"Подготовка…",source:"Источник",insufficient:"Недостаточно материала в выбранном источнике.",aiError:"Не удалось подготовить ответ. Проверьте диапазон или повторите позже.",quota:"Дневной лимит AI исчерпан. Попробуйте завтра.",unavailable:"Текст ещё не извлечён или отсутствует. Обратитесь к администратору.",cached:"Сохранённый ответ",limit:"До 10 страниц и 30 000 символов; по умолчанию 10 запросов в сутки.",modes:{summary:"Краткий конспект",review:"Повторение",sor:"Подготовка к СОР",soch:"Подготовка к СОЧ",questions:"Вопросы для самопроверки"}},
-=======
-ru:{aiConfiguration:"AI недоступен: администратору нужно проверить модель и ключ Gemini.",aiTimeout:"Gemini не ответил вовремя. Попробуйте меньший диапазон страниц.",aiBusy:"Такой запрос уже выполняется. Подождите немного и повторите.",aiProviderQuota:"Лимит сервиса Gemini достигнут. Повторите позже или обратитесь к администратору.",extractReady:"Текст сохранён",grade:"Параллель",allGrades:"Все параллели",edition:"Язык учебника",editionHint:"Язык учебника не меняет язык интерфейса.",ru:"Русский",kz:"Қазақша",en:"English",und:"Язык не указан",newEdition:"Добавить вариант",logicalStatus:"Публикация книги (все варианты)",editionStatus:"Публикация варианта",fitWidth:"По ширине",fitPage:"Страница целиком",jump:"Перейти",zoomIn:"Увеличить",zoomOut:"Уменьшить",extract:"Извлечь текст для AI",extractHint:"Один раз для каждого PDF. Скан без текстового слоя не поддерживается.",ai:"AI Study · beta",aiDisabled:"AI Study не включён оператором.",aiConsent:"В Gemini отправляется только выбранный текст учебника. Не выбирайте конфиденциальные данные. Ответ может содержать ошибки — сверяйтесь с источником.",from:"Со страницы",to:"По страницу",generate:"Подготовить",working:"Подготовка…",source:"Источник",insufficient:"Недостаточно материала в выбранном источнике.",aiError:"Не удалось подготовить ответ. Проверьте диапазон или повторите позже.",quota:"Дневной лимит AI исчерпан. Попробуйте завтра.",unavailable:"Текст ещё не извлечён или отсутствует. Обратитесь к администратору.",cached:"Сохранённый ответ",limit:"До 10 страниц и 30 000 символов; по умолчанию 10 запросов в сутки.",modes:{summary:"Краткий конспект",review:"Review",sor:"Подготовка к СОР",soch:"Подготовка к СОЧ",questions:"Вопросы для самопроверки"}},
->>>>>>> ccc1ea1b5766fdcae994fe1ed3ca7707cb081dc3
-kk:{aiConfiguration:"AI қолжетімсіз: әкімші Gemini моделі мен кілтін тексеруі керек.",aiTimeout:"Gemini уақытында жауап бермеді. Азырақ бет таңдаңыз.",aiBusy:"Бұл сұрау орындалып жатыр. Біраз күтіп, қайталаңыз.",aiProviderQuota:"Gemini сервисінің шегіне жетті. Кейін қайталаңыз немесе әкімшіге хабарласыңыз.",extractReady:"Мәтін сақталды",grade:"Сынып деңгейі",allGrades:"Барлық деңгейлер",edition:"Оқулық тілі",editionHint:"Оқулық тілі интерфейс тілін өзгертпейді.",ru:"Русский",kz:"Қазақша",en:"English",und:"Тіл көрсетілмеген",newEdition:"Нұсқа қосу",logicalStatus:"Кітапты жариялау (барлық нұсқалар)",editionStatus:"Нұсқаны жариялау",fitWidth:"Ені бойынша",fitPage:"Толық бет",jump:"Өту",zoomIn:"Үлкейту",zoomOut:"Кішірейту",extract:"AI үшін мәтінді шығару",extractHint:"Әр PDF үшін бір рет. Мәтін қабаты жоқ скан қолдау таппайды.",ai:"AI Study · beta",aiDisabled:"Оператор AI Study қызметін қосқан жоқ.",aiConsent:"Gemini-ге тек таңдалған оқулық мәтіні жіберіледі. Құпия деректерді таңдамаңыз. Жауапта қате болуы мүмкін — дереккөзбен салыстырыңыз.",from:"Бастапқы бет",to:"Соңғы бет",generate:"Дайындау",working:"Дайындалуда…",source:"Дереккөз",insufficient:"Таңдалған дереккөзде материал жеткіліксіз.",aiError:"Жауап дайындалмады. Аралықты тексеріңіз немесе кейін қайталаңыз.",quota:"Күндік AI шегі бітті. Ертең қайталаңыз.",unavailable:"Мәтін әлі шығарылмаған немесе жоқ. Әкімшіге хабарласыңыз.",cached:"Сақталған жауап",limit:"10 бетке және 30 000 таңбаға дейін; әдепкіде күніне 10 сұрау.",modes:{summary:"Қысқаша конспект",review:"Қайталау",sor:"БЖБ-ға дайындық",soch:"ТЖБ-ға дайындық",questions:"Өзін-өзі тексеру сұрақтары"}},
-en:{aiConfiguration:"AI is unavailable: an admin needs to check the Gemini model and key.",aiTimeout:"Gemini did not respond in time. Try a smaller page range.",aiBusy:"An identical request is already running. Wait briefly and retry.",aiProviderQuota:"The Gemini service limit was reached. Try later or contact an admin.",extractReady:"Text saved",grade:"Grade",allGrades:"All grades",edition:"Textbook language",editionHint:"Textbook language does not change the interface language.",ru:"Русский",kz:"Қазақша",en:"English",und:"Language unspecified",newEdition:"Add edition",logicalStatus:"Book publication (all editions)",editionStatus:"Edition publication",fitWidth:"Fit width",fitPage:"Fit page",jump:"Go",zoomIn:"Zoom in",zoomOut:"Zoom out",extract:"Extract text for AI",extractHint:"Once per PDF. Scans without a text layer are unsupported.",ai:"AI Study · beta",aiDisabled:"AI Study is not enabled by the operator.",aiConsent:"Only the selected textbook text is sent to Gemini. Do not select confidential data. Answers may contain errors — check the source.",from:"From page",to:"To page",generate:"Generate",working:"Generating…",source:"Source",insufficient:"The selected source does not contain enough material.",aiError:"Could not generate an answer. Check the range or try again later.",quota:"Daily AI limit reached. Try again tomorrow.",unavailable:"Text has not been extracted or is unavailable. Contact an admin.",cached:"Cached answer",limit:"Up to 10 pages and 30,000 characters; default 10 requests per day.",modes:{summary:"Summary",review:"Review",sor:"SOR preparation",soch:"SOCH preparation",questions:"Self-check questions"}}
+import type { Locale } from "./i18n";
+
+const copy = {
+  ru: {
+    aiConfiguration:
+      "AI недоступен: администратору нужно проверить модель и ключ Gemini.",
+    aiTimeout:
+      "Gemini не ответил вовремя. Попробуйте меньший диапазон страниц.",
+    aiBusy:
+      "Такой запрос уже выполняется. Подождите немного и повторите.",
+    aiProviderQuota:
+      "Лимит сервиса Gemini достигнут. Повторите позже или обратитесь к администратору.",
+    extractReady: "Текст сохранён",
+    grade: "Параллель",
+    allGrades: "Все параллели",
+    edition: "Язык учебника",
+    editionHint:
+      "Язык учебника не меняет язык интерфейса.",
+    ru: "Русский",
+    kz: "Қазақша",
+    en: "English",
+    und: "Язык не указан",
+    newEdition: "Добавить вариант",
+    logicalStatus: "Публикация книги (все варианты)",
+    editionStatus: "Публикация варианта",
+    fitWidth: "По ширине",
+    fitPage: "Страница целиком",
+    jump: "Перейти",
+    zoomIn: "Увеличить",
+    zoomOut: "Уменьшить",
+    extract: "Извлечь текст для AI",
+    extractHint:
+      "Один раз для каждого PDF. Скан без текстового слоя не поддерживается.",
+    ai: "AI Study · beta",
+    aiDisabled: "AI Study не включён оператором.",
+    aiConsent:
+      "В Gemini отправляется только выбранный текст учебника. Не выбирайте конфиденциальные данные. Ответ может содержать ошибки — сверяйтесь с источником.",
+    from: "Со страницы",
+    to: "По страницу",
+    generate: "Подготовить",
+    working: "Подготовка…",
+    source: "Источник",
+    insufficient:
+      "Недостаточно материала в выбранном источнике.",
+    aiError:
+      "Не удалось подготовить ответ. Проверьте диапазон или повторите позже.",
+    quota:
+      "Дневной лимит AI исчерпан. Попробуйте завтра.",
+    unavailable:
+      "Текст ещё не извлечён или отсутствует. Обратитесь к администратору.",
+    cached: "Сохранённый ответ",
+    limit:
+      "До 10 страниц и 30 000 символов; по умолчанию 10 запросов в сутки.",
+    modes: {
+      summary: "Краткий конспект",
+      review: "Повторение",
+      sor: "Подготовка к СОР",
+      soch: "Подготовка к СОЧ",
+      questions: "Вопросы для самопроверки",
+    },
+  },
+
+  kk: {
+    aiConfiguration:
+      "AI қолжетімсіз: әкімші Gemini моделі мен кілтін тексеруі керек.",
+    aiTimeout:
+      "Gemini уақытында жауап бермеді. Азырақ бет таңдаңыз.",
+    aiBusy:
+      "Бұл сұрау орындалып жатыр. Біраз күтіп, қайталаңыз.",
+    aiProviderQuota:
+      "Gemini сервисінің шегіне жетті. Кейін қайталаңыз немесе әкімшіге хабарласыңыз.",
+    extractReady: "Мәтін сақталды",
+    grade: "Сынып деңгейі",
+    allGrades: "Барлық деңгейлер",
+    edition: "Оқулық тілі",
+    editionHint:
+      "Оқулық тілі интерфейс тілін өзгертпейді.",
+    ru: "Русский",
+    kz: "Қазақша",
+    en: "English",
+    und: "Тіл көрсетілмеген",
+    newEdition: "Нұсқа қосу",
+    logicalStatus:
+      "Кітапты жариялау (барлық нұсқалар)",
+    editionStatus: "Нұсқаны жариялау",
+    fitWidth: "Ені бойынша",
+    fitPage: "Толық бет",
+    jump: "Өту",
+    zoomIn: "Үлкейту",
+    zoomOut: "Кішірейту",
+    extract: "AI үшін мәтінді шығару",
+    extractHint:
+      "Әр PDF үшін бір рет. Мәтін қабаты жоқ скан қолдау таппайды.",
+    ai: "AI Study · beta",
+    aiDisabled:
+      "Оператор AI Study қызметін қосқан жоқ.",
+    aiConsent:
+      "Gemini-ге тек таңдалған оқулық мәтіні жіберіледі. Құпия деректерді таңдамаңыз. Жауапта қате болуы мүмкін — дереккөзбен салыстырыңыз.",
+    from: "Бастапқы бет",
+    to: "Соңғы бет",
+    generate: "Дайындау",
+    working: "Дайындалуда…",
+    source: "Дереккөз",
+    insufficient:
+      "Таңдалған дереккөзде материал жеткіліксіз.",
+    aiError:
+      "Жауап дайындалмады. Аралықты тексеріңіз немесе кейін қайталаңыз.",
+    quota:
+      "Күндік AI шегі бітті. Ертең қайталаңыз.",
+    unavailable:
+      "Мәтін әлі шығарылмаған немесе жоқ. Әкімшіге хабарласыңыз.",
+    cached: "Сақталған жауап",
+    limit:
+      "10 бетке және 30 000 таңбаға дейін; әдепкіде күніне 10 сұрау.",
+    modes: {
+      summary: "Қысқаша конспект",
+      review: "Қайталау",
+      sor: "БЖБ-ға дайындық",
+      soch: "ТЖБ-ға дайындық",
+      questions: "Өзін-өзі тексеру сұрақтары",
+    },
+  },
+
+  en: {
+    aiConfiguration:
+      "AI is unavailable: an admin needs to check the Gemini model and key.",
+    aiTimeout:
+      "Gemini did not respond in time. Try a smaller page range.",
+    aiBusy:
+      "An identical request is already running. Wait briefly and retry.",
+    aiProviderQuota:
+      "The Gemini service limit was reached. Try later or contact an admin.",
+    extractReady: "Text saved",
+    grade: "Grade",
+    allGrades: "All grades",
+    edition: "Textbook language",
+    editionHint:
+      "Textbook language does not change the interface language.",
+    ru: "Русский",
+    kz: "Қазақша",
+    en: "English",
+    und: "Language unspecified",
+    newEdition: "Add edition",
+    logicalStatus:
+      "Book publication (all editions)",
+    editionStatus: "Edition publication",
+    fitWidth: "Fit width",
+    fitPage: "Fit page",
+    jump: "Go",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    extract: "Extract text for AI",
+    extractHint:
+      "Once per PDF. Scans without a text layer are unsupported.",
+    ai: "AI Study · beta",
+    aiDisabled:
+      "AI Study is not enabled by the operator.",
+    aiConsent:
+      "Only the selected textbook text is sent to Gemini. Do not select confidential data. Answers may contain errors — check the source.",
+    from: "From page",
+    to: "To page",
+    generate: "Generate",
+    working: "Generating…",
+    source: "Source",
+    insufficient:
+      "The selected source does not contain enough material.",
+    aiError:
+      "Could not generate an answer. Check the range or try again later.",
+    quota:
+      "Daily AI limit reached. Try again tomorrow.",
+    unavailable:
+      "Text has not been extracted or is unavailable. Contact an admin.",
+    cached: "Cached answer",
+    limit:
+      "Up to 10 pages and 30,000 characters; default 10 requests per day.",
+    modes: {
+      summary: "Summary",
+      review: "Review",
+      sor: "SOR preparation",
+      soch: "SOCH preparation",
+      questions: "Self-check questions",
+    },
+  },
 };
-export function v051Copy(locale:Locale){return copy[locale];}
+
+export function v051Copy(locale: Locale) {
+  return copy[locale];
+}
