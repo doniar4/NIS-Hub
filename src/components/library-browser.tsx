@@ -64,7 +64,10 @@ export function LibraryBrowser({ books, subjects, initial, truncated }: {
     {!filteredBooks.length ? <EmptyState title={t.noMaterials}>{t.noMaterialsHint}</EmptyState> :
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filteredBooks.map(book =>
         <li key={book.id} className="library-card border border-[var(--line)] bg-[var(--surface)] p-6">
+<<<<<<< HEAD
           <SubjectMotif subject={subjectsById.get(book.subject_id)}/><PanelGlyph kind="library"/>
+=======
+>>>>>>> ccc1ea1b5766fdcae994fe1ed3ca7707cb081dc3
           <p className="field-label">{subjectName(subjectsById.get(book.subject_id), locale)}</p>
           <h2 className="text-xl font-semibold"><Link prefetch={false} className="underline-offset-4 hover:underline" href={"/books/" + book.id}>{book.title}</Link></h2>
           <p className="mt-3 text-sm text-[var(--muted)]">{book.grade ? p.grade+" "+book.grade : ""}</p>

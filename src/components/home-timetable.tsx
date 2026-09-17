@@ -6,8 +6,11 @@ import { weeklyDay, schoolWeek } from "@/lib/weekly-schedule";
 import { v05Copy } from "@/lib/v05-copy";
 import { useI18n } from "./locale-provider";
 import { WeeklyLessonList } from "./weekly-schedule";
+<<<<<<< HEAD
 import { PanelGlyph } from "./academic-art";
 import { vintageCopy } from "@/lib/vintage-copy";
+=======
+>>>>>>> ccc1ea1b5766fdcae994fe1ed3ca7707cb081dc3
 export function HomeTimetable({lessons,subjects,classId,today,nonSchoolDays,grade=null}:{
   lessons:WeeklyLesson[];subjects:SubjectRow[];classId:string;today:string;nonSchoolDays:CalendarDay[];grade?:number|null
 }) {
@@ -20,7 +23,11 @@ export function HomeTimetable({lessons,subjects,classId,today,nonSchoolDays,grad
   const rows=reasons.length?[]:weeklyDay(lessons,classId,schoolWeek(date).weekday,date);
   const navigate=(direction:-1|1)=>{const next=schoolDayJump(date,direction,nonSchoolDays,locale);setJump({from:date,direction});if(next.date)setDate(next.date);};
   return <section aria-label={t.today} className="home-timetable">
+<<<<<<< HEAD
     <div className="timetable-heading"><div className="panel-heading"><PanelGlyph kind="schedule"/><div><h2 className="section-title">{date===today?p.today:p.preview}</h2><p className="panel-caption">{date===today?vintageCopy(locale).todayHint:t.schedule}</p></div></div>
+=======
+    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="section-title">{date===today?p.today:p.preview}</h2>
+>>>>>>> ccc1ea1b5766fdcae994fe1ed3ca7707cb081dc3
       <div className="flex gap-2"><button type="button" className="button button-secondary" aria-label={p.previous} onClick={()=>navigate(-1)}>←</button><button type="button" className="button button-secondary" aria-label={p.next} onClick={()=>navigate(1)}>→</button></div>
     </div>
     <p className="mt-2 font-medium"><time dateTime={date}>{formatSchoolDate(date,locale)}</time></p>

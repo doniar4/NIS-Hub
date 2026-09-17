@@ -17,14 +17,24 @@ export function WeeklyLessonList({ lessons, subjects, grade=null }: { lessons: W
   const subjectsById = useMemo(() => subjectMap(subjects), [subjects]);
   return <ol className="divide-y divide-[var(--line)]">{lessons.map(row => <li key={row.id} className="timetable-row flex items-start gap-4 py-5">
     <SubjectMotif subject={subjectsById.get(row.subject_id)}/>
+<<<<<<< HEAD
+=======
+    
+>>>>>>> ccc1ea1b5766fdcae994fe1ed3ca7707cb081dc3
     <div className="min-w-0 flex-1"><h3 className="break-words text-lg font-semibold"><Link prefetch={false}
         href={librarySubjectHref(row.subject_id,grade)}
         className="timetable-subject-link inline-flex min-h-11 items-center">
         {subjectName(subjectsById.get(row.subject_id),locale)}
       </Link></h3>
+<<<<<<< HEAD
       {row.start_time && row.end_time && <p className="lesson-time mt-1 text-lg font-semibold tabular-nums">{row.start_time.slice(0,5)}–{row.end_time.slice(0,5)}</p>}
       <p className="lesson-slot mt-2 text-sm text-[var(--muted)]">{t.lesson} {lessonRange(row)}</p>
       {row.room && <p className="lesson-room mt-1 text-sm">{t.room}: {normalizeRoom(row.room)}</p>}
+=======
+      {row.start_time && row.end_time && <p className="mt-1 text-lg font-semibold tabular-nums">{row.start_time.slice(0,5)}–{row.end_time.slice(0,5)}</p>}
+      <p className="mt-2 text-sm text-[var(--muted)]">{t.lesson} {lessonRange(row)}</p>
+      {row.room && <p className="mt-1 text-sm">{t.room}: {normalizeRoom(row.room)}</p>}
+>>>>>>> ccc1ea1b5766fdcae994fe1ed3ca7707cb081dc3
     </div>
   </li>)}</ol>;
 }
