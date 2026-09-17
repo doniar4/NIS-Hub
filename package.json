@@ -13,11 +13,16 @@
     "test": "node --import tsx --test tests/*.test.ts",
     "test:browser": "node --import tsx --test tests/browser.smoke.ts",
     "test:browser:phase4": "node --import tsx --test tests/phase4-browser.smoke.ts",
+    "test:browser:v05": "node --import tsx --test tests/v05-browser.smoke.ts",
     "test:http": "node --import tsx --test tests/http.smoke.ts"
   },
   "dependencies": {
+    "@fontsource-variable/noto-sans": "^5.3.0",
+    "@fontsource-variable/outfit": "^5.3.0",
+    "@gsap/react": "^2.1.2",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.116.0",
+    "gsap": "^3.15.0",
     "next": "16.3.4",
     "pdfjs-dist": "^6.3.289",
     "react": "19.2.8",

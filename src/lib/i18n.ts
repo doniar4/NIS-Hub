@@ -774,4 +774,4 @@ const translations = {
 export type MessageKey = keyof typeof translations;
 export type Dictionary = Record<MessageKey, string>;
 export const dictionaries = Object.fromEntries(locales.map((locale, index) => [locale, Object.fromEntries(Object.entries(translations).map(([key, values]) => [key, values[index]]))])) as Record<Locale, Dictionary>;
-export function subjectName(subject: Pick<SubjectRow, "name" | "name_kz" | "name_en"> | undefined, locale: Locale): string { if (!subject) return ""; return (locale === "kk" ? subject.name_kz : locale === "en" ? subject.name_en : subject.name)?.trim() || subject.name; }
+export function subjectName(subject: Pick<SubjectRow, "name" | "name_ru" | "name_kz" | "name_en"> | undefined, locale: Locale): string { if (!subject) return ""; return (locale === "kk" ? subject.name_kz : locale === "en" ? subject.name_en : subject.name_ru ?? subject.name)?.trim() || (locale==="ru" ? subject.name : locale==="kk" ? "Пән" : "Subject"); }

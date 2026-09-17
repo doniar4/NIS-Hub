@@ -41,6 +41,10 @@ export function BookmarkIcon(props: IconProps) {
   return <Icon {...props}><path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-3-6 3V4Z" /></Icon>;
 }
 
+export function RefreshIcon(props: IconProps) {
+  return <Icon {...props}><path d="M20 11a8.1 8.1 0 0 0-14.6-3.7L3 10" /><path d="M3 5v5h5M4 13a8.1 8.1 0 0 0 14.6 3.7L21 14" /><path d="M21 19v-5h-5" /></Icon>;
+}
+
 export function UserIcon(props: IconProps) {
   return <Icon {...props}><circle cx="12" cy="8" r="3.5" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></Icon>;
 }

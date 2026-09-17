@@ -58,18 +58,18 @@ test("Phase 3 Chromium and WebKit browser verification", { timeout: 180_000 }, a
       try {
         await t.test(name + ": instant filtering changes DOM and URL with ZERO requests or document navigation", async () => {
           const page = await browser.newPage({ viewport: { width: 1000, height: 780 } });
-          await page.goto(origin + "/library?q=алгебра&classId=" + classes[0].id + "&subject=" + subjects[0].id);
+          await page.goto(origin + "/library?q=алгебра&grade=" + classes[0].grade + "&subject=" + subjects[0].id);
           await expect(page.getByRole("searchbox")).toHaveValue("алгебра");
-          await expect(page.getByRole("combobox", { name: "Class", exact: true })).toHaveValue(classes[0].id);
-          await expect(page.locator("section li")).toHaveCount(books.filter(book => book.title.startsWith("Алгебра") && book.class_id === classes[0].id).length);
+          await expect(page.getByRole("combobox", { name: "Grade", exact: true })).toHaveValue(String(classes[0].grade));
+          await expect(page.locator("section li")).toHaveCount(books.filter(book => book.title.startsWith("Алгебра") && book.grade === classes[0].grade).length);
           await page.waitForLoadState("networkidle");
           const requests: string[] = []; page.on("request", request => requests.push(request.method() + " " + new URL(request.url()).pathname));
           await page.evaluate(() => { (window as unknown as { fixtureDocument: string }).fixtureDocument = "unchanged"; });
           await page.getByRole("searchbox").fill("Physics");
           await expect(page.getByRole("heading", { name: "No materials found" })).toBeVisible();
           await page.getByRole("combobox", { name: "Subject", exact: true }).selectOption("");
-          await page.getByRole("combobox", { name: "Class", exact: true }).selectOption(classes[1].id);
-          await expect(page.locator("section li")).toHaveCount(books.filter(book => book.title.startsWith("Physics") && book.class_id === classes[1].id).length);
+          await page.getByRole("combobox", { name: "Grade", exact: true }).selectOption(String(classes[1].grade));
+          await expect(page.locator("section li")).toHaveCount(books.filter(book => book.title.startsWith("Physics") && book.grade === classes[1].grade).length);
           assert.ok(page.url().includes("q=Physics"));
           await page.getByRole("button", { name: "Reset filters" }).focus();
           await page.keyboard.press("Enter");
@@ -127,12 +127,12 @@ test("Phase 3 Chromium and WebKit browser verification", { timeout: 180_000 }, a
           const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
           await page.goto(publicApp + "/privacy", { waitUntil: "networkidle" });
           await expect(page.getByRole("heading", { level: 1 })).toHaveText("Политика конфиденциальности");
-          await page.getByLabel("Тема", { exact: true }).selectOption("dark");
+          await page.getByRole("radio", {name:dictionaries.ru.dark,exact:true}).check();
           await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
           await page.reload({ waitUntil: "networkidle" }); await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-          await page.getByLabel("Тема", { exact: true }).selectOption("light");
+          await page.getByRole("radio", {name:dictionaries.ru.light,exact:true}).check();
           await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-          await page.getByLabel("Тема", { exact: true }).selectOption("system");
+          await page.getByRole("radio", {name:dictionaries.ru.system,exact:true}).check();
           await page.emulateMedia({ colorScheme: "dark" });
           await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
           for (const locale of ["kk", "en", "ru"] as const) {
@@ -143,9 +143,15 @@ test("Phase 3 Chromium and WebKit browser verification", { timeout: 180_000 }, a
             await expect(page.getByRole("heading", { level: 1 })).toHaveText({ ru: "Политика конфиденциальности", kk: "Құпиялық саясаты", en: "Privacy Policy" }[locale]);
             await page.goto(publicApp + "/terms", { waitUntil: "networkidle" });
             await expect(page.getByRole("heading", { level: 1 })).toHaveText({ ru: "Условия использования", kk: "Пайдалану шарттары", en: "Terms of Use" }[locale]);
-            await expect(page.getByText(dictionaries[locale].privacy, { exact: true }).first()).toBeVisible();
+            await expect(page.locator(".app-footer").getByRole("link",{name:dictionaries[locale].privacy,exact:true})).toBeVisible();
             await page.goto(publicApp + "/privacy", { waitUntil: "networkidle" });
           }
+          await expect(page.locator("html")).not.toHaveAttribute("data-intro","true");
+          await page.evaluate(()=>{(window as unknown as {documentMarker:string}).documentMarker="retained";});
+          await page.locator(".app-footer").getByRole("link",{name:dictionaries.ru.terms,exact:true}).click();
+          await page.waitForURL("**/terms");
+          assert.equal(await page.evaluate(()=>(window as unknown as {documentMarker:string}).documentMarker),"retained");
+          await expect(page.locator("html")).not.toHaveAttribute("data-intro","true");
           assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
           await page.screenshot({ path: join(artifactDir, name + "-privacy-dark-mobile.png"), fullPage: true });
           await page.goto(publicApp + "/library", { waitUntil: "networkidle" }); await expect(page).toHaveURL(/\/login\?next=/);

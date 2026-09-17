@@ -1,21 +1,45 @@
 export type Profile = { id: string; display_name: string | null; class_id: string | null; avatar_path: string | null; bio: string | null; role: "student" | "admin"; created_at: string; updated_at: string };
 export type ClassRow = { id: string; name: string; grade: number | null; section: string | null; created_at: string };
-export type SubjectRow = { id: string; name: string; name_kz: string | null; name_en: string | null; short_name: string | null; created_at: string };
-export type Book = { id: string; title: string; subject_id: string; class_id: string | null; author: string | null; publisher: string | null; publication_year: number | null; language: string | null; cover_path: string | null; file_path: string; page_count: number | null; publication_status: "draft" | "published" | "archived"; created_at: string; updated_at: string };
+export type SubjectRow = { id: string; name: string; name_ru?: string | null; name_kz: string | null; name_en: string | null; short_name: string | null; created_at: string };
+export type Book = { id: string; title: string; subject_id: string; class_id: string | null; grade: number | null; author: string | null; publisher: string | null; publication_year: number | null; language: string | null; cover_path: string | null; file_path: string; page_count: number | null; publication_status: "draft" | "published" | "archived"; created_at: string; updated_at: string };
+export type BookVariant = {id:string;book_id:string;language:"ru"|"kz"|"en"|"und";storage_path:string;cover_path:string|null;file_size:number|null;page_count:number|null;publication_status:Book["publication_status"];content_revision:string;created_at:string;updated_at:string};
+export type VariantBookmark = {id:string;profile_id:string;book_variant_id:string;page_number:number;created_at:string};
+export type VariantProgress = {profile_id:string;book_variant_id:string;page_number:number;updated_at:string};
+export type BookPage = {id:string;book_variant_id:string;content_revision:string;page_number:number;text:string;extraction_status:"ready"|"empty";text_hash:string;created_at:string};
+export type BookExtraction = {book_variant_id:string;content_revision:string;job_id:string;status:"extracting"|"ready"|"failed";page_count:number|null;file_hash:string|null;started_at:string;finished_at:string|null};
+export type AiGeneration = {id:string;user_id:string;book_variant_id:string;content_revision:string;start_page:number;end_page:number;mode:string;locale:string;source_hash:string;model_key:string;status:"pending"|"ready"|"failed";response:string|null;signature:string|null;lease:string;created_at:string};
 export type Bookmark = { id: string; profile_id: string; book_id: string; page_number: number; created_at: string };
 export type Progress = { profile_id: string; book_id: string; page_number: number; updated_at: string };
 export type Lesson = { id: string; class_id: string; date: string; lesson_number: number; subject_id: string; teacher: string | null; room: string | null; created_at: string };
 export type WeeklyLesson = { id: string; class_id: string; weekday: number; lesson_start: number; lesson_end: number; start_time: string | null; end_time: string | null; subject_id: string; teacher: string | null; room: string | null; effective_from: string | null; effective_to: string | null; created_at: string; updated_at: string };
+export type NonSchoolDay = {id:string;start_date:string;end_date:string;type:"holiday"|"vacation"|"cancelled"|"other";label:string;created_by:string|null;created_at:string};
+export type ScheduleVersion = {id:string;created_at:string;created_by:string|null;source_type:"baseline"|"csv_tsv"|"delete"|"restore";row_count:number;note:string;status:"active"|"superseded";previous_id:string|null;restored_from:string|null;snapshot:Json};
+export type TicketCategory = "platform"|"schedule"|"library"|"account"|"data"|"other";
+export type TicketStatus = "open"|"in_progress"|"resolved"|"closed";
+export type SupportTicket = {id:string;owner_id:string;category:TicketCategory;title:string;description:string;status:TicketStatus;created_at:string;updated_at:string;last_user_message_at:string;last_admin_message_at:string|null;needs_admin_reply:boolean};
+export type SupportMessage = {id:string;ticket_id:string;author_id:string|null;author_role:"student"|"admin";body:string;created_at:string};
+export type SupportStatusEvent = {id:string;ticket_id:string;actor_id:string|null;previous_status:TicketStatus;status:TicketStatus;created_at:string};
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 type Table<Row, Required extends keyof Row> = { Row: Row; Insert: Pick<Row, Required> & Partial<Row>; Update: Partial<Row>; Relationships: [] };
-// Application types for schema.sql and migrations through Phase 4. Historical
+// Application types for schema.sql and migrations through v0.5. Historical
 // rights tables/enums are retained only for schema compatibility. Regenerate from the
 // owner's Supabase project after applying migrations; no cloud schema is assumed.
 export type Database = { public: {
   Tables: {
+    schedule_import_batches: Table<ScheduleVersion, "source_type"|"row_count"|"status"|"snapshot">;
+    non_school_days: Table<NonSchoolDay, "start_date"|"end_date"|"type"|"label">;
+    support_tickets: Table<SupportTicket, "owner_id"|"category"|"title"|"description">;
+    support_messages: Table<SupportMessage, "ticket_id"|"author_role"|"body">;
+    support_status_events: Table<SupportStatusEvent, "ticket_id"|"previous_status"|"status">;
     profiles: Table<Profile, "id">;
     classes: Table<ClassRow, "name">;
     subjects: Table<SubjectRow, "name">;
+    book_pages: Table<BookPage,"book_variant_id"|"content_revision"|"page_number"|"text"|"text_hash"|"extraction_status">;
+    book_extractions: Table<BookExtraction,"book_variant_id"|"content_revision"|"status">;
+    ai_study_generations: Table<AiGeneration,"user_id"|"book_variant_id"|"content_revision"|"start_page"|"end_page"|"mode"|"locale"|"source_hash"|"model_key"|"status">;
+    book_variants: Table<BookVariant,"book_id"|"language"|"storage_path">;
+    variant_bookmarks: Table<VariantBookmark,"profile_id"|"book_variant_id"|"page_number">;
+    variant_reading_progress: Table<VariantProgress,"profile_id"|"book_variant_id"|"page_number">;
     books: Table<Book, "title" | "subject_id" | "file_path">;
     bookmarks: Table<Bookmark, "profile_id" | "book_id" | "page_number">;
     reading_progress: Table<Progress, "profile_id" | "book_id" | "page_number">;
@@ -26,10 +50,21 @@ export type Database = { public: {
   };
   Views: Record<string, never>;
   Functions: {
+    create_support_ticket: {Args:{p_category:string;p_title:string;p_description:string};Returns:string};
+    reply_support_ticket: {Args:{p_ticket:string;p_body:string};Returns:string};
+    set_support_status: {Args:{p_ticket:string;p_status:string};Returns:undefined};
     is_admin: { Args: Record<string, never>; Returns: boolean };
     save_profile: { Args: { p_name: string; p_class: string | null; p_subjects: string[] }; Returns: undefined };
+    delete_weekly_lesson: {Args:{p_id:string};Returns:undefined};
+    restore_schedule_version: {Args:{p_id:string;p_expected_active:string};Returns:string};
     import_weekly_schedule: { Args: { p_lessons: Json }; Returns: number };
     import_schedule: { Args: { p_lessons: Json }; Returns: number };
+    begin_book_extraction:{Args:{p_variant:string};Returns:Json};
+    put_book_pages:{Args:{p_variant:string;p_revision:string;p_job:string;p_pages:Json};Returns:undefined};
+    finish_book_extraction:{Args:{p_variant:string;p_revision:string;p_job:string;p_count:number;p_hash:string;p_failed?:boolean};Returns:undefined};
+    reserve_ai_study:{Args:{p_variant:string;p_revision:string;p_start:number;p_end:number;p_mode:string;p_locale:string;p_hash:string;p_model:string;p_limit?:number};Returns:Json};
+    complete_ai_study:{Args:{p_id:string;p_lease:string;p_response:string;p_signature:string;p_failed?:boolean};Returns:boolean};
+    save_book_edition: {Args:{p_book:Json;p_variant:Json;p_prepare?:boolean};Returns:string};
     save_book: { Args: { p_book: Json }; Returns: string };
   };
   Enums: { profile_role: "student" | "admin"; book_publication_status: Book["publication_status"]; book_license_status: "pending_review" | "approved" | "restricted" };
