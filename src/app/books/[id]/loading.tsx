@@ -1,12 +1,12 @@
 import { SiteShell } from "@/components/site-shell";
 import { PencilStudyLoader } from "@/components/loaders/contextual-loaders";
 
-export default function RootLoading() {
+export default function BookLoading() {
   return (
     <SiteShell>
       <PencilStudyLoader
-        title="Загрузка NIS Hub..."
-        caption="Подготовка учебного пространства"
+        title="Открываем книгу..."
+        caption="Загрузка страниц и оглавления"
       />
     </SiteShell>
   );

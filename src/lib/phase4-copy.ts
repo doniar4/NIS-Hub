@@ -1,9 +1,9 @@
 import type { Locale } from "./i18n";
 const copy = {
   "weeklyHint": [
-    "Недельное расписание Пн–Пт. Дни переключаются без загрузки страницы.",
-    "Дс–Жм апталық кестесі. Күндер бетті қайта жүктемей ауысады.",
-    "Monday–Friday timetable. Switch days without reloading."
+    "Недельное расписание Пн–Пт.",
+    "Дс–Жм апталық кестесі.",
+    "Monday–Friday timetable."
   ],
   "weekdays": [
     [

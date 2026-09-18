@@ -288,7 +288,7 @@ export function LibraryBrowser({
                 <Link
                   prefetch={false}
                   className="underline-offset-4 hover:underline"
-                  href={"/books/" + book.id}
+                  href={"/books/" + book.id + "/read"}
                 >
                   {book.title}
                 </Link>
@@ -303,7 +303,7 @@ export function LibraryBrowser({
               <Link
                 prefetch={false}
                 className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold underline"
-                href={"/books/" + book.id}
+                href={"/books/" + book.id + "/read"}
                 aria-label={
                   t.openMaterial +
                   ": " +

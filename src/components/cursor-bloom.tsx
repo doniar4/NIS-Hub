@@ -17,8 +17,8 @@ export function CursorBloom() {
       y = event.clientY;
       if (!frame)
         frame = requestAnimationFrame(() => {
-          element.style.transform = `translate3d(${x - 5}px,${y - 5}px,0)`;
-          element.style.opacity = ".55";
+          element.style.transform = `translate3d(${x - 22}px,${y - 22}px,0)`;
+          element.style.opacity = ".4";
           frame = 0;
         });
     };

@@ -122,18 +122,30 @@ export function AppFrame({
 
   const links = [
     ["/", t.home],
+    ["/messages", community.messages],
     ["/library", t.library],
     ["/schedule", t.schedule],
     ["/profile", t.profile],
-    ["/support", p.support],
-    ["/messages", community.messages],
     ["/diary", community.diary],
+    ["/support", p.support],
     ...(admin ? [["/admin", t.admin]] : []),
   ];
 
+  const renderNavIcon = (href: string) => {
+    if (href === "/messages") return <ChatBubbleIcon aria-hidden="true" />;
+    if (href === "/diary") return <ReaderIcon aria-hidden="true" />;
+    if (href === "/") return <NavIcon index={0} />;
+    if (href === "/library") return <NavIcon index={1} />;
+    if (href === "/schedule") return <NavIcon index={2} />;
+    if (href === "/profile") return <NavIcon index={3} />;
+    if (href === "/support") return <NavIcon index={4} />;
+    if (href === "/admin") return <NavIcon index={5} />;
+    return <NavIcon index={0} />;
+  };
+
   const navigation = (mobile: boolean) => (
     <nav aria-label={t.mainNav}>
-      {links.map(([href, label], index) => (
+      {links.map(([href, label]) => (
         <Link
           key={href}
           prefetch={false}
@@ -157,13 +169,7 @@ export function AppFrame({
             }
           }}
         >
-          {href === "/messages" ? (
-            <ChatBubbleIcon aria-hidden="true" />
-          ) : href === "/diary" ? (
-            <ReaderIcon aria-hidden="true" />
-          ) : (
-            <NavIcon index={href === "/admin" ? 5 : index} />
-          )}
+          {renderNavIcon(href)}
           <span className="sidebar-label">{label}</span>
         </Link>
       ))}
@@ -183,7 +189,7 @@ export function AppFrame({
         <div className="sidebar-brand-row">
           <Link className="brand-link" href="/" aria-label="NIS Hub">
             <Sprout />
-            <span className="sidebar-label">
+            <span className="brand-name">
               NIS <em>Hub</em>
             </span>
           </Link>

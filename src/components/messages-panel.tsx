@@ -70,9 +70,15 @@ export function MessagesPanel({
   return (
     <div className="messages-layout">
       <aside className="surface-card messages-index">
-        <h2 className="section-title">{p.newChat}</h2>
+        <div className="flex items-center justify-between pb-3 border-b border-[var(--line)]">
+          <h2 className="section-title text-xl">{p.newChat}</h2>
+          <span className="text-xs font-mono uppercase tracking-wider text-[var(--muted)]">
+            Direct
+          </span>
+        </div>
+
         <form
-          className="space-y-3 mt-5"
+          className="space-y-3 mt-4"
           onSubmit={(event) => {
             event.preventDefault();
             start(async () => {
@@ -97,56 +103,93 @@ export function MessagesPanel({
               required
               autoComplete="off"
               aria-describedby="dm-name-hint"
+              placeholder={p.exactName}
             />
           </label>
-          <p id="dm-name-hint" className="text-sm text-[var(--muted)]">
+          <p id="dm-name-hint" className="text-xs text-[var(--muted)]">
             {p.exactName}
           </p>
           <button className="button w-full" disabled={pending}>
             {pending ? p.loading : p.start}
           </button>
         </form>
+
         {error && (
           <div className="mt-4">
             <p role="alert" className="form-error">
               {error}
             </p>
-            <ReloadButton className="mt-3" onClick={() => void refresh()}>
+            <ReloadButton className="mt-3 w-full" onClick={() => void refresh()}>
               {p.retry}
             </ReloadButton>
           </div>
         )}
-        <nav className="conversation-list" aria-label={p.messages}>
-          {!loaded ? (
-            <p role="status">{p.loading}</p>
-          ) : !threads.length ? (
-            <p className="text-sm text-[var(--muted)]">{p.noThreads}</p>
-          ) : (
-            threads.map((thread) => (
-              <button
-                key={thread.id}
-                type="button"
-                className="conversation-link"
-                aria-current={thread.id === active ? "page" : undefined}
-                onClick={() => setActive(thread.id)}
-              >
-                <span className="conversation-initial" aria-hidden="true">
-                  {thread.peer_name?.slice(0, 1).toLocaleUpperCase() || "N"}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <strong>{thread.peer_name}</strong>
-                  <span className="conversation-preview">
-                    {thread.last_body ?? p.emptyChat}
+
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs uppercase tracking-wider font-semibold text-[var(--muted)]">
+              {p.messages} ({threads.length})
+            </span>
+          </div>
+
+          <nav className="conversation-list" aria-label={p.messages}>
+            {!loaded ? (
+              <div className="space-y-2 py-2">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 p-2 rounded bg-[var(--sidebar)] opacity-60 animate-pulse"
+                  >
+                    <div className="h-9 w-9 rounded-full bg-[var(--line-strong)]" />
+                    <div className="flex-1 space-y-1">
+                      <div className="h-3 w-3/4 rounded bg-[var(--line-strong)]" />
+                      <div className="h-2 w-1/2 rounded bg-[var(--line)]" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : !threads.length ? (
+              <div className="p-4 text-center rounded border border-dashed border-[var(--line)]">
+                <p className="text-xs text-[var(--muted)]">{p.noThreads}</p>
+              </div>
+            ) : (
+              threads.map((thread) => (
+                <button
+                  key={thread.id}
+                  type="button"
+                  className="conversation-link w-full text-left"
+                  aria-current={thread.id === active ? "page" : undefined}
+                  onClick={() => setActive(thread.id)}
+                >
+                  <div className="relative">
+                    <span className="conversation-initial" aria-hidden="true">
+                      {thread.peer_name?.slice(0, 1).toLocaleUpperCase() || "N"}
+                    </span>
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--surface)] bg-[var(--accent)]"
+                      title="Active"
+                    />
+                  </div>
+                  <span className="min-w-0 flex-1 ml-2">
+                    <strong className="text-sm font-medium text-[var(--ink)] truncate block">
+                      {thread.peer_name}
+                    </strong>
+                    <span className="conversation-preview text-xs text-[var(--muted)] truncate block mt-0.5">
+                      {thread.last_body ?? p.emptyChat}
+                    </span>
                   </span>
-                </span>
-                {thread.unread > 0 && (
-                  <span className="unread-count">{thread.unread}</span>
-                )}
-              </button>
-            ))
-          )}
-        </nav>
+                  {thread.unread > 0 && (
+                    <span className="unread-count ml-auto shadow-sm">
+                      {thread.unread}
+                    </span>
+                  )}
+                </button>
+              ))
+            )}
+          </nav>
+        </div>
       </aside>
+
       {current ? (
         <Conversation
           key={current.id}
@@ -159,10 +202,12 @@ export function MessagesPanel({
           onRead={refresh}
         />
       ) : (
-        <section className="surface-card conversation-empty">
-          <ChatBubbleIcon aria-hidden="true" />
-          <h2 className="section-title">{p.messages}</h2>
-          <p>{p.chooseChat}</p>
+        <section className="surface-card conversation-empty flex flex-col items-center justify-center p-12 text-center min-h-[460px]">
+          <div className="h-16 w-16 rounded-full bg-[var(--sidebar)] flex items-center justify-center mb-4 text-[var(--accent)] border border-[var(--line)]">
+            <ChatBubbleIcon className="w-8 h-8" aria-hidden="true" />
+          </div>
+          <h2 className="section-title text-2xl mb-2">{p.messages}</h2>
+          <p className="text-sm text-[var(--muted)] max-w-xs">{p.chooseChat}</p>
         </section>
       )}
     </div>
@@ -266,18 +311,28 @@ function Conversation({
   }, [messages]);
   return (
     <section className="surface-card conversation-panel">
-      <header className="conversation-heading">
-        <span className="conversation-initial" aria-hidden="true">
-          {thread.peer_name.slice(0, 1).toLocaleUpperCase()}
-        </span>
-        <div>
-          <h2 className="section-title">{thread.peer_name}</h2>
-          <p>{p.privateChat}</p>
+      <header className="conversation-heading flex items-center justify-between pb-4 border-b border-[var(--line)]">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <span className="conversation-initial shadow-sm" aria-hidden="true">
+              {thread.peer_name.slice(0, 1).toLocaleUpperCase()}
+            </span>
+            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[var(--surface)] bg-[var(--accent)]" />
+          </div>
+          <div>
+            <h2 className="section-title text-xl font-semibold text-[var(--ink)]">
+              {thread.peer_name}
+            </h2>
+            <p className="text-xs text-[var(--muted)] flex items-center gap-1.5 mt-0.5">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+              {p.privateChat}
+            </p>
+          </div>
         </div>
       </header>
       {more && (
         <button
-          className="text-link justify-center"
+          className="text-link justify-center text-sm py-2 my-1"
           disabled={olderBusy}
           onClick={async () => {
             const first = messages[0];
@@ -308,7 +363,7 @@ function Conversation({
         </button>
       )}
       {error && (
-        <p role="alert" className="form-error">
+        <p role="alert" className="form-error my-2">
           {error}
         </p>
       )}
@@ -327,9 +382,13 @@ function Conversation({
         }}
       >
         {loading ? (
-          <li role="status">{p.loading}</li>
+          <li role="status" className="p-4 text-center text-xs text-[var(--muted)] animate-pulse">
+            {p.loading}
+          </li>
         ) : messages.length === 0 ? (
-          <li className="conversation-empty">{p.emptyChat}</li>
+          <li className="conversation-empty p-8 text-center text-sm text-[var(--muted)]">
+            {p.emptyChat}
+          </li>
         ) : (
           messages.map((m) => (
             <li
@@ -354,7 +413,7 @@ function Conversation({
         )}
       </ol>
       <form
-        className="message-compose"
+        className="message-compose mt-3 pt-3 border-t border-[var(--line)]"
         onSubmit={(event) => {
           event.preventDefault();
           const body = text.trim();
@@ -392,6 +451,12 @@ function Conversation({
             required
             value={text}
             disabled={pending}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                event.currentTarget.form?.requestSubmit();
+              }
+            }}
             onChange={(event) => {
               setText(event.target.value);
               saveDraft(event.target.value);
@@ -400,7 +465,7 @@ function Conversation({
           />
         </label>
         <button
-          className="button"
+          className="button flex items-center gap-2 px-4"
           disabled={pending || !text.trim()}
           aria-label={p.send}
         >

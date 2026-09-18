@@ -169,56 +169,58 @@ export function WeeklyScheduleBrowser({
         </select>
       </label>
 
-      <div
-        role="tablist"
-        aria-label={p.weeklyTitle}
-        className="my-6 grid grid-cols-5 gap-1 sm:gap-3"
-        onKeyDown={(event) => {
-          const next =
-            event.key === "ArrowRight"
-              ? (weekday % 5) + 1
-              : event.key === "ArrowLeft"
-                ? ((weekday + 3) % 5) + 1
-                : event.key === "Home"
-                  ? 1
-                  : event.key === "End"
-                    ? 5
-                    : null;
+      <div className="day-liquid-container">
+        <div
+          role="tablist"
+          aria-label={p.weeklyTitle}
+          className="day-liquid-track"
+          onKeyDown={(event) => {
+            const next =
+              event.key === "ArrowRight"
+                ? (weekday % 5) + 1
+                : event.key === "ArrowLeft"
+                  ? ((weekday + 3) % 5) + 1
+                  : event.key === "Home"
+                    ? 1
+                    : event.key === "End"
+                      ? 5
+                      : null;
 
-          if (next) {
-            event.preventDefault();
+            if (next) {
+              event.preventDefault();
 
-            setWeekday(next);
+              setWeekday(next);
 
-            event.currentTarget
-              .querySelectorAll<HTMLButtonElement>(
-                '[role="tab"]',
-              )
-              [next - 1]?.focus();
-          }
-        }}
-      >
-        {p.weekdays.map((label, index) => (
-          <button
-            key={index}
-            type="button"
-            role="tab"
-            id={"day-" + (index + 1)}
-            aria-controls="weekly-panel"
-            aria-selected={weekday === index + 1}
-            tabIndex={weekday === index + 1 ? 0 : -1}
-            aria-label={label}
-            className={
-              "button !px-1 " +
-              (weekday === index + 1
-                ? ""
-                : "button-secondary")
+              event.currentTarget
+                .querySelectorAll<HTMLButtonElement>(
+                  '[role="tab"]',
+                )
+                [next - 1]?.focus();
             }
-            onClick={() => setWeekday(index + 1)}
-          >
-            {p.shortDays[index]}
-          </button>
-        ))}
+          }}
+        >
+          <div
+            className="day-liquid-pill"
+            style={{ transform: `translateX(${(weekday - 1) * 100}%)` }}
+            aria-hidden="true"
+          />
+          {p.weekdays.map((label, index) => (
+            <button
+              key={index}
+              type="button"
+              role="tab"
+              id={"day-" + (index + 1)}
+              aria-controls="weekly-panel"
+              aria-selected={weekday === index + 1}
+              tabIndex={weekday === index + 1 ? 0 : -1}
+              aria-label={label}
+              className="day-liquid-button"
+              onClick={() => setWeekday(index + 1)}
+            >
+              <span>{p.shortDays[index]}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <section
