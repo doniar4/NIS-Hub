@@ -212,7 +212,7 @@ test(
           portrait.x < heading.x &&
           Math.abs(portrait.y - heading.y) < 70,
       );
-      const divider = page.locator(".sidebar-toggle-symbol svg").last();
+      const divider = page.locator(".sidebar-toggle-divider");
       const initial = await divider.evaluate(
         (e) => getComputedStyle(e).transform,
       );
@@ -261,24 +261,20 @@ test(
       });
       await page.goto(origin + "/diary");
       await expect(page.locator("tbody tr")).toHaveCount(6);
-      await page
-        .locator("input[type=file]")
-        .setInputFiles({
-          name: "grades.csv",
-          mimeType: "text/csv",
-          buffer: Buffer.from(
-            "subject,date,score,max,type\nPhysics,2026-09-18,9,10,Quiz",
-          ),
-        });
+      await page.locator("input[type=file]").setInputFiles({
+        name: "grades.csv",
+        mimeType: "text/csv",
+        buffer: Buffer.from(
+          "subject,date,score,max,type\nPhysics,2026-09-18,9,10,Quiz",
+        ),
+      });
       await expect(page.locator("tbody tr")).toHaveCount(1);
       await expect(page.locator("tbody")).toContainText("Physics");
-      await page
-        .locator("input[type=file]")
-        .setInputFiles({
-          name: "bad.csv",
-          mimeType: "text/csv",
-          buffer: Buffer.from("bad data"),
-        });
+      await page.locator("input[type=file]").setInputFiles({
+        name: "bad.csv",
+        mimeType: "text/csv",
+        buffer: Buffer.from("bad data"),
+      });
       await expect(page.getByRole("alert")).toBeVisible();
       await expect(page.locator("tbody")).toContainText("Physics");
       await page.request.post(origin + "/incoming");
@@ -319,20 +315,27 @@ test(
       await page.goto(origin + "/reader");
       await page.locator("summary").click();
       await expect(page.locator(".ai-study-panel form")).toBeVisible();
-      await expect(page.locator(".book-first-page .cover-canvas:not(.cover-pending)")).toBeVisible({
+      await expect(
+        page.locator(".book-first-page .cover-canvas:not(.cover-pending)"),
+      ).toBeVisible({
         timeout: 15000,
       });
       await page.screenshot({
         path: join(artifacts, "reader.png"),
         fullPage: true,
       });
-      for (const locale of ['ru','kk','en']) {
-      await page.setViewportSize({width:320,height:844});
-      await page.goto(origin+'/diary?locale='+locale);
-      await expect(page.locator('tbody tr')).toHaveCount(6);
-      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth), 'locale overflow '+locale);
-    }
-    await page.emulateMedia({ reducedMotion: "reduce" });
+      for (const locale of ["ru", "kk", "en"]) {
+        await page.setViewportSize({ width: 320, height: 844 });
+        await page.goto(origin + "/diary?locale=" + locale);
+        await expect(page.locator("tbody tr")).toHaveCount(6);
+        assert.ok(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+          "locale overflow " + locale,
+        );
+      }
+      await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto(origin + "/profile");
       assert.equal(
         await page

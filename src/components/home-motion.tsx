@@ -19,19 +19,84 @@ export function HomeMotion({ children }: { children: ReactNode }) {
     if (paused) return;
     const media = gsap.matchMedia();
     media.add("(prefers-reduced-motion: no-preference)", () => {
-      gsap.from(".hero-arrive", { opacity: 0, y: 12, duration: .85, stagger: .09, ease: "power2.out", clearProps: "all" });
+      // Apple HIG: Purposeful, brief, and fluid motion with spring-deceleration curve
+      gsap.from(".hero-arrive", {
+        opacity: 0,
+        y: 14,
+        duration: 0.65,
+        stagger: 0.07,
+        ease: "power3.out",
+        clearProps: "transform,opacity",
+      });
+
       gsap.utils.toArray<HTMLElement>("[data-scroll-art]", scope.current).forEach(art => {
-        gsap.timeline({ scrollTrigger: { trigger: art, start: "top 95%", end: "bottom top", scrub: 1 } })
-          .fromTo(art, { scale: .8, opacity: .65 }, { scale: 1, opacity: 1, duration: .45, ease: "none" })
+        gsap.timeline({ scrollTrigger: { trigger: art, start: "top 95%", end: "bottom top", scrub: 0.8 } })
+          .fromTo(art, { scale: .85, opacity: .7 }, { scale: 1, opacity: 1, duration: .45, ease: "power2.out" })
           .to(art, { scale: 1, opacity: 1, duration: .35 })
           .to(art, { opacity: .2, duration: .2, ease: "none" });
       });
+
       gsap.utils.toArray<HTMLElement>("[data-reveal-text]", scope.current).forEach(text => {
         gsap.from(text.querySelectorAll("span"), {
-          opacity: .2, stagger: .12, ease: "none",
-          scrollTrigger: { trigger: text, start: "top 90%", end: "top 60%", scrub: .7 },
+          opacity: .2,
+          stagger: 0.08,
+          ease: "none",
+          scrollTrigger: { trigger: text, start: "top 90%", end: "top 60%", scrub: 0.6 },
         });
       });
+
+      // Study desk panels (Timetable & Reading list)
+      const panels = scope.current?.querySelector(".home-panels");
+      if (panels) {
+        gsap.from(".home-panel", {
+          opacity: 0,
+          y: 18,
+          duration: 0.6,
+          stagger: 0.08,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: panels,
+            start: "top 88%",
+            toggleActions: "play none none none",
+          },
+        });
+      }
+
+      // Library invitation copy
+      const invitation = scope.current?.querySelector(".library-invitation");
+      if (invitation) {
+        gsap.from(".invitation-copy", {
+          opacity: 0,
+          x: -16,
+          duration: 0.65,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: invitation,
+            start: "top 82%",
+            toggleActions: "play none none none",
+          },
+        });
+      }
+
+      // Learning routes cards
+      const learning = scope.current?.querySelector(".learning-section");
+      if (learning) {
+        gsap.from(".study-route", {
+          opacity: 0,
+          y: 18,
+          duration: 0.6,
+          stagger: 0.08,
+          ease: "power3.out",
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: learning,
+            start: "top 86%",
+            toggleActions: "play none none none",
+          },
+        });
+      }
     }, scope);
     // Async server content and accordion height changes can move scroll triggers.
     const observer = new ResizeObserver(() => ScrollTrigger.refresh());

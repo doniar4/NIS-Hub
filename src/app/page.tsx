@@ -9,7 +9,6 @@ import { getI18n } from "@/lib/i18n-server";
 import {
   BookEngraving,
   BotanicalFlourish,
-  KazakhOrnament,
   PanelGlyph,
   RouteIllustration,
 } from "@/components/academic-art";
@@ -49,7 +48,8 @@ export default async function Home() {
           <div className="hero-masthead hero-arrive">
             <span>{c.space}</span>
             <span>
-              NIS <i aria-hidden="true">/</i> НИШ <i aria-hidden="true">/</i> НЗМ
+              NIS <i aria-hidden="true">/</i> НИШ <i aria-hidden="true">/</i>{" "}
+              НЗМ
             </span>
           </div>
           <div className="hero-body">
@@ -88,8 +88,6 @@ export default async function Home() {
             )}
           </div>
           <div className="hero-bottom-rule" aria-hidden="true">
-            <span />
-            <KazakhOrnament />
             <span />
           </div>
         </section>
@@ -143,7 +141,10 @@ export default async function Home() {
           </div>
         )}
 
-        <section className="library-invitation" aria-labelledby="invitation-title">
+        <section
+          className="library-invitation"
+          aria-labelledby="invitation-title"
+        >
           <BotanicalFlourish className="invitation-ornament" />
           <div className="invitation-copy">
             <h2 id="invitation-title">

@@ -55,12 +55,8 @@ export function WeeklyLessonList({
       {lessons.map((row) => (
         <li
           key={row.id}
-          className="timetable-row flex items-start gap-4 py-5"
+          className="timetable-row flex items-center justify-between gap-4 py-4 px-3"
         >
-          <SubjectMotif
-            subject={subjectsById.get(row.subject_id)}
-          />
-
           <div className="min-w-0 flex-1">
             <h3 className="break-words text-lg font-semibold">
               <Link
@@ -95,6 +91,10 @@ export function WeeklyLessonList({
               </p>
             )}
           </div>
+
+          <SubjectMotif
+            subject={subjectsById.get(row.subject_id)}
+          />
         </li>
       ))}
     </ol>
@@ -169,11 +169,11 @@ export function WeeklyScheduleBrowser({
         </select>
       </label>
 
-      <div className="day-liquid-container">
+      <div className="schedule-day-deck">
         <div
           role="tablist"
           aria-label={p.weeklyTitle}
-          className="day-liquid-track"
+          className="day-deck-grid"
           onKeyDown={(event) => {
             const next =
               event.key === "ArrowRight"
@@ -188,38 +188,35 @@ export function WeeklyScheduleBrowser({
 
             if (next) {
               event.preventDefault();
-
               setWeekday(next);
-
               event.currentTarget
-                .querySelectorAll<HTMLButtonElement>(
-                  '[role="tab"]',
-                )
+                .querySelectorAll<HTMLButtonElement>('[role="tab"]')
                 [next - 1]?.focus();
             }
           }}
         >
-          <div
-            className="day-liquid-pill"
-            style={{ transform: `translateX(${(weekday - 1) * 100}%)` }}
-            aria-hidden="true"
-          />
-          {p.weekdays.map((label, index) => (
-            <button
-              key={index}
-              type="button"
-              role="tab"
-              id={"day-" + (index + 1)}
-              aria-controls="weekly-panel"
-              aria-selected={weekday === index + 1}
-              tabIndex={weekday === index + 1 ? 0 : -1}
-              aria-label={label}
-              className="day-liquid-button"
-              onClick={() => setWeekday(index + 1)}
-            >
-              <span>{p.shortDays[index]}</span>
-            </button>
-          ))}
+          {p.weekdays.map((label, index) => {
+            const isSelected = weekday === index + 1;
+            const shortName = p.shortDays[index];
+
+            return (
+              <button
+                key={index}
+                type="button"
+                role="tab"
+                id={"day-" + (index + 1)}
+                aria-controls="weekly-panel"
+                aria-selected={isSelected}
+                tabIndex={isSelected ? 0 : -1}
+                aria-label={label}
+                className={`day-square-btn ${isSelected ? "is-active" : ""}`}
+                onClick={() => setWeekday(index + 1)}
+              >
+                <span className="day-square-code">{shortName}</span>
+                <span className="day-square-label">{label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

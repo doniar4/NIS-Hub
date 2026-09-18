@@ -1,14 +1,17 @@
 import { SiteShell } from "@/components/site-shell";
 import { ChatSkeletonLoader } from "@/components/loaders/contextual-loaders";
+import { getI18n } from "@/lib/i18n-server";
+import { communityCopy } from "@/lib/community-copy";
 
-export default function MessagesLoading() {
+export default async function MessagesLoading() {
+  const { locale } = await getI18n();
+  const c = communityCopy(locale);
   return (
     <SiteShell>
       <div className="page-intro">
-        <h1 className="page-title">Сообщения</h1>
-        <p className="page-description">Личные диалоги</p>
+        <h1 className="page-title">{c.messages}</h1>
       </div>
-      <ChatSkeletonLoader title="Загрузка сообщений..." subtitle="Синхронизация диалогов" />
+      <ChatSkeletonLoader kind="messages" />
     </SiteShell>
   );
 }

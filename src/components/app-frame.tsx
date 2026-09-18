@@ -6,8 +6,6 @@ import {
   MagnifyingGlassIcon,
   ChatBubbleIcon,
   ReaderIcon,
-  SquareIcon,
-  DividerVerticalIcon,
 } from "@radix-ui/react-icons";
 import {
   useEffect,
@@ -24,6 +22,7 @@ import { BotanicalFlourish } from "./academic-art";
 import { CursorBloom } from "./cursor-bloom";
 import { communityCopy } from "@/lib/community-copy";
 import { vintageCopy } from "@/lib/vintage-copy";
+import { ParallaxBackground } from "./parallax-background";
 
 let memoryCollapsed = false;
 
@@ -202,10 +201,29 @@ export function AppFrame({
             aria-controls="desktop-navigation"
             aria-expanded={!collapsed}
           >
-            <span className="sidebar-toggle-symbol" aria-hidden="true">
-              <SquareIcon className="sidebar-toggle-frame" />
-              <DividerVerticalIcon className="sidebar-toggle-divider" />
-            </span>
+            <svg
+              className="sidebar-toggle-symbol"
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <rect
+                x="2.5"
+                y="3.5"
+                width="19"
+                height="17"
+                rx="2.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+              <path
+                className="sidebar-toggle-divider"
+                d="M8.5 4.25v15.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
           </button>
         </div>
 
@@ -275,10 +293,7 @@ export function AppFrame({
         </header>
 
         <main id="main" tabIndex={-1} className="app-main">
-          <div className="page-ornaments" aria-hidden="true">
-            <BotanicalFlourish />
-            <BotanicalFlourish />
-          </div>
+          <ParallaxBackground />
 
           <div className="page-content">{children}</div>
         </main>

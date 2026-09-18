@@ -4,10 +4,7 @@ import { PencilStudyLoader } from "@/components/loaders/contextual-loaders";
 export default function BookLoading() {
   return (
     <SiteShell>
-      <PencilStudyLoader
-        title="Открываем книгу..."
-        caption="Загрузка страниц и оглавления"
-      />
+      <PencilStudyLoader kind="reader" />
     </SiteShell>
   );
 }

@@ -4,10 +4,7 @@ import { PencilStudyLoader } from "@/components/loaders/contextual-loaders";
 export default function RootLoading() {
   return (
     <SiteShell>
-      <PencilStudyLoader
-        title="Загрузка NIS Hub..."
-        caption="Подготовка учебного пространства"
-      />
+      <PencilStudyLoader kind="hub" />
     </SiteShell>
   );
 }

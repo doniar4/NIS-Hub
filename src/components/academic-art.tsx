@@ -44,6 +44,36 @@ export function KazakhOrnament({ className = "" }: { className?: string }) {
   </svg>;
 }
 
+export function KazakhFrieze({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      className={`kazakh-frieze-bar ${className}`}
+      viewBox="0 0 480 24"
+      fill="none"
+      preserveAspectRatio="none"
+    >
+      <g stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="0" y1="12" x2="480" y2="12" opacity="0.3" />
+        {[40, 120, 200, 280, 360, 440].map((cx) => (
+          <g key={cx} transform={`translate(${cx}, 12)`}>
+            {/* Central diamond */}
+            <path d="M0 -6 L6 0 L0 6 L-6 0 Z" fill="color-mix(in srgb, currentColor 20%, transparent)" />
+            {/* Horn curls top */}
+            <path d="M-6 0 C-10 -8 -18 -8 -18 -2 C-18 3 -12 4 -8 1" fill="none" />
+            <path d="M6 0 C10 -8 18 -8 18 -2 C18 3 12 4 8 1" fill="none" />
+            {/* Horn curls bottom */}
+            <path d="M-6 0 C-10 8 -18 8 -18 2 C-18 -3 -12 -4 -8 -1" fill="none" />
+            <path d="M6 0 C10 8 18 8 18 2 C18 -3 12 -4 8 -1" fill="none" />
+          </g>
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+
 export function BookEngraving({ className = "" }: { className?: string }) {
   return <svg aria-hidden="true" focusable="false" viewBox="0 0 560 460" fill="none" className={`book-engraving ${className}`}>
     <g className="engraving-orbits" stroke="currentColor" strokeWidth=".8" opacity=".42">

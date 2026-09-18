@@ -1,24 +1,92 @@
 "use client";
 
+import { useI18n } from "@/components/locale-provider";
+
+const chatTranslations = {
+  messages: {
+    ru: { title: "Загрузка сообщений...", subtitle: "Синхронизация диалогов" },
+    kk: { title: "Хабарламалар жүктелуде...", subtitle: "Диалогтарды синхрондау" },
+    en: { title: "Loading messages...", subtitle: "Syncing conversations" },
+  },
+  support: {
+    ru: { title: "Загрузка обращений...", subtitle: "Проверка заявок и ответов" },
+    kk: { title: "Өтініштер жүктелуде...", subtitle: "Өтініштер мен жауаптарды тексеру" },
+    en: { title: "Loading tickets...", subtitle: "Checking requests and replies" },
+  },
+};
+
+const cardTranslations = {
+  library: {
+    ru: "Загрузка библиотеки...",
+    kk: "Кітапхана жүктелуде...",
+    en: "Loading library...",
+  },
+  profile: {
+    ru: "Загрузка профиля...",
+    kk: "Профиль жүктелуде...",
+    en: "Loading profile...",
+  },
+  default: {
+    ru: "Загрузка материалов...",
+    kk: "Материалдар жүктелуде...",
+    en: "Loading materials...",
+  },
+};
+
+const pencilTranslations = {
+  hub: {
+    ru: { title: "Загрузка NIS Hub...", caption: "Подготовка учебного пространства" },
+    kk: { title: "NIS Hub жүктелуде...", caption: "Оқу кеңістігін дайындау" },
+    en: { title: "Loading NIS Hub...", caption: "Preparing study space" },
+  },
+  schedule: {
+    ru: { title: "Загрузка расписания...", caption: "Формирование уроков и смен" },
+    kk: { title: "Сабақ кестесі жүктелуде...", caption: "Сабақтар мен ауысымдарды құру" },
+    en: { title: "Loading schedule...", caption: "Preparing lessons and shifts" },
+  },
+  diary: {
+    ru: { title: "Загрузка дневника...", caption: "Синхронизация четвертей и оценок" },
+    kk: { title: "Күнделік жүктелуде...", caption: "Тоқсандар мен бағаларды синхрондау" },
+    en: { title: "Loading diary...", caption: "Syncing terms and grades" },
+  },
+  reader: {
+    ru: { title: "Загрузка книги...", caption: "Загрузка страниц и оглавления" },
+    kk: { title: "Кітап жүктелуде...", caption: "Беттер мен мазмұны жүктелуде" },
+    en: { title: "Loading book...", caption: "Loading pages and table of contents" },
+  },
+  default: {
+    ru: { title: "Загрузка данных...", caption: "Готовим материалы и расписание" },
+    kk: { title: "Деректер жүктелуде...", caption: "Материалдар мен кесте дайындалуда" },
+    en: { title: "Loading data...", caption: "Preparing materials and schedule" },
+  },
+};
+
 /**
  * Loader 1: Chat / Tickets Skeleton Loader
  * Based on Uiverse.io by sahilxkhadka
  */
 export function ChatSkeletonLoader({
-  title = "Загрузка сообщений...",
-  subtitle = "Синхронизация диалогов",
+  kind = "messages",
+  title,
+  subtitle,
 }: {
+  kind?: "messages" | "support";
   title?: string;
   subtitle?: string;
 }) {
+  const { locale } = useI18n();
+  const dict = chatTranslations[kind]?.[locale] || chatTranslations.messages[locale] || chatTranslations.messages.ru;
+  const displayTitle = title || dict.title;
+  const displaySubtitle = subtitle || dict.subtitle;
+
   return (
     <div
       className="messages-layout min-h-[460px] animate-pulse"
       role="status"
       aria-busy="true"
-      aria-label={`${title} ${subtitle}`}
+      aria-label={`${displayTitle} ${displaySubtitle}`}
     >
-      <span className="sr-only">{subtitle}</span>
+      <span className="sr-only">{displaySubtitle}</span>
       {/* Left sidebar skeleton */}
       <div className="surface-card messages-index space-y-4">
         <div className="h-6 w-36 rounded bg-[var(--line-strong)] opacity-60" />
@@ -95,17 +163,22 @@ export function ChatSkeletonLoader({
  */
 export function CardShimmerLoader({
   count = 6,
-  title = "Загрузка материалов...",
+  kind = "default",
+  title,
 }: {
   count?: number;
+  kind?: "library" | "profile" | "default";
   title?: string;
 }) {
+  const { locale } = useI18n();
+  const displayTitle = title || cardTranslations[kind]?.[locale] || cardTranslations.default[locale] || cardTranslations.default.ru;
+
   return (
     <div
       className="my-8"
       role="status"
       aria-busy="true"
-      aria-label={title}
+      aria-label={displayTitle}
     >
       <div className="mb-6 flex items-center justify-between">
         <div className="h-6 w-48 rounded bg-[var(--line-strong)] opacity-50 animate-pulse" />
@@ -131,18 +204,25 @@ export function CardShimmerLoader({
  * Based on Uiverse.io by gustavofusco
  */
 export function PencilStudyLoader({
-  title = "Загрузка данных...",
-  caption = "Готовим материалы и расписание",
+  kind = "default",
+  title,
+  caption,
 }: {
+  kind?: "hub" | "schedule" | "diary" | "reader" | "default";
   title?: string;
   caption?: string;
 }) {
+  const { locale } = useI18n();
+  const dict = pencilTranslations[kind]?.[locale] || pencilTranslations.default[locale] || pencilTranslations.default.ru;
+  const displayTitle = title || dict.title;
+  const displayCaption = caption || dict.caption;
+
   return (
     <div
       className="flex flex-col items-center justify-center py-16 px-4 text-center surface-card my-8"
       role="status"
       aria-busy="true"
-      aria-label={title}
+      aria-label={displayTitle}
     >
       <div className="pencil-container mb-4">
         <svg
@@ -225,10 +305,10 @@ export function PencilStudyLoader({
       </div>
 
       <h3 className="section-title text-xl text-[var(--accent)] font-semibold mt-2">
-        {title}
+        {displayTitle}
       </h3>
       <p className="text-sm text-[var(--muted)] mt-1 max-w-sm">
-        {caption}
+        {displayCaption}
       </p>
     </div>
   );

@@ -199,22 +199,11 @@ export function HomeTimetable({
           </button>
         </div>
       ) : rows.length ? (
-        <>
-          <WeeklyLessonList
-            lessons={rows}
-            subjects={subjects}
-            grade={grade}
-          />
-          <div className="timetable-footer-info mt-3 pt-3 border-t border-[var(--line)] flex items-center justify-between text-xs text-[var(--muted)]">
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-2 w-2 rounded-full bg-[var(--accent)]" aria-hidden="true" />
-              <span>{locale === "kk" ? "Қоңыраулар" : locale === "en" ? "Bells" : "Звонки"}: 08:30 – 15:20</span>
-            </span>
-            <span className="font-mono text-[11px] bg-[var(--sidebar)] px-2 py-0.5 rounded border border-[var(--line)]">
-              {rows.length} {locale === "kk" ? "сабақ" : locale === "en" ? "lessons" : rows.length === 1 ? "урок" : rows.length < 5 ? "урока" : "уроков"}
-            </span>
-          </div>
-        </>
+        <WeeklyLessonList
+          lessons={rows}
+          subjects={subjects}
+          grade={grade}
+        />
       ) : (
         <p className="py-6 text-[var(--muted)]">
           {classId ? t.noToday : t.chooseProfileClass}

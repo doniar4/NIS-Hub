@@ -45,6 +45,7 @@ function PdfPage({
 }) {
   const element = useRef<HTMLDivElement>(null);
   const canvasHost = useRef<HTMLDivElement>(null);
+  const { locale } = useI18n();
 
   const [nearby, setNearby] = useState(number === 1);
   const [loading, setLoading] = useState(false);
@@ -172,13 +173,21 @@ function PdfPage({
 
       {nearby && loading && (
         <p className="absolute mt-8 text-sm text-[var(--muted)]">
-          Загрузка страницы {number}…
+          {locale === "kk"
+            ? `${number}-бет жүктелуде…`
+            : locale === "en"
+            ? `Loading page ${number}…`
+            : `Загрузка страницы ${number}…`}
         </p>
       )}
 
       {failed && (
         <p className="py-12 text-sm text-[var(--danger)]">
-          Не удалось отобразить страницу {number}.
+          {locale === "kk"
+            ? `${number}-бетті көрсету мүмкін болмады.`
+            : locale === "en"
+            ? `Could not display page ${number}.`
+            : `Не удалось отобразить страницу ${number}.`}
         </p>
       )}
     </div>
@@ -377,7 +386,11 @@ export function PdfReader({
 
         if (!file.ok) {
           throw new Error(
-            "Не удалось получить PDF. Повторите загрузку.",
+            locale === "kk"
+              ? "PDF файлын алу мүмкін болмады. Қайта жүктеп көріңіз."
+              : locale === "en"
+              ? "Failed to fetch PDF. Please reload."
+              : "Не удалось получить PDF. Повторите загрузку.",
           );
         }
 
@@ -385,7 +398,11 @@ export function PdfReader({
 
         if (bytes.byteLength > 52428800) {
           throw new Error(
-            "PDF превышает допустимый размер 50 МБ.",
+            locale === "kk"
+              ? "PDF көлемі рұқсат етілген 50 МБ шегінен асады."
+              : locale === "en"
+              ? "PDF exceeds maximum allowed size of 50 MB."
+              : "PDF превышает допустимый размер 50 МБ.",
           );
         }
 
@@ -445,7 +462,7 @@ export function PdfReader({
           );
       }
     };
-  }, [attempt, bookId, variantId]);
+  }, [attempt, bookId, variantId, locale]);
 
   useEffect(() => {
     if (!pdf || !scrollRoot || positioned.current) {

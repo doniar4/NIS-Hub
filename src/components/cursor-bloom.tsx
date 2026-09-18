@@ -1,43 +1,64 @@
 "use client";
+
 import { useEffect, useRef } from "react";
+
 export function CursorBloom() {
   const bloom = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const element = bloom.current;
     if (!element) return;
+
     const media = matchMedia(
       "(pointer: fine) and (prefers-reduced-motion: no-preference)",
     );
-    let frame = 0,
-      x = 0,
-      y = 0;
-    const move = (event: PointerEvent) => {
-      if (!media.matches || event.pointerType !== "mouse") return;
-      x = event.clientX;
-      y = event.clientY;
-      if (!frame)
-        frame = requestAnimationFrame(() => {
-          element.style.transform = `translate3d(${x - 22}px,${y - 22}px,0)`;
-          element.style.opacity = ".4";
-          frame = 0;
-        });
+
+    let isVisible = false;
+    let isHoveringInteractive = false;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (event.pointerType === "touch" || !media.matches) return;
+
+      if (!isVisible) {
+        isVisible = true;
+      }
+
+      // Check if mouse is hovering over an interactive target
+      const target = event.target as HTMLElement | null;
+      isHoveringInteractive = Boolean(
+        target &&
+          target.closest(
+            'a, button, input, select, textarea, [role="button"], [role="tab"], .timetable-row, .card, .day-square-btn',
+          ),
+      );
+
+      const baseRadius = 22;
+      const scale = isHoveringInteractive ? 1.5 : 1.0;
+      const opacity = isHoveringInteractive ? 0.6 : 0.38;
+
+      element.style.transform = `translate3d(${event.clientX - baseRadius}px, ${event.clientY - baseRadius}px, 0) scale(${scale})`;
+      element.style.opacity = String(opacity);
     };
-    const hide = () => {
-      cancelAnimationFrame(frame);
-      frame = 0;
+
+    const handlePointerLeave = () => {
+      isVisible = false;
       element.style.opacity = "0";
     };
-    window.addEventListener("pointermove", move, { passive: true });
-    document.documentElement.addEventListener("pointerleave", hide);
-    window.addEventListener("blur", hide);
-    media.addEventListener("change", hide);
+
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    document.documentElement.addEventListener("pointerleave", handlePointerLeave);
+    window.addEventListener("blur", handlePointerLeave);
+    media.addEventListener("change", handlePointerLeave);
+
     return () => {
-      hide();
-      window.removeEventListener("pointermove", move);
-      document.documentElement.removeEventListener("pointerleave", hide);
-      window.removeEventListener("blur", hide);
-      media.removeEventListener("change", hide);
+      handlePointerLeave();
+      window.removeEventListener("pointermove", handlePointerMove);
+      document.documentElement.removeEventListener("pointerleave", handlePointerLeave);
+      window.removeEventListener("blur", handlePointerLeave);
+      media.removeEventListener("change", handlePointerLeave);
     };
   }, []);
+
   return <div className="cursor-bloom" aria-hidden="true" ref={bloom} />;
 }
+
