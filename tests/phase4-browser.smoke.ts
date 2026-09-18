@@ -92,7 +92,7 @@ test("Phase 4 Chromium/WebKit production components with isolated transport", {t
           await expect(page.getByRole("tab",{name:phase4Copy(locale).weekdays[0],exact:true})).toBeVisible();
         }
         const p=phase4Copy("en"),d=dictionaries.en;
-        for(const theme of ["light","dark","system"]){await page.getByRole("radio",{name:d[theme as "light"|"dark"|"system"],exact:true}).check();}
+        for(const theme of ["light","dark"]){await page.getByRole("radio",{name:d[theme as "light"|"dark"],exact:true}).check();}
         const raw="class,weekday,lesson_start,lesson_end,start_time,end_time,subject,teacher,room\n"+classes[0].name+",Fri,7,8,13:50,15:20,"+subjects[0].name+",Teacher,228";
         await page.getByRole("textbox",{name:p.paste}).fill(raw.replace(classes[0].name,"TYPO"));await page.getByRole("button",{name:p.preview}).click();
         await expect(page.getByRole("alert")).toContainText(p.class);await expect(page.getByRole("button",{name:p.import,exact:true})).toHaveCount(0);

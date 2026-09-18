@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import { BotanicalLines } from "@/components/brand";
 import { vintageCopy } from "@/lib/vintage-copy";
 import { classGrade } from "@/lib/book-model";
 import { HomeTimetable } from "@/components/home-timetable";

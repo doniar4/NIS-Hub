@@ -132,9 +132,9 @@ test("Phase 3 Chromium and WebKit browser verification", { timeout: 180_000 }, a
           await page.reload({ waitUntil: "networkidle" }); await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
           await page.getByRole("radio", {name:dictionaries.ru.light,exact:true}).check();
           await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-          await page.getByRole("radio", {name:dictionaries.ru.system,exact:true}).check();
+          await expect(page.getByRole("radio")).toHaveCount(2);
           await page.emulateMedia({ colorScheme: "dark" });
-          await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+          await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
           for (const locale of ["kk", "en", "ru"] as const) {
             await page.locator('select').filter({ has: page.locator('option[value="kk"]') }).selectOption(locale);
             await expect(page.locator("html")).toHaveAttribute("lang", locale);

@@ -140,11 +140,6 @@ const translations = {
     "Күңгірт",
     "Dark"
   ],
-  "system": [
-    "Системная",
-    "Жүйелік",
-    "System"
-  ],
   "locale": [
     "Язык интерфейса",
     "Интерфейс тілі",
@@ -351,9 +346,9 @@ const translations = {
     "Only for you"
   ],
   "profileHint": [
-    "Ваш класс и любимые предметы. Профиль виден только вам.",
-    "Сіздің сыныбыңыз және сүйікті пәндеріңіз. Профильді тек өзіңіз көресіз.",
-    "Your class and favourite subjects. Only you can view your profile."
+    "Ваш класс и любимые предметы. Имя используется для личных сообщений.",
+    "Сіздің сыныбыңыз бен сүйікті пәндеріңіз. Есім жеке хабарламалар үшін қолданылады.",
+    "Your class and favourite subjects. Your name is used for direct messages."
   ],
   "displayName": [
     "Отображаемое имя",
@@ -774,4 +769,17 @@ const translations = {
 export type MessageKey = keyof typeof translations;
 export type Dictionary = Record<MessageKey, string>;
 export const dictionaries = Object.fromEntries(locales.map((locale, index) => [locale, Object.fromEntries(Object.entries(translations).map(([key, values]) => [key, values[index]]))])) as Record<Locale, Dictionary>;
-export function subjectName(subject: Pick<SubjectRow, "name" | "name_ru" | "name_kz" | "name_en"> | undefined, locale: Locale): string { if (!subject) return ""; return (locale === "kk" ? subject.name_kz : locale === "en" ? subject.name_en : subject.name_ru ?? subject.name)?.trim() || (locale==="ru" ? subject.name : locale==="kk" ? "Пән" : "Subject"); }
+const knownSubjects: Record<string, [string,string,string]> = {
+  "основы права": ["Основы права","Құқық негіздері","Fundamentals of Law"],
+  "fundamentals of law": ["Основы права","Құқық негіздері","Fundamentals of Law"],
+  "құқық негіздері": ["Основы права","Құқық негіздері","Fundamentals of Law"],
+  "law": ["Основы права","Құқық негіздері","Fundamentals of Law"],
+  "искусство": ["Искусство","Өнер","Art"], "өнер": ["Искусство","Өнер","Art"],
+  "art": ["Искусство","Өнер","Art"], "arts": ["Искусство","Өнер","Art"],
+};
+export function subjectName(subject: Pick<SubjectRow, "name" | "name_ru" | "name_kz" | "name_en"> | undefined, locale: Locale): string {
+  if (!subject) return "";
+  const known=knownSubjects[subject.name.trim().toLocaleLowerCase()];
+  if(known) return known[locale==="ru"?0:locale==="kk"?1:2];
+  return (locale === "kk" ? subject.name_kz : locale === "en" ? subject.name_en : subject.name_ru ?? subject.name)?.trim() || (locale==="ru" ? subject.name : locale==="kk" ? "Пән" : "Subject");
+}

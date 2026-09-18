@@ -12,7 +12,6 @@ test("class letters resolve to one grade; editions and Library links use canonic
  assert.equal(url.searchParams.get("grade"),"9");assert.equal(url.searchParams.get("subject"),id(20));assert.equal(url.searchParams.has("classId"),false);
  assert.equal(editionLanguage("kk"),"kz");assert.equal(editionLanguage("Русский"),"ru");assert.equal(editionLanguage("unknown"),"und");
 });
-<<<<<<< HEAD
 test("subject correction migration translates known legacy English labels",async()=>{
  const db=await v051Database(async db=>{
   await db.query("insert into public.subjects(id,name,name_kz,name_en) values ($1,'Fundamentals of Law','Fundamentals of Law','Fundamentals of Law')",[id(20)]);
@@ -22,8 +21,6 @@ test("subject correction migration translates known legacy English labels",async
   assert.deepEqual(law,{name_ru:"Основы права",name_kz:"Құқық негіздері",name_en:"Fundamentals of Law"});
  } finally { await db.close(); }
 });
-=======
->>>>>>> ccc1ea1b5766fdcae994fe1ed3ca7707cb081dc3
 test("v0.5.1 migrations preserve legacy PDFs/covers and reading data; editions remain private and isolated",async()=>{
  const db=await v051Database(async db=>{
   await db.exec("insert into auth.users(id) values ('"+id(1)+"'),('"+id(2)+"'),('"+id(3)+"'); update public.profiles set role='admin' where id='"+id(1)+"';");

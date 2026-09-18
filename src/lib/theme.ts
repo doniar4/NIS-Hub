@@ -1,6 +1,10 @@
 export const THEME_KEY = "nis-theme";
-export type Theme = "light" | "dark" | "system";
-export function parseTheme(value: unknown): Theme { return value === "light" || value === "dark" ? value : "system"; }
-export function resolvedTheme(theme: Theme, dark: boolean) { return theme === "system" ? (dark ? "dark" : "light") : theme; }
-// Constant, synchronous head script: runs before body paint, with no user input.
-export const themeBootstrap = `(()=>{let t="system";try{const v=localStorage.getItem("nis-theme");if(v==="light"||v==="dark")t=v}catch{}const d=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;document.documentElement.dataset.theme=d;document.documentElement.style.colorScheme=d})()`;
+export type Theme = "light" | "dark";
+
+// Legacy "system" and invalid preferences now use the explicit light default.
+export function parseTheme(value: unknown): Theme {
+  return value === "dark" ? "dark" : "light";
+}
+
+// Runs before first paint; keep its fallback in sync with parseTheme.
+export const themeBootstrap = `(()=>{let t="light";try{t=localStorage.getItem("nis-theme")==="dark"?"dark":"light";localStorage.setItem("nis-theme",t)}catch{}document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t})()`;

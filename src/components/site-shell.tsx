@@ -9,6 +9,7 @@ import {AVATAR_URL_TTL_SECONDS} from "@/lib/avatar-policy";
 import {ActionForm} from "./action-form";
 import {logout} from "@/app/actions/auth";
 import {AppFrame} from "./app-frame";
+import {NotificationCenter} from "./notification-center";
 import {HeaderAvatar} from "./header-avatar";
 export async function SiteShell({children}:{children:ReactNode}){
  const {t}=await getI18n(),viewer=await getViewer();let url:string|null=null;
@@ -17,5 +18,5 @@ export async function SiteShell({children}:{children:ReactNode}){
  }
  return <AppFrame admin={viewer.profile?.role==="admin"} preferences={<PreferenceControls localeAction={changeLocale}/>}
  account={viewer.user?<ActionForm action={logout} label={t.logout} className="text-sm"/>:<Link className="button button-small" href="/login">{t.login}</Link>}
- avatar={viewer.user?<HeaderAvatar key={url} url={url} name={viewer.profile?.display_name??""}/>:null}>{children}</AppFrame>;
+ avatar={viewer.user?<><NotificationCenter key={viewer.user.id}/><HeaderAvatar key={url} url={url} name={viewer.profile?.display_name??""}/></>:null}>{children}</AppFrame>;
 }

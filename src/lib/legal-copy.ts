@@ -31,7 +31,7 @@ const baseLegalCopy = {
       ],
       [
         "Cookies и локальные настройки",
-        "Cookies Supabase поддерживают вход и обновление сессии; их срок зависит от настройки Auth. Cookie nis-locale сохраняет язык на срок до года и передаётся серверу. Ключ nis-theme в localStorage хранит выбор Light/Dark/System до очистки или изменения; сам выбор темы серверу не отправляется. Поисковые фильтры библиотеки отражаются в URL, поэтому могут попасть в историю браузера и журнал запросов при открытии ссылки."
+        "Cookies Supabase поддерживают вход и обновление сессии; их срок зависит от настройки Auth. Cookie nis-locale сохраняет язык на срок до года и передаётся серверу. Ключ nis-theme в localStorage хранит выбор Light/Dark до очистки или изменения; сам выбор темы серверу не отправляется. Поисковые фильтры библиотеки отражаются в URL, поэтому могут попасть в историю браузера и журнал запросов при открытии ссылки."
       ],
       [
         "Аналитика и технические журналы",
@@ -118,7 +118,7 @@ const baseLegalCopy = {
       ],
       [
         "Cookies және жергілікті баптаулар",
-        "Supabase cookies кіруді және сессияны жаңартуды қолдайды; мерзімі Auth баптауына байланысты. nis-locale cookie тілді бір жылға дейін сақтап, серверге жіберіледі. localStorage ішіндегі nis-theme Light/Dark/System таңдауын тазартылғанша не өзгертілгенше сақтайды; тақырып таңдауы серверге жіберілмейді. Кітапхана сүзгілері URL-де болады, сондықтан сілтемені ашқанда браузер тарихы мен сұрау журналына түсуі мүмкін."
+        "Supabase cookies кіруді және сессияны жаңартуды қолдайды; мерзімі Auth баптауына байланысты. nis-locale cookie тілді бір жылға дейін сақтап, серверге жіберіледі. localStorage ішіндегі nis-theme Light/Dark таңдауын тазартылғанша не өзгертілгенше сақтайды; тақырып таңдауы серверге жіберілмейді. Кітапхана сүзгілері URL-де болады, сондықтан сілтемені ашқанда браузер тарихы мен сұрау журналына түсуі мүмкін."
       ],
       [
         "Аналитика және техникалық журналдар",
@@ -205,7 +205,7 @@ const baseLegalCopy = {
       ],
       [
         "Cookies and local preferences",
-        "Supabase cookies maintain sign-in and session refresh; their lifetime depends on Auth configuration. The nis-locale cookie stores the interface language for up to one year and is sent to the server. The nis-theme localStorage key keeps Light/Dark/System until changed or cleared; that theme preference is not sent to the server. Library filters appear in the URL and may enter browser history and request logs when a link is opened."
+        "Supabase cookies maintain sign-in and session refresh; their lifetime depends on Auth configuration. The nis-locale cookie stores the interface language for up to one year and is sent to the server. The nis-theme localStorage key keeps Light/Dark until changed or cleared; that theme preference is not sent to the server. Library filters appear in the URL and may enter browser history and request logs when a link is opened."
       ],
       [
         "Analytics and technical logs",
@@ -264,7 +264,12 @@ const baseLegalCopy = {
     ]
   }
 } satisfies Record<Locale, LegalCopy>;
+const communityPrivacy: Record<Locale, [string,string]> = {
+ ru: ["Личные сообщения и демо-дневник", "Отображаемое имя уникально: другой авторизованный пользователь может начать переписку, введя его полностью. Supabase хранит участников, тексты сообщений, время отправки, отметки прочтения и уведомления. В интерфейсе переписка доступна только её участникам; сквозного шифрования нет, инфраструктура оператора обрабатывает содержание. Уведомления обновляются в открытой вкладке сайта; фоновые push-уведомления не используются. Импортированные оценки обрабатываются в памяти браузера, не отправляются на сервер и исчезают при перезагрузке страницы. Демо-дневник не подключён к школьному аккаунту."],
+ kk: ["Жеке хабарламалар және демо-күнделік", "Көрсетілетін ат бірегей: жүйеге кірген басқа пайдаланушы толық атты енгізіп, хат алмасуды бастай алады. Supabase қатысушыларды, хабарлама мәтіндерін, жіберілген уақытты, оқылған белгілерді және хабарландыруларды сақтайды. Интерфейсте хат алмасу тек қатысушыларға қолжетімді; ұштан-ұшқа шифрлау жоқ, мазмұн оператор инфрақұрылымында өңделеді. Хабарландырулар сайттың ашық қойындысында жаңартылады; фондық push-хабарландырулар қолданылмайды. Импортталған бағалар браузер жадында өңделеді, серверге жіберілмейді және бет жаңартылғанда жойылады. Демо-күнделік мектеп аккаунтына қосылмаған."],
+ en: ["Direct messages and demo diary", "Display names are unique: another signed-in user can start a conversation by entering your full name. Supabase stores participants, message text, timestamps, read markers and notifications. In the app, conversations are accessible only to their participants; messages are not end-to-end encrypted and operator infrastructure processes their content. Notifications update in an open website tab; background push notifications are not used. Imported grades are processed in browser memory, are not uploaded and disappear when the page reloads. The demo diary is not connected to a school account."]
+};
 export const legalCopy = Object.fromEntries(Object.entries(baseLegalCopy).map(([key,copy])=>{
  const locale=key as Locale;
- return [locale,{...copy,privacy:[...copy.privacy,supportLegalCopy[locale].privacy],terms:[...copy.terms,supportLegalCopy[locale].terms]}];
+ return [locale,{...copy,privacy:[...copy.privacy,supportLegalCopy[locale].privacy,communityPrivacy[locale]],terms:[...copy.terms,supportLegalCopy[locale].terms]}];
 })) as Record<Locale,LegalCopy>;

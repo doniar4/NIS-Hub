@@ -13,6 +13,16 @@ The supplied light/dark reference guides the compact greeting, green and copper 
 - The homepage shows at most three recent books; the full reading history remains in the profile.
 - GSAP animations are scoped to the homepage and cleaned up on navigation. The pause control and operating-system reduced-motion preference disable motion.
 
+## Control refinement, September 2026
+
+- The header search uses a filled rounded rectangle and a magnifier submit button; its GET `/library?q=…` behavior is unchanged.
+- Only Light and Dark remain. Legacy System, missing and invalid preferences migrate to Light. Both explicit choices persist; operating-system colour changes do not override them.
+- Theme segments use two equal columns and a sliding indicator. Keyboard radio navigation, focus rings and reduced-motion support remain available.
+- The sidebar toggle is icon-only with translated accessible labels and tooltips. Its rail retains icon positions; sidebar width and content margin use the same 360 ms easing. Collapsed legal links are inert and hidden.
+- Reload actions share `reload-button.tsx`; rotation restarts on activation. The AI action in `ai-generate-button.tsx` uses a green dimensional surface and gold highlights, with pending feedback driven by the existing request state.
+- Control styles are adapted from the supplied Uiverse examples by joe-watson-sbf, devsebastian44, JaydipPrajapati1910 and dexter-st. New control icons use Radix Icons. Corner radii remain rectangular, with no hover lifting.
+- Removed an accidentally nested legacy stylesheet from the reduced-motion block so that disabling animation preserves the same layout and colours.
+
 ## Generated banner asset
 
 Saved asset: `public/images/academic-still-life.webp` (1536 × 1024, alpha transparency).

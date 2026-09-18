@@ -41,9 +41,11 @@ export async function ReadingList({
           >
             {!bookmarks && book && (
               <BookCover
-                key={book.cover_url}
+                key={book.id}
                 title={book.title}
                 url={book.cover_url}
+                bookId={book.book_id}
+                variantId={book.id}
               />
             )}
 

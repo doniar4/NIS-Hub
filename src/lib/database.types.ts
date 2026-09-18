@@ -1,3 +1,6 @@
+export type DmThread = {id:string;peer_name:string;last_body:string|null;last_at:string;unread:number};
+export type DirectMessage = {id:string;thread_id:string;sender_id:string;body:string;client_id:string;created_at:string};
+export type WebNotification = {id:string;thread_id:string;actor_name:string;created_at:string;read_at:string|null};
 export type Profile = { id: string; display_name: string | null; class_id: string | null; avatar_path: string | null; bio: string | null; role: "student" | "admin"; created_at: string; updated_at: string };
 export type ClassRow = { id: string; name: string; grade: number | null; section: string | null; created_at: string };
 export type SubjectRow = { id: string; name: string; name_ru?: string | null; name_kz: string | null; name_en: string | null; short_name: string | null; created_at: string };
@@ -26,6 +29,8 @@ type Table<Row, Required extends keyof Row> = { Row: Row; Insert: Pick<Row, Requ
 // owner's Supabase project after applying migrations; no cloud schema is assumed.
 export type Database = { public: {
   Tables: {
+    direct_messages: Table<DirectMessage,"thread_id"|"sender_id"|"body"|"client_id">;
+    web_notifications: Table<{id:string;recipient_id:string;actor_id:string;thread_id:string;message_id:string;created_at:string;read_at:string|null},"recipient_id"|"actor_id"|"thread_id"|"message_id">;
     schedule_import_batches: Table<ScheduleVersion, "source_type"|"row_count"|"status"|"snapshot">;
     non_school_days: Table<NonSchoolDay, "start_date"|"end_date"|"type"|"label">;
     support_tickets: Table<SupportTicket, "owner_id"|"category"|"title"|"description">;
@@ -50,6 +55,12 @@ export type Database = { public: {
   };
   Views: Record<string, never>;
   Functions: {
+    start_dm:{Args:{p_name:string};Returns:string};
+    send_dm:{Args:{p_thread:string;p_body:string;p_client:string};Returns:string};
+    dm_inbox:{Args:Record<string,never>;Returns:DmThread[]};
+    read_dm:{Args:{p_thread:string;p_message:string};Returns:undefined};
+    notification_feed:{Args:Record<string,never>;Returns:WebNotification[]};
+    dismiss_notification:{Args:{p_id:string};Returns:undefined};
     create_support_ticket: {Args:{p_category:string;p_title:string;p_description:string};Returns:string};
     reply_support_ticket: {Args:{p_ticket:string;p_body:string};Returns:string};
     set_support_status: {Args:{p_ticket:string;p_status:string};Returns:undefined};

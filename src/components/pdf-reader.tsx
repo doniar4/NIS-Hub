@@ -2,7 +2,8 @@
 
 import { saveReading } from "@/app/actions/reading";
 import { useI18n } from "@/components/locale-provider";
-import { BookmarkIcon, RefreshIcon } from "@/components/icons";
+import { BookmarkIcon } from "@/components/icons";
+import { ReloadButton } from "@/components/reload-button";
 import { extractPageText } from "@/lib/pdf-page-text";
 import {
   isRenderCancellation,
@@ -580,8 +581,8 @@ export function PdfReader({
             {error.detail}
           </p>
 
-          <button
-            className="button button-secondary button-reload mt-4"
+          <ReloadButton
+            className="mt-4"
             onClick={() => {
               setPdf(null);
               setError(null);
@@ -591,9 +592,8 @@ export function PdfReader({
               );
             }}
           >
-            <RefreshIcon />
             {t.reloadPdf}
-          </button>
+          </ReloadButton>
         </div>
       ) : (
         <p

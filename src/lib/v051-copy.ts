@@ -50,7 +50,7 @@ const copy = {
       "Текст ещё не извлечён или отсутствует. Обратитесь к администратору.",
     cached: "Сохранённый ответ",
     limit:
-      "До 10 страниц и 30 000 символов; по умолчанию 10 запросов в сутки.",
+      "Лимиты: страницы и символы на запрос · запросы за 24 часа.",
     modes: {
       summary: "Краткий конспект",
       review: "Повторение",
@@ -111,7 +111,7 @@ const copy = {
       "Мәтін әлі шығарылмаған немесе жоқ. Әкімшіге хабарласыңыз.",
     cached: "Сақталған жауап",
     limit:
-      "10 бетке және 30 000 таңбаға дейін; әдепкіде күніне 10 сұрау.",
+      "Шектеулер: сұраудағы беттер мен таңбалар · 24 сағаттағы сұраулар.",
     modes: {
       summary: "Қысқаша конспект",
       review: "Қайталау",
@@ -172,7 +172,7 @@ const copy = {
       "Text has not been extracted or is unavailable. Contact an admin.",
     cached: "Cached answer",
     limit:
-      "Up to 10 pages and 30,000 characters; default 10 requests per day.",
+      "Limits: pages and characters per request · requests per 24 hours.",
     modes: {
       summary: "Summary",
       review: "Review",

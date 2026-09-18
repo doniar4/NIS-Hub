@@ -3,6 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  MagnifyingGlassIcon,
+  ChatBubbleIcon,
+  ReaderIcon,
+  SquareIcon,
+  DividerVerticalIcon,
+} from "@radix-ui/react-icons";
+import {
   useEffect,
   useRef,
   useState,
@@ -14,6 +21,8 @@ import { useI18n } from "./locale-provider";
 import { v05Copy } from "@/lib/v05-copy";
 import { Sprout } from "./brand";
 import { BotanicalFlourish } from "./academic-art";
+import { CursorBloom } from "./cursor-bloom";
+import { communityCopy } from "@/lib/community-copy";
 import { vintageCopy } from "@/lib/vintage-copy";
 
 let memoryCollapsed = false;
@@ -78,20 +87,17 @@ export function AppFrame({
 }) {
   const { locale, t } = useI18n();
   const p = v05Copy(locale);
+  const community = communityCopy(locale);
   const pathname = usePathname();
 
-  const collapsed = useSyncExternalStore(
-    subscribe,
-    snapshot,
-    () => false,
-  );
+  const collapsed = useSyncExternalStore(subscribe, snapshot, () => false);
 
   const dialog = useRef<HTMLDialogElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    document.documentElement.dataset.sidebar = collapsed
+    document.documentElement.dataset.sidebar = snapshot()
       ? "collapsed"
       : "expanded";
   }, [collapsed]);
@@ -120,6 +126,8 @@ export function AppFrame({
     ["/schedule", t.schedule],
     ["/profile", t.profile],
     ["/support", p.support],
+    ["/messages", community.messages],
+    ["/diary", community.diary],
     ...(admin ? [["/admin", t.admin]] : []),
   ];
 
@@ -133,9 +141,7 @@ export function AppFrame({
           title={!mobile && collapsed ? label : undefined}
           aria-label={label}
           aria-current={
-            (href === "/"
-              ? pathname === href
-              : pathname.startsWith(href))
+            (href === "/" ? pathname === href : pathname.startsWith(href))
               ? "page"
               : undefined
           }
@@ -151,7 +157,13 @@ export function AppFrame({
             }
           }}
         >
-          <NavIcon index={index} />
+          {href === "/messages" ? (
+            <ChatBubbleIcon aria-hidden="true" />
+          ) : href === "/diary" ? (
+            <ReaderIcon aria-hidden="true" />
+          ) : (
+            <NavIcon index={href === "/admin" ? 5 : index} />
+          )}
           <span className="sidebar-label">{label}</span>
         </Link>
       ))}
@@ -160,19 +172,36 @@ export function AppFrame({
 
   return (
     <div className="app-frame">
+      <CursorBloom />
       <a className="skip-link" href="#main">
         {t.skip}
       </a>
 
-      <aside className="app-sidebar">
+      <aside id="desktop-navigation" className="app-sidebar">
         <BotanicalFlourish className="sidebar-flourish" />
 
-        <Link className="brand-link" href="/" aria-label="NIS Hub">
-          <Sprout />
-          <span className="sidebar-label">
-            NIS <em>Hub</em>
-          </span>
-        </Link>
+        <div className="sidebar-brand-row">
+          <Link className="brand-link" href="/" aria-label="NIS Hub">
+            <Sprout />
+            <span className="sidebar-label">
+              NIS <em>Hub</em>
+            </span>
+          </Link>
+          <button
+            type="button"
+            className="sidebar-collapse"
+            onClick={toggle}
+            aria-label={collapsed ? p.expand : p.collapse}
+            title={collapsed ? p.expand : p.collapse}
+            aria-controls="desktop-navigation"
+            aria-expanded={!collapsed}
+          >
+            <span className="sidebar-toggle-symbol" aria-hidden="true">
+              <SquareIcon className="sidebar-toggle-frame" />
+              <DividerVerticalIcon className="sidebar-toggle-divider" />
+            </span>
+          </button>
+        </div>
 
         <div className="sidebar-edition sidebar-label">
           <span>NIS / НИШ / НЗМ</span>
@@ -181,26 +210,13 @@ export function AppFrame({
 
         {navigation(false)}
 
-        <button
-          type="button"
-          className="sidebar-collapse"
-          onClick={toggle}
-          aria-label={collapsed ? p.expand : p.collapse}
-          aria-expanded={!collapsed}
-        >
-          <span aria-hidden="true">{collapsed ? "»" : "«"}</span>
-          <span className="sidebar-label">{p.collapse}</span>
-        </button>
-
-        <div className="sidebar-bottom">
+        <div className="sidebar-bottom" inert={collapsed}>
           <div className="sidebar-legal">
             <Link href="/privacy">{t.privacy}</Link>
             <Link href="/terms">{t.terms}</Link>
           </div>
 
-          <span className="sidebar-label text-xs">
-            NIS Hub · {t.beta}
-          </span>
+          <span className="sidebar-label text-xs">NIS Hub · {t.beta}</span>
         </div>
       </aside>
 
@@ -228,18 +244,6 @@ export function AppFrame({
             aria-label={p.search}
             className="global-search"
           >
-            <svg
-              aria-hidden="true"
-              className="search-glyph"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.4"
-            >
-              <circle cx="10.5" cy="10.5" r="6.5" />
-              <path d="m16 16 5 5" />
-            </svg>
-
             <label className="sr-only" htmlFor="global-search">
               {p.search}
             </label>
@@ -253,7 +257,7 @@ export function AppFrame({
             />
 
             <button type="submit" aria-label={p.searchGo}>
-              ↗
+              <MagnifyingGlassIcon aria-hidden="true" />
             </button>
           </form>
 

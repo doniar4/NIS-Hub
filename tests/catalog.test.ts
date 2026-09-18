@@ -18,12 +18,9 @@ test("one canonical subject Map supports all locale labels and explicit fallback
   for (const locale of ["ru","kk","en"] as const) assert.equal(subjectName(map.get("canonical"),locale), locale==="en" ? "Mathematics" : "Математика");
   assert.equal(subjectName(undefined,"en"), "");
 });
-<<<<<<< HEAD
 test("subject labels keep each locale separate", () => {
   const law = {id:"law",name:"Fundamentals of Law",name_ru:"Основы права",name_kz:"Құқық негіздері",name_en:"Fundamentals of Law",short_name:null,created_at:""};
   assert.equal(subjectName(law,"ru"),"Основы права");
   assert.equal(subjectName(law,"kk"),"Құқық негіздері");
   assert.equal(subjectName(law,"en"),"Fundamentals of Law");
 });
-=======
->>>>>>> ccc1ea1b5766fdcae994fe1ed3ca7707cb081dc3
