@@ -3,14 +3,14 @@ import { actionContext } from "@/lib/auth";
 import { smsConfig } from "@/lib/sms/config";
 import { SmsHttp } from "@/lib/sms/http";
 import { loginSms, validCredentials } from "@/lib/sms/login";
-import { fetchDiary } from "@/lib/sms/grades";
+import { fetchDiary, fetchDiarySubject } from "@/lib/sms/grades";
 import { clearSmsSession, readSmsSession, saveSmsSession, hasSmsSession } from "@/lib/sms/session";
 import { safeSmsError } from "@/lib/sms/errors";
-import type { SmsResult } from "@/lib/sms/types";
+import type { SmsDiarySelection, SmsResult, SmsSubjectDetailResult } from "@/lib/sms/types";
 // Concurrency and a minimum interval per warm process; no retries or polling.
 // This map contains NIS user IDs + expiry only, never credentials or SMS responses.
 const active = new Map<string,number>();
-async function operation(connect: boolean, form?: FormData): Promise<SmsResult> {
+async function operation(connect: boolean, form?: FormData, selection:SmsDiarySelection={}): Promise<SmsResult> {
   let context: Awaited<ReturnType<typeof actionContext>>;
   try { context=await actionContext(); } catch { return {connected:false,error:"session_expired"}; }
   const {supabase,user}=context;
@@ -29,7 +29,7 @@ async function operation(connect: boolean, form?: FormData): Promise<SmsResult> 
       const page=await loginSms(http,iin,password as string);
       await saveSmsSession(supabase,user.id,http.cookies);
       connected=true;
-      const snapshot=await fetchDiary(http,page);
+      const snapshot=await fetchDiary(http,page,selection);
       // Preserve rotated cookies but never extend the original hard deadline.
       const session=await readSmsSession(supabase,user.id);
       await saveSmsSession(supabase,user.id,http.cookies,session.expires);
@@ -38,7 +38,7 @@ async function operation(connect: boolean, form?: FormData): Promise<SmsResult> 
     const session=await readSmsSession(supabase,user.id);
     connected=true;
     const http=new SmsHttp(config,session.cookies);
-    const snapshot=await fetchDiary(http);
+    const snapshot=await fetchDiary(http,undefined,selection);
     await saveSmsSession(supabase,user.id,http.cookies,session.expires);
     return {connected:true,snapshot};
   } catch(error) {
@@ -54,7 +54,25 @@ async function operation(connect: boolean, form?: FormData): Promise<SmsResult> 
   }
 }
 export async function connectSms(form: FormData): Promise<SmsResult> { return operation(true,form); }
-export async function refreshSms(): Promise<SmsResult> { return operation(false); }
+export async function refreshSms(selection:SmsDiarySelection={}): Promise<SmsResult> { return operation(false,undefined,selection); }
+export async function loadSmsSubject(selection:SmsDiarySelection,subjectId:string):Promise<SmsSubjectDetailResult> {
+  let context:Awaited<ReturnType<typeof actionContext>>;
+  try{context=await actionContext();}catch{return {error:"session_expired"};}
+  const {supabase,user}=context,now=Date.now();
+  for(const [id,until] of active)if(until<now)active.delete(id);
+  if(active.has(user.id)||active.size>=1000)return {error:"busy"};
+  active.set(user.id,now+120000);
+  try{
+    const session=await readSmsSession(supabase,user.id),http=new SmsHttp(smsConfig(),session.cookies);
+    const assessments=await fetchDiarySubject(http,selection,subjectId);
+    await saveSmsSession(supabase,user.id,http.cookies,session.expires);
+    return {assessments};
+  }catch(error){
+    const code=safeSmsError(error);
+    if(code==="session_expired")try{await clearSmsSession(supabase);}catch{}
+    return {error:code};
+  }finally{active.set(user.id,Date.now()+2000);}
+}
 export async function disconnectSms(): Promise<SmsResult> {
   try { const {supabase}=await actionContext();await clearSmsSession(supabase);return {connected:false}; }
   catch { return {connected:false,error:"sms_unavailable"}; }

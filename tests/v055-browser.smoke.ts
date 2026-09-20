@@ -9,12 +9,14 @@ import {chromium,webkit,expect} from "@playwright/test";
 import {smsCopy} from "../src/lib/sms/copy";
 import {parseGrades} from "../src/lib/sms/parser";
 import {themeBootstrap} from "../src/lib/theme";
-const snapshot=parseGrades(readFileSync("tests/fixtures/sms/grades-semantic.html","utf8"),new Date("2026-09-20T12:00:00Z"));
+const parsedSnapshot=parseGrades(readFileSync("tests/fixtures/sms/grades-semantic.html","utf8"),new Date("2026-09-20T12:00:00Z"));
+const snapshot={...parsedSnapshot,student:{displayName:"Synthetic Student",className:"10 A",schoolYear:"2026–2027",term:"I term"},filters:{yearId:"11111111-1111-4111-8111-111111111111",termId:"22222222-2222-4222-8222-222222222222",years:[{id:"11111111-1111-4111-8111-111111111111",label:"2026–2027"}],terms:[{id:"22222222-2222-4222-8222-222222222222",label:"I term"}]},subjects:parsedSnapshot.subjects.map((subject,index)=>({...subject,sourceId:`33333333-3333-4333-8333-33333333333${index}`,journalId:`44444444-4444-4444-8444-44444444444${index}`,evaluations:[{id:`55555555-5555-4555-8555-55555555555${index}`,label:"Synthetic SOR",shortLabel:"SOR",type:"sor" as const}]}))};
 test("v055 Chromium/WebKit: live UI states, no credential persistence, no polling, responsive themes/locales, sidebar and egg",{timeout:240000},async t=>{
  const bundle=await build({entryPoints:["tests/browser/v055-harness.tsx"],bundle:true,write:false,format:"esm",platform:"browser",jsx:"automatic",define:{"process.env":JSON.stringify({NODE_ENV:"production"})},plugins:[{name:"sms-boundary",setup(b){
- b.onResolve({filter:/^@\/app\/actions\/sms$/},()=>({path:"actions",namespace:"fixture"}));
- b.onResolve({filter:/^next\/navigation$/},()=>({path:"navigation",namespace:"fixture"}));
- b.onLoad({filter:/.*/,namespace:"fixture"},a=>({contents:a.path==="navigation"?'export const usePathname=()=>location.pathname;':'const call=async(name,form)=>(await fetch("/rpc",{method:"POST",body:JSON.stringify({name,mode:new URLSearchParams(location.search).get("mode"),fields:form?[...form.keys()]:[]})})).json();export const connectSms=form=>call("connect",form);export const refreshSms=()=>call("refresh");export const disconnectSms=()=>call("disconnect");'}));
+	 b.onResolve({filter:/^@\/app\/actions\/sms$/},()=>({path:"actions",namespace:"fixture"}));
+	 b.onResolve({filter:/^@\/app\/actions\/homework$/},()=>({path:"homework",namespace:"fixture"}));
+	 b.onResolve({filter:/^next\/navigation$/},()=>({path:"navigation",namespace:"fixture"}));
+	 b.onLoad({filter:/.*/,namespace:"fixture"},a=>({contents:a.path==="navigation"?'export const usePathname=()=>location.pathname;':a.path==="homework"?'export const saveHomework=async()=>({success:true});':'const call=async(name,form)=>(await fetch("/rpc",{method:"POST",body:JSON.stringify({name,mode:new URLSearchParams(location.search).get("mode"),fields:form instanceof FormData?[...form.keys()]:[]})})).json();export const connectSms=form=>call("connect",form);export const refreshSms=selection=>call("refresh",selection);export const disconnectSms=()=>call("disconnect");export const loadSmsSubject=()=>Promise.resolve({assessments:[{subject:"Synthetic subject",title:"Synthetic SOR",type:"sor",score:13,max:16,percent:81.3,percentSource:"derived"}]});'}));
  }}]});
  const css=readdirSync(".next/static/css").filter(n=>n.endsWith(".css")).map(n=>readFileSync(join(".next/static/css",n),"utf8")).join("\n");
  const calls:{name:string;fields:string[]}[]=[];
@@ -66,8 +68,10 @@ test("v055 Chromium/WebKit: live UI states, no credential persistence, no pollin
   JSON.stringify({zoom,a,b,brand}));
  await toggle.focus();await page.keyboard.press("Enter");await expect(toggle).toHaveAttribute("aria-expanded","false");await expect(toggle).toBeVisible();await page.keyboard.press("Enter");await expect(toggle).toHaveAttribute("aria-expanded","true");
  }}
- await page.evaluate(()=>{document.body.style.zoom="1";});
- await page.goto(origin+"/library");await expect(page.locator(".library-card")).toHaveCount(1);
+	 await page.evaluate(()=>{document.body.style.zoom="1";});
+	 for(const path of ["/home-schedule","/schedule"]){await page.goto(origin+path+"?locale=ru");await expect(page.locator(".lesson-row")).toHaveCount(2);await expect(page.locator(".lesson-row > .subject-motif-frame")).toHaveCount(2);assert.ok(await page.locator(".lesson-row > .subject-motif-frame").first().evaluate(element=>Number.parseFloat(getComputedStyle(element).opacity)>0));}
+	 await page.screenshot({path:join(dir,engineName+"-schedule-motifs.png"),fullPage:true});
+	 await page.goto(origin+"/library");await expect(page.locator(".library-card")).toHaveCount(1);
  const search=page.locator('input[type="search"]').last(),requests:string[]=[];const track=(r:{url():string})=>requests.push(r.url());await page.waitForLoadState("networkidle");page.on("request",track);
  await search.fill("Проза о Tamerlane Esentaeve третем");await expect(page.locator(".library-card")).toHaveCount(0);
  await search.fill(" НИШ  ХАБЧИК ");await expect(page.locator(".library-card")).toHaveCount(1);await expect(page.locator(".library-card")).toContainText("Tamerlane");assert.deepEqual(requests,[]);page.off("request",track);

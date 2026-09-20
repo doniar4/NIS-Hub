@@ -89,12 +89,45 @@ test("SMS semantic parser: nested markup/NBSP, dates, decimal commas, SOR/SOCH, 
  for(const html of ["<div>Unknown ExtJS grade view</div>",grades.replace("13&nbsp;/&nbsp;16","20/16"),grades.replace("18.09.2026","31.02.2026")])assert.throws(()=>parseGrades(html));
  assert.deepEqual(gradeFilters('<label for="year">Учебный год</label><select name="actualYear" id="year"><option value="source-id">2026–2027</option></select>'),[{name:"actualYear",label:"year",options:[{value:"source-id",label:"2026–2027"}]}]);
 });
-test("SMS live grade mapping fails closed until verified; expired sessions are distinguished",async()=>{
- const {SmsHttp,fetchDiary}=await apiPromise;
- const http=new SmsHttp(config(),[],async()=>{assert.fail("Unverified grade URLs must not be requested");});
- await assert.rejects(fetchDiary(http,{url:new URL(origin+"/root"),body:authenticated+grades}),{code:"sms_changed"});
+test("SMS JCE Diary uses the verified routes, fields and real response semantics",async()=>{
+ const {SmsHttp,fetchDiary,fetchDiarySubject}=await apiPromise;
+ const ids={year:"10000000-0000-4000-8000-000000000001",term:"10000000-0000-4000-8000-000000000002",parallel:"10000000-0000-4000-8000-000000000003",klass:"10000000-0000-4000-8000-000000000004",student:"10000000-0000-4000-8000-000000000005",subject:"10000000-0000-4000-8000-000000000006",journal:"10000000-0000-4000-8000-000000000007",sor:"10000000-0000-4000-8000-000000000008",soch:"10000000-0000-4000-8000-000000000009",work:"10000000-0000-4000-8000-000000000010"};
+ const j=(data:unknown,total=Array.isArray(data)?data.length:undefined)=>response(JSON.stringify({success:true,data,...(total===undefined?{}:{total})}),"application/json");
+ const calls:{path:string;fields:Record<string,string>;referer:string}[]=[];
+ const transport:typeof fetch=async(input,init)=>{
+  const url=new URL(String(input)),fields=Object.fromEntries(new URLSearchParams(String(init?.body||""))),referer=new Headers(init?.headers).get("referer")||"";
+  calls.push({path:url.pathname,fields,referer});
+  if(url.pathname==="/root")return response(authenticated);
+  if(url.pathname==="/jcediary/index/0")return response('<script src="/JCEJournal/JceDiary/app.js"></script>');
+  if(url.pathname==="/Ref/GetSchoolYears")return j([{Id:ids.year,Name:"2026–2027",Data:{IsActual:true}}]);
+  if(url.pathname==="/Ref/GetPeriods")return j([{Id:ids.term,Name:"I четверть",Data:null}]);
+  if(url.pathname==="/JceDiary/GetParallels")return j([{Id:ids.parallel,Name:"10",Data:null}]);
+  if(url.pathname==="/JceDiary/GetKlasses")return j([{Id:ids.klass,Name:"10 A",Data:null}]);
+  if(url.pathname==="/JceDiary/GetStudents")return j([{Id:ids.student,Name:"Synthetic Student",Data:null}]);
+  if(url.pathname==="/JceDiary/GetJceDiary")return j({Url:`/jce/Diary/Index?shId=${ids.year}&qId=${ids.term}&pId=${ids.parallel}&lId=${ids.klass}&studId=${ids.student}&subjects=${ids.subject}&theme=0&lang=ru&ch=1`});
+  if(url.pathname==="/jce/Diary/Index")return response(authenticated+'<script src="/Jce/diary/app.js"></script>');
+  if(url.pathname==="/Jce/Diary/GetSubjects")return j([{Name:"Математика",JournalId:ids.journal,Score:72.5,Mark:5,MarkComment:null,Evaluations:[{Type:1,EvalType:1,Formula:1,Name:"Суммативное оценивание за раздел",ShortName:"СОР",Percent:50,IsCanDontConsider:false,MaxScores:{[ids.work]:16},Id:ids.sor},{Type:2,EvalType:2,Formula:2,Name:"Суммативное оценивание за четверть",ShortName:"СОЧ",Percent:50,IsCanDontConsider:false,MaxScores:{[ids.work]:20},Id:ids.soch}],Id:ids.subject}]);
+  if(url.pathname==="/Jce/Diary/GetResultByEvalution")return j([{Name:fields.evalId===ids.sor?"Раздел 1":"Четверть 1",Description:null,Score:fields.evalId===ids.sor?13:18,MaxScore:fields.evalId===ids.sor?16:20,Disabled:false,Comment:null,RubricId:null,Id:ids.work}]);
+  assert.fail("Unexpected SMS path: "+url.pathname);
+ };
+ const initial={url:new URL(origin+"/root"),body:authenticated};
+ const chooser=await fetchDiary(new SmsHttp(config(),[],transport),initial);
+ assert.equal(chooser.filters?.yearId,ids.year);assert.equal(chooser.filters?.termId,undefined);assert.equal(chooser.subjects.length,0);
+ assert.deepEqual(calls.map(call=>call.path),["/jcediary/index/0","/Ref/GetSchoolYears","/Ref/GetPeriods"]);
+ assert.deepEqual(calls[1].fields,{page:"1",start:"0",limit:"100"});assert.equal(calls[2].fields.schoolYearId,ids.year);
+ calls.length=0;
+ const selected={yearId:ids.year,termId:ids.term};
+ const snapshot=await fetchDiary(new SmsHttp(config(),[],transport),initial,selected);
+ assert.equal(snapshot.student.displayName,"Synthetic Student");assert.equal(snapshot.student.className,"10 A");
+ assert.equal(snapshot.subjects[0].percent,72.5);assert.equal(snapshot.subjects[0].percentSource,"official_display");assert.equal(snapshot.subjects[0].currentMark,5);
+ assert.deepEqual(snapshot.subjects[0].evaluations?.map(item=>item.type),["sor","soch"]);
+ assert.deepEqual(calls.find(call=>call.path==="/JceDiary/GetJceDiary")?.fields,{periodId:ids.term,parallelId:ids.parallel,klassId:ids.klass,studentId:ids.student});
+ assert.match(calls.find(call=>call.path==="/Jce/Diary/GetSubjects")?.referer||"",/^https:\/\/sms\.ura\.nis\.edu\.kz\/jce\/Diary\/Index\?/);
+ calls.length=0;
+ const assessments=await fetchDiarySubject(new SmsHttp(config(),[],transport),selected,ids.subject);
+ assert.equal(assessments.length,2);assert.deepEqual(assessments.map(item=>item.type),["sor","soch"]);assert.equal(assessments[0].percent,81.3);assert.equal(assessments[0].percentSource,"derived");assert.equal(assessments[0].date,undefined);
+ const detailCalls=calls.filter(call=>call.path==="/Jce/Diary/GetResultByEvalution");assert.deepEqual(detailCalls.map(call=>call.fields),[{journalId:ids.journal,evalId:ids.sor,page:"1",start:"0",limit:"100"},{journalId:ids.journal,evalId:ids.soch,page:"1",start:"0",limit:"100"}]);
  await assert.rejects(fetchDiary(new SmsHttp(config(),[],async()=>response(login))),{code:"session_expired"});
- await assert.rejects(fetchDiary(new SmsHttp(config()),{url:new URL(origin+"/root"),body:authenticated}),{code:"sms_changed"});
 });
 test("SMS encrypted overflow: additive migration, own-only RLS, bounded storage, TTL and no anon access",async()=>{
  const db=await v051Database();

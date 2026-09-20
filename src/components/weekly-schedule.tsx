@@ -27,6 +27,7 @@ import { subjectName } from "@/lib/i18n";
 import { weeklyDay, lessonRange, schoolWeek } from "@/lib/weekly-schedule";
 
 import { EmptyState } from "./ui";
+import { SubjectMotif } from "./subject-motif";
 
 export function WeeklyLessonList({
   lessons,
@@ -51,6 +52,7 @@ export function WeeklyLessonList({
     <ol className="lesson-list">
       {lessons.map((row) => (
         <li key={row.id} className="timetable-row lesson-row">
+          <SubjectMotif subject={subjectsById.get(row.subject_id)} />
           <div className="lesson-clock">
             {row.start_time && row.end_time && (
               <span className="lesson-time">

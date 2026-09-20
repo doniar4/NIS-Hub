@@ -33,16 +33,17 @@ export class SmsHttp {
       if (this.cookies.length > 40 || JSON.stringify(this.cookies).length > 24000) throw new SmsError("sms_changed");
     }
   }
-  async request(path: string, form?: URLSearchParams, kind: "html" | "script" | "login" = "html"): Promise<{body: string; url: URL; type: string}> {
+  async request(path: string, form?: URLSearchParams, kind: "html" | "script" | "login" | "json" = "html", referer?: string): Promise<{body: string; url: URL; type: string}> {
     let url = safeSmsUrl(path, this.config.origin), method = form ? "POST" : "GET";
+    const safeReferer = referer ? safeSmsUrl(referer, this.config.origin).href : new URL(this.config.loginPath,this.config.origin).href;
     const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
     try {
       for (let redirect = 0; redirect <= 5; redirect++) {
-        if (++this.calls > 12) throw new SmsError("sms_changed");
+        if (++this.calls > 24) throw new SmsError("sms_changed");
         const cookie = this.cookies.filter(c => (c.expires === undefined || c.expires > Date.now()) && (url.pathname === c.path || url.pathname.startsWith(c.path.endsWith("/") ? c.path : c.path + "/"))).sort((a,b) => b.path.length-a.path.length).map(c => c.name + "=" + c.value).join("; ");
         const response = await this.transport(url, { method, cache: "no-store", redirect: "manual", signal: controller.signal,
-          headers: { "User-Agent": "Mozilla/5.0", Accept: kind === "script" ? "text/javascript, application/javascript" : "text/html, application/json", "Accept-Language": "ru-RU",
-            ...(cookie ? {Cookie: cookie} : {}), ...(method === "POST" ? {"Content-Type":"application/x-www-form-urlencoded",Origin:this.config.origin,Referer:new URL(this.config.loginPath,this.config.origin).href} : {}) },
+          headers: { "User-Agent": "Mozilla/5.0", Accept: kind === "script" ? "text/javascript, application/javascript" : kind === "json" ? "application/json, text/json" : "text/html, application/json", "Accept-Language": "ru-RU",
+            ...(cookie ? {Cookie: cookie} : {}), ...(method === "POST" ? {"Content-Type":"application/x-www-form-urlencoded",Origin:this.config.origin,Referer:safeReferer} : {}) },
           body: method === "POST" ? form : undefined });
         this.receive(response.headers, url);
         if ([301,302,303,307,308].includes(response.status)) {
@@ -57,7 +58,7 @@ export class SmsHttp {
         if ([401,403].includes(response.status)) throw new SmsError("session_expired");
         if (!response.ok) throw new SmsError("sms_unavailable");
         const type = (response.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
-        const permitted = kind === "script" ? ["application/javascript","text/javascript"] : kind === "login" ? ["text/html","application/json","text/json"] : ["text/html","application/xhtml+xml"];
+        const permitted = kind === "script" ? ["application/javascript","text/javascript"] : kind === "json" ? ["application/json","text/json"] : kind === "login" ? ["text/html","application/json","text/json"] : ["text/html","application/xhtml+xml"];
         if (!permitted.includes(type)) throw new SmsError("sms_changed");
         const length = Number(response.headers.get("content-length") || 0);
         if (length > this.config.maxBytes) { await response.body?.cancel(); throw new SmsError("sms_changed"); }
