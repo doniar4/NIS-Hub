@@ -75,9 +75,7 @@ export function MessagesPanel({
       <aside className="surface-card messages-index">
         <div className="flex items-center justify-between pb-3 border-b border-[var(--line)]">
           <h2 className="section-title text-xl">{p.newChat}</h2>
-          <span className="text-xs font-mono uppercase tracking-wider text-[var(--muted)]">
-            Direct
-          </span>
+
         </div>
 
         <form
@@ -122,7 +120,10 @@ export function MessagesPanel({
             <p role="alert" className="form-error">
               {error}
             </p>
-            <ReloadButton className="mt-3 w-full" onClick={() => void refresh()}>
+            <ReloadButton
+              className="mt-3 w-full"
+              onClick={() => void refresh()}
+            >
               {p.retry}
             </ReloadButton>
           </div>
@@ -168,14 +169,15 @@ export function MessagesPanel({
                     <span className="conversation-initial" aria-hidden="true">
                       {thread.peer_name?.slice(0, 1).toLocaleUpperCase() || "N"}
                     </span>
-
                   </div>
                   <span className="min-w-0 flex-1 ml-2">
                     <strong className="text-sm font-medium text-[var(--ink)] truncate block">
                       {thread.peer_name}
                     </strong>
                     <span className="conversation-preview text-xs text-[var(--muted)] truncate block mt-0.5">
-                      {thread.last_deleted ? v053Copy(locale).deleted : thread.last_body ?? p.emptyChat}
+                      {thread.last_deleted
+                        ? v053Copy(locale).deleted
+                        : (thread.last_body ?? p.emptyChat)}
                     </span>
                   </span>
                   {thread.unread > 0 && (
@@ -280,10 +282,15 @@ function Conversation({
         if (!active.current) return;
         if ("error" in result) setError(p[result.error]);
         else {
-          const gap = result.more && latestIds.current.size > 0 && !result.data.some(m => latestIds.current.has(m.id));
-          if (gap) { setMessages(result.data); nearBottom.current = true; }
-          else merge(result.data);
-          latestIds.current = new Set(result.data.map(m => m.id));
+          const gap =
+            result.more &&
+            latestIds.current.size > 0 &&
+            !result.data.some((m) => latestIds.current.has(m.id));
+          if (gap) {
+            setMessages(result.data);
+            nearBottom.current = true;
+          } else merge(result.data);
+          latestIds.current = new Set(result.data.map((m) => m.id));
           if (first || gap) {
             setMore(result.more);
             first = false;
@@ -312,28 +319,30 @@ function Conversation({
   return (
     <section className="surface-card conversation-panel">
       <header className="conversation-heading flex items-center justify-between pb-4 border-b border-[var(--line)]">
-        <Link href={"/people/"+thread.peer_id} className="min-w-0 flex items-center gap-3">
+        <Link
+          href={"/people/" + thread.peer_id + "?thread=" + thread.id}
+          className="conversation-profile"
+        >
           <div className="relative">
             <span className="conversation-initial shadow-sm" aria-hidden="true">
               {thread.peer_name.slice(0, 1).toLocaleUpperCase()}
             </span>
-
           </div>
           <div>
             <h2 className="section-title text-xl font-semibold text-[var(--ink)]">
               {thread.peer_name}
             </h2>
-            <p className="text-xs text-[var(--muted)] flex items-center gap-1.5 mt-0.5">
-
-              {p.privateChat}
-            </p>
+            <span className="conversation-profile-label">
+              {v053Copy(locale).viewProfile} <span aria-hidden="true">→</span>
+            </span>
           </div>
         </Link>
-        <SafetyMenu peer={thread.peer_id} thread={thread.id} onDone={onRead}/>
+        <SafetyMenu peer={thread.peer_id} thread={thread.id} onDone={onRead} />
       </header>
+      <p className="conversation-privacy">{p.privateChat}</p>
       {more && (
         <button
-          className="text-link justify-center text-sm py-2 my-1"
+          className="button button-secondary button-small older-messages"
           disabled={olderBusy}
           onClick={async () => {
             const first = messages[0];
@@ -383,7 +392,10 @@ function Conversation({
         }}
       >
         {loading ? (
-          <li role="status" className="p-4 text-center text-xs text-[var(--muted)] animate-pulse">
+          <li
+            role="status"
+            className="p-4 text-center text-xs text-[var(--muted)] animate-pulse"
+          >
             {p.loading}
           </li>
         ) : messages.length === 0 ? (
@@ -401,20 +413,32 @@ function Conversation({
               }
             >
               <p>{m.deleted_at ? v053Copy(locale).deleted : m.body}</p>
-              {!m.deleted_at&&<SafetyMenu message={m.id} own={m.sender_id===userId} onDone={()=>{void loadMessages(thread.id).then(result=>{if("data"in result)merge(result.data);});}}/>}
-              <time dateTime={m.created_at}>
-                {new Intl.DateTimeFormat(locale, {
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(m.created_at))}
-              </time>
+              <div className="message-meta">
+                <time dateTime={m.created_at}>
+                  {new Intl.DateTimeFormat(locale, {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }).format(new Date(m.created_at))}
+                </time>
+                {!m.deleted_at && (
+                  <SafetyMenu
+                    message={m.id}
+                    own={m.sender_id === userId}
+                    onDone={() => {
+                      void loadMessages(thread.id).then((result) => {
+                        if ("data" in result) merge(result.data);
+                      });
+                    }}
+                  />
+                )}
+              </div>
             </li>
           ))
         )}
       </ol>
-      {thread.blocked&&<p role="status">{v053Copy(locale).blocked}</p>}
+      {thread.blocked && <p role="status">{v053Copy(locale).blocked}</p>}
       <form
         className="message-compose mt-3 pt-3 border-t border-[var(--line)]"
         onSubmit={(event) => {

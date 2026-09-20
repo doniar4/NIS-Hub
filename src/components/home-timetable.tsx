@@ -53,32 +53,17 @@ export function HomeTimetable({
   } | null>(null);
 
   const result = jump
-    ? schoolDayJump(
-        jump.from,
-        jump.direction,
-        nonSchoolDays,
-        locale,
-      )
+    ? schoolDayJump(jump.from, jump.direction, nonSchoolDays, locale)
     : null;
 
   const reasons = dayReasons(date, nonSchoolDays, locale);
 
   const rows = reasons.length
     ? []
-    : weeklyDay(
-        lessons,
-        classId,
-        schoolWeek(date).weekday,
-        date,
-      );
+    : weeklyDay(lessons, classId, schoolWeek(date).weekday, date);
 
   const navigate = (direction: -1 | 1) => {
-    const next = schoolDayJump(
-      date,
-      direction,
-      nonSchoolDays,
-      locale,
-    );
+    const next = schoolDayJump(date, direction, nonSchoolDays, locale);
 
     setJump({
       from: date,
@@ -91,10 +76,7 @@ export function HomeTimetable({
   };
 
   return (
-    <section
-      aria-label={t.today}
-      className="home-timetable"
-    >
+    <section aria-label={t.today} className="home-timetable">
       <div className="timetable-heading">
         <div className="panel-heading">
           <PanelGlyph kind="schedule" />
@@ -105,9 +87,7 @@ export function HomeTimetable({
             </h2>
 
             <p className="panel-caption">
-              {date === today
-                ? vintageCopy(locale).todayHint
-                : t.schedule}
+              {date === today ? vintageCopy(locale).todayHint : t.schedule}
             </p>
           </div>
         </div>
@@ -134,9 +114,7 @@ export function HomeTimetable({
       </div>
 
       <p className="mt-2 font-medium">
-        <time dateTime={date}>
-          {formatSchoolDate(date, locale)}
-        </time>
+        <time dateTime={date}>{formatSchoolDate(date, locale)}</time>
       </p>
 
       <div
@@ -145,9 +123,7 @@ export function HomeTimetable({
         aria-atomic="true"
         className="calendar-notice"
       >
-        {result && !result.date && (
-          <p>{p.noNearby}</p>
-        )}
+        {result && !result.date && <p>{p.noNearby}</p>}
 
         {!!result?.skipped.length && (
           <>
@@ -158,8 +134,7 @@ export function HomeTimetable({
                 <li key={index}>
                   {formatSchoolDate(gap.start, locale)}
                   {gap.end !== gap.start &&
-                    " — " +
-                      formatSchoolDate(gap.end, locale)}
+                    " — " + formatSchoolDate(gap.end, locale)}
                   {" · "}
                   {gap.reasons.join("; ")}
                 </li>
@@ -172,7 +147,7 @@ export function HomeTimetable({
       {date !== today && (
         <button
           type="button"
-          className="text-link"
+          className="button button-secondary button-small timetable-today"
           onClick={() => {
             setDate(today);
             setJump(null);
@@ -204,6 +179,8 @@ export function HomeTimetable({
       ) : rows.length ? (
         <WeeklyLessonList
           lessons={rows}
+          date={date}
+          canAddHomework={!!classId}
           subjects={subjects}
           grade={grade}
           materials={materials}

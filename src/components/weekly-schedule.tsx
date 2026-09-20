@@ -1,14 +1,14 @@
 "use client";
 
-import { materialKey,type MaterialMap } from "@/lib/schedule-materials";
-import { v053Copy } from "@/lib/v053-copy";
+import { materialKey, type MaterialMap } from "@/lib/schedule-materials";
+import { LessonActions } from "./lesson-actions";
 import { classGrade, librarySubjectHref } from "@/lib/book-model";
 
-import { SubjectMotif } from "./subject-motif";
-
-import Link from "next/link";
-
-import { type CalendarDay, dayReasons } from "@/lib/school-calendar";
+import {
+  type CalendarDay,
+  dayReasons,
+  formatSchoolDate,
+} from "@/lib/school-calendar";
 
 import { v05Copy } from "@/lib/v05-copy";
 
@@ -16,11 +16,7 @@ import { normalizeRoom, subjectMap, sortClasses } from "@/lib/catalog";
 
 import { useMemo, useState } from "react";
 
-import type {
-  ClassRow,
-  SubjectRow,
-  WeeklyLesson,
-} from "@/lib/database.types";
+import type { ClassRow, SubjectRow, WeeklyLesson } from "@/lib/database.types";
 
 import { useI18n } from "./locale-provider";
 
@@ -28,11 +24,7 @@ import { phase4Copy } from "@/lib/phase4-copy";
 
 import { subjectName } from "@/lib/i18n";
 
-import {
-  weeklyDay,
-  lessonRange,
-  schoolWeek,
-} from "@/lib/weekly-schedule";
+import { weeklyDay, lessonRange, schoolWeek } from "@/lib/weekly-schedule";
 
 import { EmptyState } from "./ui";
 
@@ -41,64 +33,52 @@ export function WeeklyLessonList({
   subjects,
   grade = null,
   materials = {},
+  date,
+  canAddHomework = false,
 }: {
   lessons: WeeklyLesson[];
   subjects: SubjectRow[];
   grade?: number | null;
   materials?: MaterialMap;
+  date?: string;
+  canAddHomework?: boolean;
 }) {
   const { locale, t } = useI18n();
 
-  const subjectsById = useMemo(
-    () => subjectMap(subjects),
-    [subjects],
-  );
+  const subjectsById = useMemo(() => subjectMap(subjects), [subjects]);
 
   return (
-    <ol className="divide-y divide-[var(--line)]">
+    <ol className="lesson-list">
       {lessons.map((row) => (
-        <li
-          key={row.id}
-          className="timetable-row flex items-center justify-between gap-4 py-4 px-3"
-        >
-          <div className="min-w-0 flex-1">
-            <h3 className="break-words text-lg font-semibold">
-              <Link
-                prefetch={false}
-                href={librarySubjectHref(
-                  row.subject_id,
-                  grade,
-                )}
-                className="timetable-subject-link inline-flex min-h-11 items-center"
-              >
-                {subjectName(
-                  subjectsById.get(row.subject_id),
-                  locale,
-                )}
-              </Link>
-            </h3>
-
+        <li key={row.id} className="timetable-row lesson-row">
+          <div className="lesson-clock">
             {row.start_time && row.end_time && (
-              <p className="lesson-time mt-1 text-lg font-semibold tabular-nums">
-                {row.start_time.slice(0, 5)}–
-                {row.end_time.slice(0, 5)}
-              </p>
+              <span className="lesson-time">
+                {row.start_time.slice(0, 5)}–{row.end_time.slice(0, 5)}
+              </span>
             )}
-
-            <p className="lesson-slot mt-2 text-sm text-[var(--muted)]">
+            <span className="lesson-slot">
               {t.lesson} {lessonRange(row)}
-            </p>
-
+            </span>
+          </div>
+          <div className="lesson-info">
+            <h3>{subjectName(subjectsById.get(row.subject_id), locale)}</h3>
             {row.room && (
-              <p className="lesson-room mt-1 text-sm">
+              <p className="lesson-room">
                 {t.room}: {normalizeRoom(row.room)}
               </p>
             )}
           </div>
-
-          <Link prefetch={false} className="button button-secondary timetable-materials" href={materials[materialKey(row.subject_id,grade)]??librarySubjectHref(row.subject_id,grade)} aria-label={v053Copy(locale).materials+": "+subjectName(subjectsById.get(row.subject_id),locale)}>{v053Copy(locale).materials}</Link>
-          <SubjectMotif
-            subject={subjectsById.get(row.subject_id)}
+          <LessonActions
+            key={row.id + (date ?? "")}
+            subjectId={row.subject_id}
+            subject={subjectName(subjectsById.get(row.subject_id), locale)}
+            href={
+              materials[materialKey(row.subject_id, grade)] ??
+              librarySubjectHref(row.subject_id, grade)
+            }
+            date={date}
+            canAddHomework={canAddHomework}
           />
         </li>
       ))}
@@ -130,27 +110,16 @@ export function WeeklyScheduleBrowser({
   const [classId, setClassId] = useState(initialClassId);
 
   const [weekday, setWeekday] = useState(
-    week.weekday >= 1 && week.weekday <= 5
-      ? week.weekday
-      : 1,
+    week.weekday >= 1 && week.weekday <= 5 ? week.weekday : 1,
   );
 
   const selectedDate = week.dates[weekday - 1];
 
-  const reasons = dayReasons(
-    selectedDate,
-    nonSchoolDays,
-    locale,
-  );
+  const reasons = dayReasons(selectedDate, nonSchoolDays, locale);
 
   const filtered = useMemo(
     () =>
-      weeklyDay(
-        lessons,
-        classId,
-        weekday,
-        schoolWeek(date).dates[weekday - 1],
-      ),
+      weeklyDay(lessons, classId, weekday, schoolWeek(date).dates[weekday - 1]),
     [lessons, classId, weekday, date],
   );
 
@@ -162,9 +131,7 @@ export function WeeklyScheduleBrowser({
         <select
           className="field"
           value={classId}
-          onChange={(event) =>
-            setClassId(event.target.value)
-          }
+          onChange={(event) => setClassId(event.target.value)}
         >
           <option value="">{t.notSelected}</option>
 
@@ -234,12 +201,13 @@ export function WeeklyScheduleBrowser({
         tabIndex={0}
       >
         <h2 className="section-title">
-          {p.weekdays[weekday - 1]} · {selectedDate}
+          <time dateTime={selectedDate}>
+            {formatSchoolDate(selectedDate, locale)}
+          </time>
         </h2>
 
         <p className="sr-only" role="status">
-          {p.weekdays[weekday - 1]}:{" "}
-          {reasons.length ? 0 : filtered.length}
+          {p.weekdays[weekday - 1]}: {reasons.length ? 0 : filtered.length}
         </p>
 
         {reasons.length ? (
@@ -255,22 +223,16 @@ export function WeeklyScheduleBrowser({
         ) : filtered.length ? (
           <WeeklyLessonList
             lessons={filtered}
+            date={selectedDate}
+            canAddHomework={!!initialClassId && classId === initialClassId}
             materials={materials}
             subjects={subjects}
-            grade={classGrade(
-              classes.find((c) => c.id === classId),
-            )}
+            grade={classGrade(classes.find((c) => c.id === classId))}
           />
         ) : (
           <div className="mt-5">
-            <EmptyState
-              title={
-                classId ? t.noLessons : t.chooseClass
-              }
-            >
-              {classId
-                ? t.noLessonsHint
-                : t.chooseClassHint}
+            <EmptyState title={classId ? t.noLessons : t.chooseClass}>
+              {classId ? t.noLessonsHint : t.chooseClassHint}
             </EmptyState>
           </div>
         )}

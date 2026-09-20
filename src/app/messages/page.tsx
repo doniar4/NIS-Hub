@@ -3,6 +3,7 @@ import { getI18n } from "@/lib/i18n-server";
 import { communityCopy } from "@/lib/community-copy";
 import { SiteShell } from "@/components/site-shell";
 import { PageIntro } from "@/components/ui";
+import { CommunityNav } from "@/components/community-nav";
 import { MessagesPanel } from "@/components/messages-panel";
 export default async function MessagesPage({
   searchParams,
@@ -15,7 +16,10 @@ export default async function MessagesPage({
     { thread } = await searchParams;
   return (
     <SiteShell>
-      <PageIntro title={p.messages}>{p.privateChat}</PageIntro>
+      <div className="community-intro">
+        <PageIntro title={p.messages} />
+      </div>
+      <CommunityNav locale={locale} />
       <MessagesPanel
         key={thread ?? "inbox"}
         userId={user.id}

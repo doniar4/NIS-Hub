@@ -9,8 +9,8 @@ import { WeeklyScheduleBrowser } from "../../src/components/weekly-schedule";
 import { HomeTimetable } from "../../src/components/home-timetable";
 import { TopSubjects } from "../../src/components/top-subjects";
 import { PeopleBrowser } from "../../src/components/people-browser";
-import { PersonActions } from "../../src/components/person-actions";
-import { SubjectBadges } from "../../src/components/subject-badges";
+import { PublicProfile } from "../../src/components/public-profile";
+
 import { CommunityNav } from "../../src/components/community-nav";
 import { MessagesPanel } from "../../src/components/messages-panel";
 import { NotificationCenter } from "../../src/components/notification-center";
@@ -26,7 +26,7 @@ const lessons=[1,2,3,4,5].map(day=>({id:id(500+day),class_id:classes[0].id,weekd
 function Profile({locale}:{locale:"ru"|"kk"|"en"}){
  const [person,setPerson]=useState<Person|null>(null);
  useEffect(()=>{void findPeople("profile","",id(2)).then(r=>{if("data"in r)setPerson(r.data[0]??null);});},[]);
- return person?<article className="surface-card public-profile space-y-5"><h1 className="page-title">{person.display_name}</h1><p>{person.bio}</p><SubjectBadges ids={person.top_subjects} subjects={subjects} locale={locale}/><PersonActions person={person}/></article>:<p>No profile</p>;
+ return person?<PublicProfile person={person} subjects={subjects} locale={locale} thread={new URLSearchParams(location.search).get("thread")??undefined}/>:<p>No profile</p>;
 }
 function Harness(){
  const [locale,setLocale]=useState(parseLocale(new URLSearchParams(location.search).get("locale")??"en")),path=location.pathname;

@@ -5,12 +5,13 @@ import { createServer } from "node:http";
 import { once } from "node:events";
 import { join,basename } from "node:path";
 import { build } from "esbuild";
-import { chromium,webkit,expect } from "@playwright/test";
+import { chromium,webkit,expect as baseExpect } from "@playwright/test";
 import { v051Database } from "./helpers/v051-database";
 import { asUser,fixtureId as id } from "./helpers/database";
 import { themeBootstrap } from "../src/lib/theme";
 import { v053Copy } from "../src/lib/v053-copy";
-const artifacts="/private/tmp/nis-v053-browser-results";
+const expect=baseExpect.configure({timeout:15000});
+const artifacts=join(process.cwd(),"test-results","community-ui");
 test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, community safety, homework, answer UI and responsive locales", {timeout:240000},async t=>{
  const methods=["findPeople","changeFriend","safetyAction","loadHomework","saveHomework","deleteHomework","loadInbox","startConversation","loadMessages","sendMessage","markConversationRead","loadNotifications","dismissNotification","reviewStudyAnswers"];
  const bundle=await build({entryPoints:["tests/browser/v053-harness.tsx"],bundle:true,write:false,platform:"browser",format:"esm",jsx:"automatic",define:{"process.env":JSON.stringify({NODE_ENV:"production"})},plugins:[{name:"isolated-boundaries",setup(api){
@@ -37,7 +38,7 @@ test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, co
  queue=queue.then(async()=>{
  const user=String(req.headers["x-fixture-user"]??id(1));await asUser(db,user);
  const a=request.args;let result:unknown;
- const rpc=async(name:string,args:unknown[]=[])=>db.query("select "+name+"("+args.map((_,i)=>"$"+(i+1)).join(",")+") value",args);
+ const rpc=async(name:string,args:unknown[]=[])=>db.query<{value: string}>("select "+name+"("+args.map((_,i)=>"$"+(i+1)).join(",")+") value",args);
  try{
  switch(request.name){
  case "findPeople":result={data:(await db.query("select * from people_list($1,$2,$3,$4)",[a[0],a[1]??"",a[2]??null,a[3]??0])).rows};break;
@@ -64,8 +65,8 @@ test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, co
  });
  server.listen(0,"127.0.0.1");await once(server,"listening");const address=server.address();assert.ok(address&&typeof address!=="string");const origin="http://127.0.0.1:"+address.port;mkdirSync(artifacts,{recursive:true});
  try{
- for(const [engineName,engine]of [["chromium",chromium],["webkit",webkit]]as const){
- const browser=await engine.launch({headless:true});
+ for(const [engineName,engine]of (process.env.NIS_BROWSER_ENGINE==="chromium"?[["chromium",chromium]]as const:[["chromium",chromium],["webkit",webkit]]as const)){
+ const browser=await engine.launch({headless:true,...(engineName==="chromium"&&process.env.NIS_CHROMIUM_PATH?{executablePath:process.env.NIS_CHROMIUM_PATH}:{})});
  try{const page=await browser.newPage({viewport:{width:1280,height:900}}),errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
  await page.goto(origin+"/library");await expect(page.locator(".library-card")).toHaveCount(125);await page.waitForLoadState("networkidle");
  const network:string[]=[];const track=(r:{url():string})=>network.push(r.url());page.on("request",track);
@@ -73,22 +74,52 @@ test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, co
  assert.ok(page.url().includes("subject="+id(21)));await page.getByRole("button",{name:"Reset filters"}).click();assert.deepEqual(network,[]);page.off("request",track);
  const card=page.locator(".library-card").first(),box=await card.boundingBox();assert.ok(box);await card.click({position:{x:box.width-5,y:box.height-5}});await page.waitForURL(/\/books\//);
  await page.goto(origin+"/schedule");assert.equal(await page.getByText("NEVER_VISIBLE_TEACHER").count(),0);
- const tab=page.getByRole("tab").nth(1),tabBox=await tab.boundingBox();assert.ok(tabBox);await tab.click({position:{x:tabBox.width-3,y:tabBox.height-3}});await expect(tab).toHaveAttribute("aria-selected","true");await tab.press("ArrowRight");await expect(page.getByRole("tab").nth(2)).toHaveAttribute("aria-selected","true");
+ const tab=page.getByRole("tab").nth(1),tabBox=await tab.boundingBox();assert.ok(tabBox);await tab.click({position:{x:tabBox.width-10,y:tabBox.height-10}});await expect(tab).toHaveAttribute("aria-selected","true");await tab.press("ArrowRight");await expect(page.getByRole("tab").nth(2)).toHaveAttribute("aria-selected","true");
  const material=page.locator(".timetable-materials").first();await expect(material).toHaveAttribute("href","/library?subject="+id(20)+"&grade=7");
  await page.locator(".home-timetable").getByRole("button",{name:/Next school day/i}).click();await expect(page.locator('.home-timetable time').first()).toHaveAttribute("datetime","2026-09-21");await expect(page.locator(".calendar-notice").first()).toContainText("19");
  await page.locator(".homework-panel select").selectOption(id(20));await page.locator(".homework-panel textarea").fill("Practice exercise one");await page.locator(".homework-panel").getByRole("button",{name:"Save",exact:true}).click();await expect(page.locator(".homework-entry").first()).toContainText("Practice exercise one");
- await page.goto(origin+"/people");await page.getByLabel("Find people",{exact:true}).fill("tiM");await page.getByRole("button",{name:"Find people",exact:true}).click();await expect(page.locator(".person-card")).toHaveCount(1);await page.locator(".person-card").click();
+
+ await page.locator('.home-timetable .action-menu-trigger').first().click();
+ await page.getByRole('menuitem',{name:'Add homework',exact:true}).click();
+ await expect(page.getByRole('dialog')).toBeVisible();
+ await expect(page.getByRole('dialog').locator('select')).toHaveCount(0);
+ await expect(page.getByRole('dialog').locator('input[type=date]')).toHaveValue('2026-09-21');
+ await page.getByRole('dialog').locator('textarea').fill('Quick homework from the home screen');
+ await page.getByRole('dialog').locator('input[type=date]').fill('2026-09-19');
+ await page.getByRole('dialog').getByRole('button',{name:'Save',exact:true}).click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await expect(page.locator('.homework-panel')).toContainText('Quick homework from the home screen');
+ await page.locator('.home-timetable .action-menu-trigger').first().click();
+ await page.keyboard.press('Escape');
+ await expect(page.getByRole('menu')).toHaveCount(0);
+ await expect(page.locator('.home-timetable .action-menu-trigger').first()).toBeFocused();
+ await page.locator('.home-timetable .action-menu-trigger').first().click();
+ await page.getByRole('menuitem',{name:'Add homework',exact:true}).click();
+ await page.keyboard.press('Escape');
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await page.screenshot({path:join(artifacts,engineName+'-schedule-desktop.png'),fullPage:true});
+ await page.goto(origin+"/people");await page.getByLabel("Find a student",{exact:true}).fill("tiM");await page.getByRole("button",{name:"Find a student",exact:true}).click();await expect(page.locator(".person-card")).toHaveCount(1);await page.locator(".person-card").click();
  await expect(page.getByRole("button",{name:"Add friend",exact:true})).toBeVisible();await page.getByRole("button",{name:"Add friend",exact:true}).click();await expect(page.getByText("Request sent",{exact:true})).toBeVisible();
  await page.getByRole("button",{name:"Message",exact:true}).click();await page.waitForURL(/\/messages\?thread=/);
- await expect(page.locator(".conversation-heading a")).toHaveAttribute("href","/people/"+id(2));
+ await expect(page.locator(".conversation-heading a")).toHaveAttribute("href","/people/"+id(2)+"?thread="+new URL(page.url()).searchParams.get("thread"));
  await page.locator(".message-compose textarea").fill("First message");await page.getByRole("button",{name:"Send",exact:true}).click();await expect(page.locator(".message-history")).toContainText("First message");
  const thread=new URL(page.url()).searchParams.get("thread")!;
- await page.locator(".message-own summary").first().click();await page.getByRole("button",{name:"Delete my message"}).click();await expect(page.locator(".message-history")).toContainText("Message deleted");
+ const headingHeight=await page.locator('.conversation-heading').evaluate(e=>e.getBoundingClientRect().height);
+ await page.locator('.conversation-heading .action-menu-trigger').click();
+ await expect(page.getByRole('menu')).toBeVisible();
+ assert.equal(await page.locator('.conversation-heading').evaluate(e=>e.getBoundingClientRect().height),headingHeight);
+ await page.screenshot({path:join(artifacts,engineName+'-chat-menu-desktop.png')});
+ await page.keyboard.press('Escape');
+ await page.locator('.conversation-profile').click();
+ await page.getByRole('link',{name:'Back to messages',exact:true}).click();
+ await page.waitForURL(/\/messages\?thread=/);
+
+ await page.locator(".message-own .action-menu-trigger").first().click();await page.getByRole("menuitem",{name:"Delete my message"}).click();await expect(page.locator(".message-history")).toContainText("Message deleted");
  await page.goto(origin+"/profile");await page.waitForLoadState("networkidle");
  const incoming=await page.request.post(origin+"/rpc",{headers:{"x-fixture-user":id(2)},data:{name:"sendMessage",args:[thread,"Preview from Timur "+"🧑".repeat(130),crypto.randomUUID()]}});assert.ok((await incoming.json()).id);
  await page.evaluate(()=>window.dispatchEvent(new Event("nis-notifications-change")));
  await expect(page.locator(".notification-toasts .preview-lines")).toContainText("Preview from Timur");assert.equal(Array.from(await page.locator(".notification-toasts .preview-lines").innerText()).length,120);
- await page.goto(origin+"/people/"+id(2));await page.locator(".public-profile summary").click();await page.getByRole("button",{name:"Block",exact:true}).click();await expect(page.getByText("No profile",{exact:true})).toBeVisible();
+ await page.goto(origin+"/people/"+id(2));await page.locator(".public-profile .action-menu-trigger").click();await page.getByRole("menuitem",{name:"Block",exact:true}).click();await expect(page.getByText("No profile",{exact:true})).toBeVisible();
  await page.request.post(origin+"/rpc",{data:{name:"safetyAction",args:[{action:"unblock",id:id(2)}]}});
  // Restore friendship state between engine runs without deleting data.
  await page.request.post(origin+"/rpc",{data:{name:"changeFriend",args:[id(2),"remove"]}});
@@ -96,16 +127,42 @@ test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, co
  // Real component layouts at all requested sizes, three locales, both themes.
  for(const locale of ["ru","kk","en"]as const)for(const width of [1280,1024,768,390,320]){
  await page.setViewportSize({width,height:900});await page.goto(origin+"/schedule?locale="+locale);
- await page.evaluate((dark)=>{document.documentElement.dataset.theme=dark?"dark":"light";},width%3===0);
+ await page.locator(`input[type="radio"][value="${width%3===0?"dark":"light"}"]`).check();
  await expect(page.locator(".day-square-btn")).toHaveCount(5);
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),engineName+" overflow "+locale+" "+width);
  for(const button of await page.locator(".day-square-btn").all()){const r=await button.boundingBox();assert.ok(r&&r.width>=44&&r.height>=44);}
+ if(width===320){
+   await page.emulateMedia({reducedMotion:'reduce'});
+   await page.locator('.home-timetable .action-menu-trigger').first().click();
+   const menu=await page.getByRole('menu').boundingBox();assert.ok(menu&&menu.x>=0&&menu.x+menu.width<=width);
+   await page.getByRole('menuitem',{name:v053Copy(locale).addHomework,exact:true}).click();
+   await expect(page.getByRole('dialog').locator('textarea')).toBeFocused();
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+   await page.screenshot({path:join(artifacts,engineName+'-homework-'+locale+'-320.png')});
+   await page.keyboard.press('Escape');
+   await expect(page.getByRole('dialog')).toHaveCount(0);
+   await expect(page.locator('.home-timetable .action-menu-trigger').first()).toBeFocused();
+   await page.emulateMedia({reducedMotion:'no-preference'});
+ }
+
  }
  for(const path of ["/library","/people/"+id(2),"/profile","/messages","/reader","/privacy","/terms"]){
  await page.setViewportSize({width:320,height:900});await page.goto(origin+path+"?locale=kk");await page.waitForLoadState("networkidle");
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),engineName+" overflow "+path);
- await page.screenshot({path:join(artifacts,engineName+"-"+path.replaceAll("/","-")+"-320.png")});
+ await page.screenshot({path:join(artifacts,engineName+"-"+path.split("/").join("-")+"-320.png")});
  }
+
+ await page.setViewportSize({width:1280,height:900});await page.goto(origin+'/schedule?locale=ru');
+ await page.locator('input[type=radio][value=dark]').check();await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.screenshot({path:join(artifacts,engineName+'-schedule-ru-dark.png'),fullPage:true});
+ await page.locator('.home-timetable .action-menu-trigger').first().click();
+ await page.getByRole('menuitem',{name:v053Copy('ru').addHomework,exact:true}).click();
+ await page.screenshot({path:join(artifacts,engineName+'-homework-ru-dark.png')});
+ await page.keyboard.press('Escape');
+ await page.goto(origin+'/people/'+id(2)+'?locale=ru');
+ await page.locator('input[type=radio][value=dark]').check();await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+ await page.screenshot({path:join(artifacts,engineName+'-profile-ru-dark.png'),fullPage:true});
  await page.setViewportSize({width:1280,height:900});await page.goto(origin+"/profile");await page.evaluate(()=>{document.body.style.zoom="2";});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),engineName+" 200% zoom overflow");
  await page.screenshot({path:join(artifacts,engineName+"-200-percent.png")});
@@ -114,7 +171,7 @@ test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, co
  await toggle.click();await expect(page.locator("html")).toHaveAttribute("data-sidebar","collapsed");await toggle.focus();await page.keyboard.press("Enter");await expect(page.locator("html")).toHaveAttribute("data-sidebar","expanded");
  assert.equal(await page.locator(".app-sidebar nav a[href='/messages']").count(),0);assert.ok(await page.getByRole("link",{name:v053Copy("en").people,exact:true}).count());
  assert.deepEqual(errors,[]);await page.close();t.diagnostic(engineName+": layout matrix, full hitboxes, filter requests=0, real SQL community/homework; provider response fixture only.");
- }finally{await browser.close();}
+ }catch(error){const page=browser.contexts()[0]?.pages()[0];await page?.screenshot({path:join(artifacts,"failure.png"),fullPage:true});throw error;}finally{await browser.close();}
  }
  }finally{server.close();await once(server,"close");await db.close();}
 });

@@ -6,4 +6,17 @@ import { SiteShell } from "@/components/site-shell";
 import { PageIntro } from "@/components/ui";
 import { PeopleBrowser } from "@/components/people-browser";
 import { CommunityNav } from "@/components/community-nav";
-export default async function PeoplePage(){await requireViewer("/people");const {locale}=await getI18n();const {subjects}=await getCatalogOptions();return <SiteShell><PageIntro title={v053Copy(locale).people}/><CommunityNav locale={locale}/><PeopleBrowser subjects={subjects}/></SiteShell>;}
+export default async function PeoplePage() {
+  await requireViewer("/people");
+  const { locale } = await getI18n();
+  const { subjects } = await getCatalogOptions();
+  return (
+    <SiteShell>
+      <div className="community-intro">
+        <PageIntro title={v053Copy(locale).people} />
+      </div>
+      <CommunityNav locale={locale} />
+      <PeopleBrowser subjects={subjects} />
+    </SiteShell>
+  );
+}
