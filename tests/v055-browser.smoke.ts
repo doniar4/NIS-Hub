@@ -30,10 +30,14 @@ test("v055 Chromium/WebKit: live UI states, no credential persistence, no pollin
  });
  server.listen(0,"127.0.0.1");await once(server,"listening");const address=server.address();assert.ok(address&&typeof address!=="string");const origin="http://127.0.0.1:"+address.port;
  const dir="test-results/sms-ui";mkdirSync(dir,{recursive:true});
- try{for(const [engineName,engine]of (process.env.NIS_BROWSER_ENGINE==="webkit"?[["webkit",webkit]]as const:[["chromium",chromium],["webkit",webkit]]as const)){
- const browser=await engine.launch({headless:true});
+ const engines=process.env.NIS_BROWSER_ENGINE==="chromium"?[["chromium",chromium]]as const:
+  process.env.NIS_BROWSER_ENGINE==="webkit"?[["webkit",webkit]]as const:
+  [["chromium",chromium],["webkit",webkit]]as const;
+ try{for(const [engineName,engine]of engines){
+ const browser=await engine.launch({headless:true,...(engineName==="chromium"&&process.env.NIS_CHROMIUM_PATH?{executablePath:process.env.NIS_CHROMIUM_PATH}:{})});
  try{const page=await browser.newPage({viewport:{width:1280,height:900}});const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
- await page.goto(origin+"/diary?mode=bad");await page.locator("#sms-iin").fill("000000000001");await page.locator("#sms-password").fill("synthetic-not-real");await page.locator(".sms-connect form button").click();
+ await page.goto(origin+"/diary?mode=bad");await expect(page.locator("#sms-password")).toBeVisible();await expect(page.locator(".sms-subject")).toHaveCount(0);
+ await page.locator("#sms-iin").fill("000000000001");await page.locator("#sms-password").fill("synthetic-not-real");await page.locator(".sms-connect form button").click();
  await expect(page.locator("#sms-password")).toHaveValue("");await expect(page.locator("#sms-iin")).toHaveValue("");await expect(page.getByRole("alert")).toHaveText(smsCopy("en").errors.bad_credentials);
  assert.deepEqual(calls.at(-1)?.fields,["iin","password"]);
  assert.ok(!page.url().includes("000000000001"));assert.ok(!await page.evaluate(()=>JSON.stringify({...localStorage,...sessionStorage}).includes("synthetic-not-real")));
@@ -43,12 +47,13 @@ test("v055 Chromium/WebKit: live UI states, no credential persistence, no pollin
  await page.getByRole("button",{name:"Refresh",exact:true}).click();await expect(page.locator(".sms-diary")).toHaveAttribute("aria-busy","false");
  assert.equal(calls.length,count+1);
  await page.getByRole("button",{name:"Diary actions"}).click();await page.getByRole("menuitem",{name:"Disconnect SMS"}).click();await expect(page.locator("#sms-password"),JSON.stringify(calls.slice(-6))).toBeVisible();
- for(const mode of ["changed","expired","disabled"]){await page.goto(origin+"/diary?mode="+mode+(mode!=="disabled"?"&connected=1":""));await expect(page.getByRole("alert")).toBeVisible();assert.equal(await page.locator(".sms-subject").count(),0);}
+ for(const [mode,error]of [["changed","sms_changed"],["expired","session_expired"],["disabled","feature_disabled"]]as const){await page.goto(origin+"/diary?mode="+mode+(mode!=="disabled"?"&connected=1":""));await expect(page.getByRole("alert")).toHaveText(smsCopy("en").errors[error]);assert.equal(await page.locator(".sms-subject").count(),0);}
  for(const locale of ["ru","kk","en"]as const)for(const width of [1280,390,320])for(const theme of ["light","dark"]){
  await page.setViewportSize({width,height:900});await page.goto(origin+"/diary?connected=1&locale="+locale);await expect(page.locator(".sms-subject")).toHaveCount(3);
  await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);
+ await expect(page.locator(".mobile-drawer")).not.toHaveAttribute("open","");
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),engineName+" "+locale+" "+width+" "+theme);
- if(locale==="ru"&&(width===320||width===1280))await page.screenshot({path:join(dir,engineName+"-"+width+"-"+theme+".png"),fullPage:true});
+ if(locale==="ru"&&(width===320||width===1280)){await page.waitForTimeout(250);await page.screenshot({path:join(dir,engineName+"-"+width+"-"+theme+".png"),fullPage:true});}
  }
  await page.setViewportSize({width:1280,height:900});await page.goto(origin+"/diary?connected=1");await expect(page.locator(".sms-subject")).toHaveCount(3);
  for(const zoom of [1,1.25,1.5,2]){
@@ -57,7 +62,8 @@ test("v055 Chromium/WebKit: live UI states, no credential persistence, no pollin
  const toggle=page.locator(".sidebar-collapse");
  if(await toggle.isVisible()){
  const a=await page.locator(".sidebar-edition").boundingBox(),b=await toggle.boundingBox(),brand=await page.locator(".sidebar-brand-row").boundingBox();
- assert.ok(a&&b&&brand&&Math.abs(a.y+a.height/2-b.y-b.height/2)<2&&b.x>=a.x+a.width&&b.y>=brand.y+brand.height);
+ assert.ok(a&&b&&brand&&Math.abs(a.y+a.height/2-b.y-b.height/2)<2&&b.x>=a.x+a.width&&b.y>=brand.y+brand.height,
+  JSON.stringify({zoom,a,b,brand}));
  await toggle.focus();await page.keyboard.press("Enter");await expect(toggle).toHaveAttribute("aria-expanded","false");await expect(toggle).toBeVisible();await page.keyboard.press("Enter");await expect(toggle).toHaveAttribute("aria-expanded","true");
  }}
  await page.evaluate(()=>{document.body.style.zoom="1";});

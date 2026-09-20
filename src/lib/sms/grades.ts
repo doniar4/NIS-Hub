@@ -4,13 +4,16 @@ import { SmsError } from "./errors";
 import { serverState } from "./html";
 
 /**
- * Live adapter boundary. Authentication was observed, but the owner reported the
- * school's grades screen unavailable on 2026-09-20. The observed EducationRoute
- * screen is NOT a grade source. Do not invent grade URLs, selectors or query IDs.
+ * Live adapter boundary. An authorized run on 2026-09-20 verified the diary shell
+ * through /JceDiary/GetJceDiary and its child /jce/Diary/Index page. That page
+ * loads JSON subject summaries from /Jce/Diary/GetSubjects (Name, Score, Mark and
+ * Evaluations), rather than the semantic HTML table handled by parser.ts.
  *
- * parser.ts is tested infrastructure, not an activated mapping for the live
- * ExtJS portal. Replace the explicit unsupported state only after an authorized
- * authenticated grade fixture and year/term request contract are verified.
+ * The structural probe deliberately retained no values, cookies or raw response,
+ * so assessment meaning and individual grade rows remain unverified. Do not
+ * invent selectors, query IDs or field semantics. Replace this explicit
+ * unsupported state only after a sanitized authenticated JSON fixture and its
+ * year/term request contract are verified.
  */
 export async function fetchDiary(http: SmsHttp, initial?: {body:string;url:URL}): Promise<import("./types").SmsDiarySnapshot> {
   const page = initial ?? await http.request("/root");

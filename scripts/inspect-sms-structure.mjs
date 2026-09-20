@@ -4,7 +4,7 @@
 import { chromium } from "@playwright/test";
 import { createInterface } from "node:readline/promises";
 const origin="https://sms.ura.nis.edu.kz";
-const browser=await chromium.launch({headless:false});
+const browser=await chromium.launch({headless:false,...(process.env.NIS_CHROMIUM_PATH?{executablePath:process.env.NIS_CHROMIUM_PATH}:{})});
 const context=await browser.newContext({locale:"ru-RU"});
 const page=await context.newPage();
 const routes=new Map();
