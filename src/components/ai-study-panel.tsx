@@ -1,4 +1,5 @@
 "use client";
+import {StudyAnswerForm} from "./study-answer-form";
 import {useState,useTransition} from "react";
 import {generateStudy} from "@/app/actions/ai-study";
 import {STUDY_MODES,type StudyInput,type StudyResult} from "@/lib/ai-study";
@@ -32,5 +33,6 @@ export function AiStudyPanel({variantId,totalPages,initialPage,config}:{variantI
  {result.cached&&<p className="text-sm">{p.cached}</p>}{result.response.insufficient&&<p>{p.insufficient}</p>}
  {result.response.sections.map(section=><section key={section.kind}><h3 className="font-semibold">{labels[locale][section.kind]}</h3>{section.insufficient&&<p>{p.insufficient}</p>}
  <ul className="mt-2 space-y-4">{section.points.map((point,index)=><li key={index}><p className="whitespace-pre-wrap break-words">{point.text}</p>{point.evidence.map((citation,n)=><blockquote key={n} className="mt-2 border-l-2 border-[var(--line)] pl-3 text-sm text-[var(--muted)]"><p>“{citation.quote}”</p><cite>{t.page} {citation.page}</cite></blockquote>)}</li>)}</ul></section>)}</section>}
+ {mode==="questions"&&result?.response&&result.generationId&&<StudyAnswerForm key={result.generationId+locale} generationId={result.generationId} response={result.response}/>}
  </div>}</details></aside>;
 }

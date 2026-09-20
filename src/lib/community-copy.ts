@@ -27,12 +27,12 @@ const copy = {
     nameRequired: "Сначала задайте отображаемое имя в профиле.",
     nameTaken: "Это имя уже занято. Выберите другое.",
     nameHint:
-      "Уникальное имя для ЛС. Другие ученики могут найти вас по нему; класс и любимые предметы остаются приватными.",
+      "Уникальное имя для ЛС. Другие ученики могут найти вас по нему; ваш класс остаётся приватным, Bio и Top 4 видны участникам.",
     migration:
       "Личные сообщения ещё не подключены. Администратору нужно применить миграцию базы данных.",
     retry: "Повторить",
     rate: "Слишком много действий. Попробуйте чуть позже.",
-    privateChat: "Переписка доступна только вам и собеседнику.",
+    privateChat: "Переписка доступна участникам; указанное в жалобе сообщение может проверить администратор.",
     demo: "Демо-дневник",
     demoHint:
       "Пример оценок, не ваши школьные данные. Прямое подключение к sms.nis.ura.kz пока не настроено.",
@@ -91,12 +91,12 @@ const copy = {
     nameRequired: "Алдымен профильде көрсетілетін есімді енгізіңіз.",
     nameTaken: "Бұл есім бос емес. Басқасын таңдаңыз.",
     nameHint:
-      "Жеке хабарламаларға арналған бірегей есім. Басқа оқушылар сізді осы есіммен таба алады; сынып пен сүйікті пәндер жеке қалады.",
+      "Жеке хабарламаларға арналған бірегей есім. Басқа оқушылар сізді осы есіммен таба алады; сынып жеке қалады, Bio және Top 4 қатысушыларға көрінеді.",
     migration:
       "Жеке хабарламалар әлі қосылмаған. Әкімші дерекқор миграциясын қолдануы керек.",
     retry: "Қайталау",
     rate: "Әрекет тым көп. Сәл кейінірек көріңіз.",
-    privateChat: "Хат алмасуды тек сіз және сұхбаттасыңыз көре аласыз.",
+    privateChat: "Хат алмасу қатысушыларға қолжетімді; шағымдағы хабарламаны әкімші тексере алады.",
     demo: "Демо-күнделік",
     demoHint:
       "Бұл сіздің бағаларыңыз емес, үлгі деректер. sms.nis.ura.kz сайтына тікелей қосылу әлі бапталмаған.",
@@ -154,12 +154,12 @@ const copy = {
     nameRequired: "First set your display name in your profile.",
     nameTaken: "This name is taken. Choose another.",
     nameHint:
-      "A unique name for DMs. Other students can find you by this name; your class and favourite subjects stay private.",
+      "A unique name for DMs. Other students can find you by this name; your class stays private; Bio and Top 4 are visible to members.",
     migration:
       "Direct messages are not connected yet. An administrator must apply the database migration.",
     retry: "Retry",
     rate: "Too many actions. Try again shortly.",
-    privateChat: "Only you and your recipient can access this conversation.",
+    privateChat: "Conversation access is limited to participants; an admin can inspect a reported message.",
     demo: "Demo diary",
     demoHint:
       "Sample grades, not your school records. A direct connection to sms.nis.ura.kz is not configured yet.",

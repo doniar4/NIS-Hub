@@ -22,7 +22,7 @@ function failure(error: { code?: string; message?: string }): Failure {
 export async function loadInbox(): Promise<{ data: DmThread[] } | Failure> {
   try {
     const { supabase } = await actionContext();
-    const { data, error } = await supabase.rpc("dm_inbox");
+    const { data, error } = await supabase.rpc("dm_inbox_v053");
     return error ? failure(error) : { data };
   } catch {
     return { error: "failed" };
@@ -56,18 +56,7 @@ export async function loadMessages(
     return { error: "failed" };
   try {
     const { supabase } = await actionContext();
-    let query = supabase
-      .from("direct_messages")
-      .select("*")
-      .eq("thread_id", thread)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .limit(51);
-    if (before)
-      query = query.or(
-        `created_at.lt.${before.at},and(created_at.eq.${before.at},id.lt.${before.id})`,
-      );
-    const { data, error } = await query;
+    const { data, error } = await supabase.rpc("dm_history_v053", {p_thread:thread,p_before:before?.at??null,p_id:before?.id??null});
     return error
       ? failure(error)
       : { data: data.slice(0, 50).reverse(), more: data.length > 50 };
@@ -121,20 +110,16 @@ export async function loadNotifications(): Promise<
   { data: WebNotification[]; unread: number } | Failure
 > {
   try {
-    const { supabase, user } = await actionContext();
+    const { supabase } = await actionContext();
     const [feed, count] = await Promise.all([
-      supabase.rpc("notification_feed"),
-      supabase
-        .from("web_notifications")
-        .select("id", { count: "exact", head: true })
-        .eq("recipient_id", user.id)
-        .is("read_at", null),
+      supabase.rpc("notification_feed_v053"),
+      supabase.rpc("notification_unread_v053"),
     ]);
     return feed.error
       ? failure(feed.error)
       : count.error
         ? failure(count.error)
-        : { data: feed.data, unread: count.count ?? 0 };
+        : { data: feed.data, unread: count.data ?? 0 };
   } catch {
     return { error: "failed" };
   }

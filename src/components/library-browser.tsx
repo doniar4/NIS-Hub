@@ -265,8 +265,9 @@ export function LibraryBrowser({
           {filteredBooks.map((book) => (
             <li
               key={book.id}
-              className="library-card border border-[var(--line)] bg-[var(--surface)] p-6"
+              className="min-w-0"
             >
+              <Link prefetch={false} href={"/books/" + book.id + "/read"} className="library-card border border-[var(--line)] bg-[var(--surface)] p-6 h-full" aria-label={t.openMaterial + ": " + book.title}>
               <SubjectMotif
                 subject={subjectsById.get(
                   book.subject_id,
@@ -285,13 +286,7 @@ export function LibraryBrowser({
               </p>
 
               <h2 className="text-xl font-semibold">
-                <Link
-                  prefetch={false}
-                  className="underline-offset-4 hover:underline"
-                  href={"/books/" + book.id + "/read"}
-                >
-                  {book.title}
-                </Link>
+                {book.title}
               </h2>
 
               <p className="mt-3 text-sm text-[var(--muted)]">
@@ -300,17 +295,7 @@ export function LibraryBrowser({
                   : ""}
               </p>
 
-              <Link
-                prefetch={false}
-                className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold underline"
-                href={"/books/" + book.id + "/read"}
-                aria-label={
-                  t.openMaterial +
-                  ": " +
-                  book.title
-                }
-              >
-                {t.openMaterial}
+              <span className="mt-auto pt-5 inline-flex min-h-11 items-center text-sm font-semibold underline">{t.openMaterial}</span>
               </Link>
             </li>
           ))}

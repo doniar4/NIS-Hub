@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTimetableMaterials } from "@/lib/schedule-material-queries";
 import Image from "next/image";
 
 import { vintageCopy } from "@/lib/vintage-copy";
@@ -38,6 +39,7 @@ export default async function Home() {
     viewer.user ? getNonSchoolDays() : Promise.resolve([]),
   ]);
 
+  const materials=viewer.user&&classId?await getTimetableMaterials([...new Set(lessons.map(l=>l.subject_id))],[classGrade(currentClass)]):{};
   return (
     <SiteShell>
       <HomeMotion>
@@ -100,6 +102,7 @@ export default async function Home() {
             <div className="home-panels">
               <section className="surface-card home-panel timetable-panel">
                 <HomeTimetable
+                  materials={materials}
                   grade={classGrade(currentClass)}
                   lessons={lessons}
                   subjects={subjects}

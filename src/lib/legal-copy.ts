@@ -269,7 +269,8 @@ const communityPrivacy: Record<Locale, [string,string]> = {
  kk: ["Жеке хабарламалар және демо-күнделік", "Көрсетілетін ат бірегей: жүйеге кірген басқа пайдаланушы толық атты енгізіп, хат алмасуды бастай алады. Supabase қатысушыларды, хабарлама мәтіндерін, жіберілген уақытты, оқылған белгілерді және хабарландыруларды сақтайды. Интерфейсте хат алмасу тек қатысушыларға қолжетімді; ұштан-ұшқа шифрлау жоқ, мазмұн оператор инфрақұрылымында өңделеді. Хабарландырулар сайттың ашық қойындысында жаңартылады; фондық push-хабарландырулар қолданылмайды. Импортталған бағалар браузер жадында өңделеді, серверге жіберілмейді және бет жаңартылғанда жойылады. Демо-күнделік мектеп аккаунтына қосылмаған."],
  en: ["Direct messages and demo diary", "Display names are unique: another signed-in user can start a conversation by entering your full name. Supabase stores participants, message text, timestamps, read markers and notifications. In the app, conversations are accessible only to their participants; messages are not end-to-end encrypted and operator infrastructure processes their content. Notifications update in an open website tab; background push notifications are not used. Imported grades are processed in browser memory, are not uploaded and disappear when the page reloads. The demo diary is not connected to a school account."]
 };
+import {v053Legal} from "./v053-legal-copy";
 export const legalCopy = Object.fromEntries(Object.entries(baseLegalCopy).map(([key,copy])=>{
  const locale=key as Locale;
- return [locale,{...copy,privacy:[...copy.privacy,supportLegalCopy[locale].privacy,communityPrivacy[locale]],terms:[...copy.terms,supportLegalCopy[locale].terms]}];
+ return [locale,{...copy,privacy:[...copy.privacy,supportLegalCopy[locale].privacy,communityPrivacy[locale],v053Legal[locale].privacy],terms:[...copy.terms,supportLegalCopy[locale].terms,v053Legal[locale].terms]}];
 })) as Record<Locale,LegalCopy>;

@@ -121,7 +121,6 @@ export function AppFrame({
 
   const links = [
     ["/", t.home],
-    ["/messages", community.messages],
     ["/library", t.library],
     ["/schedule", t.schedule],
     ["/profile", t.profile],
@@ -192,6 +191,14 @@ export function AppFrame({
               NIS <em>Hub</em>
             </span>
           </Link>
+        </div>
+
+        <div className="sidebar-edition sidebar-label">
+          <span>NIS / НИШ / НЗМ</span>
+          <span>{vintageCopy(locale).space}</span>
+        </div>
+
+        <div className="sidebar-toggle-row">
           <button
             type="button"
             className="sidebar-collapse"
@@ -225,11 +232,6 @@ export function AppFrame({
               />
             </svg>
           </button>
-        </div>
-
-        <div className="sidebar-edition sidebar-label">
-          <span>NIS / НИШ / НЗМ</span>
-          <span>{vintageCopy(locale).space}</span>
         </div>
 
         {navigation(false)}

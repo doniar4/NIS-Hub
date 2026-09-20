@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { messagePreview } from "@/lib/people";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BellIcon,
@@ -40,7 +41,7 @@ export function NotificationCenter() {
       const readIds = new Set(result.data.filter(n => n.read_at).map(n => n.id));
       setToasts((old) =>
           Array.from(
-            new Map([...old.filter(n => !readIds.has(n.id)), ...fresh].map((n) => [n.id, n])).values(),
+            new Map([...old.filter(n => !readIds.has(n.id) && result.data.some(current=>current.id===n.id)).map(n=>result.data.find(current=>current.id===n.id)??n), ...fresh].map((n) => [n.id, n])).values(),
           ).slice(-3),
         );
     }
@@ -150,7 +151,7 @@ export function NotificationCenter() {
                     className="notification-copy"
                   >
                     <strong>{n.actor_name}</strong>
-                    <span>{p.newMessage}</span>
+                    <span className="preview-lines">{messagePreview(n.body_preview ?? "")}</span>
                     <time dateTime={n.created_at}>
                       {new Intl.DateTimeFormat(locale, {
                         day: "numeric",
@@ -194,7 +195,7 @@ export function NotificationCenter() {
                 <strong>{p.newMessage}</strong>
                 <span>
                   {p.from}: {n.actor_name}
-                </span>
+                </span><span className="preview-lines">{messagePreview(n.body_preview ?? "")}</span>
               </Link>
               <button
                 className="notification-dismiss"

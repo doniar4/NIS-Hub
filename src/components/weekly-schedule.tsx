@@ -1,5 +1,7 @@
 "use client";
 
+import { materialKey,type MaterialMap } from "@/lib/schedule-materials";
+import { v053Copy } from "@/lib/v053-copy";
 import { classGrade, librarySubjectHref } from "@/lib/book-model";
 
 import { SubjectMotif } from "./subject-motif";
@@ -38,10 +40,12 @@ export function WeeklyLessonList({
   lessons,
   subjects,
   grade = null,
+  materials = {},
 }: {
   lessons: WeeklyLesson[];
   subjects: SubjectRow[];
   grade?: number | null;
+  materials?: MaterialMap;
 }) {
   const { locale, t } = useI18n();
 
@@ -92,6 +96,7 @@ export function WeeklyLessonList({
             )}
           </div>
 
+          <Link prefetch={false} className="button button-secondary timetable-materials" href={materials[materialKey(row.subject_id,grade)]??librarySubjectHref(row.subject_id,grade)} aria-label={v053Copy(locale).materials+": "+subjectName(subjectsById.get(row.subject_id),locale)}>{v053Copy(locale).materials}</Link>
           <SubjectMotif
             subject={subjectsById.get(row.subject_id)}
           />
@@ -108,6 +113,7 @@ export function WeeklyScheduleBrowser({
   initialClassId,
   date,
   nonSchoolDays = [],
+  materials = {},
 }: {
   lessons: WeeklyLesson[];
   classes: ClassRow[];
@@ -115,6 +121,7 @@ export function WeeklyScheduleBrowser({
   initialClassId: string;
   date: string;
   nonSchoolDays?: CalendarDay[];
+  materials?: MaterialMap;
 }) {
   const { locale, t } = useI18n();
   const p = phase4Copy(locale);
@@ -248,6 +255,7 @@ export function WeeklyScheduleBrowser({
         ) : filtered.length ? (
           <WeeklyLessonList
             lessons={filtered}
+            materials={materials}
             subjects={subjects}
             grade={classGrade(
               classes.find((c) => c.id === classId),

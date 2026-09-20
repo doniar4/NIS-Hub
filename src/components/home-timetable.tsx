@@ -1,5 +1,6 @@
 "use client";
 
+import type { MaterialMap } from "@/lib/schedule-materials";
 import { useState } from "react";
 
 import type { SubjectRow, WeeklyLesson } from "@/lib/database.types";
@@ -30,6 +31,7 @@ export function HomeTimetable({
   today,
   nonSchoolDays,
   grade = null,
+  materials = {},
 }: {
   lessons: WeeklyLesson[];
   subjects: SubjectRow[];
@@ -37,6 +39,7 @@ export function HomeTimetable({
   today: string;
   nonSchoolDays: CalendarDay[];
   grade?: number | null;
+  materials?: MaterialMap;
 }) {
   const { locale, t } = useI18n();
   const p = v05Copy(locale);
@@ -203,6 +206,7 @@ export function HomeTimetable({
           lessons={rows}
           subjects={subjects}
           grade={grade}
+          materials={materials}
         />
       ) : (
         <p className="py-6 text-[var(--muted)]">

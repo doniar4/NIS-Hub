@@ -12,7 +12,7 @@ export const studyResponse=z.object({
 export type StudyInput=z.infer<typeof studyInput>;
 export type StudyResponse=z.infer<typeof studyResponse>;
 export type SourcePage={page:number;text:string};
-export type StudyResult={error?:"disabled"|"quota"|"unavailable"|"busy"|"provider_quota"|"configuration"|"timeout"|"failed";response?:StudyResponse;cached?:boolean;source?:{start:number;end:number;variantId:string;hash:string}};
+export type StudyResult={generationId?:string;error?:"disabled"|"quota"|"unavailable"|"busy"|"provider_quota"|"configuration"|"timeout"|"failed";response?:StudyResponse;cached?:boolean;source?:{start:number;end:number;variantId:string;hash:string}};
 const normalize=(text:string)=>text.replace(/\s+/gu," ").trim();
 export function validateStudyResponse(value:unknown,pages:SourcePage[],mode:StudyInput["mode"]):StudyResponse{
  const parsed=studyResponse.parse(value),kinds=parsed.sections.map(s=>s.kind);

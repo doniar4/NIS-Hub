@@ -1,4 +1,7 @@
 "use client";
+import Link from "next/link";
+import { SafetyMenu } from "./safety-menu";
+import { v053Copy } from "@/lib/v053-copy";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { ChatBubbleIcon, PaperPlaneIcon } from "@radix-ui/react-icons";
 import {
@@ -165,17 +168,14 @@ export function MessagesPanel({
                     <span className="conversation-initial" aria-hidden="true">
                       {thread.peer_name?.slice(0, 1).toLocaleUpperCase() || "N"}
                     </span>
-                    <span
-                      className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--surface)] bg-[var(--accent)]"
-                      title="Active"
-                    />
+
                   </div>
                   <span className="min-w-0 flex-1 ml-2">
                     <strong className="text-sm font-medium text-[var(--ink)] truncate block">
                       {thread.peer_name}
                     </strong>
                     <span className="conversation-preview text-xs text-[var(--muted)] truncate block mt-0.5">
-                      {thread.last_body ?? p.emptyChat}
+                      {thread.last_deleted ? v053Copy(locale).deleted : thread.last_body ?? p.emptyChat}
                     </span>
                   </span>
                   {thread.unread > 0 && (
@@ -312,23 +312,24 @@ function Conversation({
   return (
     <section className="surface-card conversation-panel">
       <header className="conversation-heading flex items-center justify-between pb-4 border-b border-[var(--line)]">
-        <div className="flex items-center gap-3">
+        <Link href={"/people/"+thread.peer_id} className="min-w-0 flex items-center gap-3">
           <div className="relative">
             <span className="conversation-initial shadow-sm" aria-hidden="true">
               {thread.peer_name.slice(0, 1).toLocaleUpperCase()}
             </span>
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[var(--surface)] bg-[var(--accent)]" />
+
           </div>
           <div>
             <h2 className="section-title text-xl font-semibold text-[var(--ink)]">
               {thread.peer_name}
             </h2>
             <p className="text-xs text-[var(--muted)] flex items-center gap-1.5 mt-0.5">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+
               {p.privateChat}
             </p>
           </div>
-        </div>
+        </Link>
+        <SafetyMenu peer={thread.peer_id} thread={thread.id} onDone={onRead}/>
       </header>
       {more && (
         <button
@@ -399,7 +400,8 @@ function Conversation({
                   : "message-bubble"
               }
             >
-              <p>{m.body}</p>
+              <p>{m.deleted_at ? v053Copy(locale).deleted : m.body}</p>
+              {!m.deleted_at&&<SafetyMenu message={m.id} own={m.sender_id===userId} onDone={()=>{void loadMessages(thread.id).then(result=>{if("data"in result)merge(result.data);});}}/>}
               <time dateTime={m.created_at}>
                 {new Intl.DateTimeFormat(locale, {
                   month: "short",
@@ -412,12 +414,13 @@ function Conversation({
           ))
         )}
       </ol>
+      {thread.blocked&&<p role="status">{v053Copy(locale).blocked}</p>}
       <form
         className="message-compose mt-3 pt-3 border-t border-[var(--line)]"
         onSubmit={(event) => {
           event.preventDefault();
           const body = text.trim();
-          if (!body || pending) return;
+          if (!body || pending || thread.blocked) return;
           if (client.current?.body !== body)
             client.current = { body, id: crypto.randomUUID() };
           const nonce = client.current.id;
@@ -466,7 +469,7 @@ function Conversation({
         </label>
         <button
           className="button flex items-center gap-2 px-4"
-          disabled={pending || !text.trim()}
+          disabled={pending || !text.trim() || thread.blocked}
           aria-label={p.send}
         >
           <PaperPlaneIcon aria-hidden="true" />

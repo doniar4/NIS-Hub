@@ -1,3 +1,4 @@
+import { answerReviewInstructions,answerReviewJsonSchema,validateAnswerReview,type AnswerReview,type AnswerReviewRequest } from "./study-answer-review";
 import {
   STUDY_SECTIONS,
   studyInstructions,
@@ -8,6 +9,7 @@ import {
 } from "./ai-study";
 
 export interface StudyProvider {
+  reviewStudyAnswers(locale:StudyInput["locale"], pages:SourcePage[], answers:AnswerReviewRequest[]):Promise<AnswerReview>;
   generate(input: StudyInput, pages: SourcePage[]): Promise<StudyResponse>;
 }
 
@@ -74,8 +76,7 @@ export function geminiProvider(
   },
   transport: typeof fetch = fetch
 ): StudyProvider {
-  return {
-    async generate(input, pages) {
+  async function request<T>(instructions:string,payload:unknown,schema:unknown,validate:(raw:unknown)=>T):Promise<T> {
       const abort = new AbortController();
       const timer = setTimeout(() => abort.abort(), config.timeoutMs);
 
@@ -102,7 +103,7 @@ export function geminiProvider(
               systemInstruction: {
                 parts: [
                   {
-                    text: studyInstructions(input.mode, input.locale)
+                    text: instructions
                   }
                 ]
               },
@@ -112,7 +113,7 @@ export function geminiProvider(
                   role: "user",
                   parts: [
                     {
-                      text: JSON.stringify({ pages })
+                      text: JSON.stringify(payload)
                     }
                   ]
                 }
@@ -123,7 +124,7 @@ export function geminiProvider(
                 candidateCount: 1,
                 maxOutputTokens: 6000,
                 responseMimeType: "application/json",
-                responseJsonSchema
+                responseJsonSchema: schema
               }
             })
           }
@@ -210,17 +211,16 @@ export function geminiProvider(
         }
 
         stage = "validate-response";
-        return validateStudyResponse(
-          JSON.parse(text),
-          pages,
-          input.mode
-        );
+        return validate(JSON.parse(text));
       } catch (error) {
         if (abort.signal.aborted) throw new StudyProviderError("timeout", stage);
         throw error instanceof StudyProviderError ? error : new StudyProviderError("failed", stage);
       } finally {
         clearTimeout(timer);
       }
-    }
+  }
+  return {
+    generate: (input,pages)=>request(studyInstructions(input.mode,input.locale),{pages},responseJsonSchema,raw=>validateStudyResponse(raw,pages,input.mode)),
+    reviewStudyAnswers: (locale,pages,answers)=>request(answerReviewInstructions(locale),{pages,answers},answerReviewJsonSchema,raw=>validateAnswerReview(raw,pages,answers))
   };
 }

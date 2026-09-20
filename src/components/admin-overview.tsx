@@ -1,3 +1,5 @@
+import Link from "next/link";
+import {v053Copy} from "@/lib/v053-copy";
 import {database} from "@/lib/queries";
 import {getI18n} from "@/lib/i18n-server";
 import {SiteShell} from "./site-shell";
@@ -9,5 +11,5 @@ export async function AdminOverview(){
  db.from("support_tickets").select("id",{count:"exact",head:true}).in("status",["open","in_progress"]),
  db.from("support_tickets").select("id",{count:"exact",head:true}).in("status",["open","in_progress"]).eq("needs_admin_reply",true)]);
  if(recent.error||open.error||unread.error)throw new Error("Admin summary unavailable");
- return <SiteShell><AdminDashboard locale={locale} open={open.count??0} unread={unread.count??0} recent={recent.data}/></SiteShell>;
+ return <SiteShell><Link href="/admin/community" className="text-link">{v053Copy(locale).moderation}</Link><AdminDashboard locale={locale} open={open.count??0} unread={unread.count??0} recent={recent.data}/></SiteShell>;
 }

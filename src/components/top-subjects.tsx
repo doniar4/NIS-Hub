@@ -1,5 +1,6 @@
 "use client";
 
+import { SubjectBadges } from "./subject-badges";
 import { useState } from "react";
 import { useI18n } from "./locale-provider";
 import { subjectName } from "@/lib/i18n";
@@ -26,6 +27,7 @@ export function TopSubjects({ subjects, initial }: { subjects: SubjectRow[]; ini
             disabled={subject.id !== value && values.includes(subject.id)}>{subjectName(subject, locale)}</option>)}
         </select>
       </label>)}</div>
+    <SubjectBadges ids={values.filter(Boolean)} subjects={subjects} locale={locale}/>
     {duplicate && <p className="form-error" role="alert">{t.topDuplicate}</p>}
   </fieldset>;
 }

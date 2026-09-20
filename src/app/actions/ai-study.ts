@@ -38,13 +38,13 @@ export async function generateStudy(raw:unknown):Promise<StudyResult>{
   const source={start:input.start,end:input.end,variantId:input.variantId,hash},pages=result.data.map(p=>({page:p.page_number,text:p.text}));
   if(reserved.state==="cached"){
    if(!g.response||!g.signature||!validCacheSignature(config.key,context,g.response,g.signature)){studyDebug("cache-invalid");return {error:"failed"};}
-   return {response:validateStudyResponse(JSON.parse(g.response),pages,input.mode),cached:true,source};
+   return {response:validateStudyResponse(JSON.parse(g.response),pages,input.mode),cached:true,source,generationId:g.id};
   }
   fail=async()=>supabase.rpc("complete_ai_study",{p_id:g.id,p_lease:g.lease,p_response:"",p_signature:"",p_failed:true});
   const response=await geminiProvider(config).generate(input,pages),serialized=JSON.stringify(response);
   const saved=await supabase.rpc("complete_ai_study",{p_id:g.id,p_lease:g.lease,p_response:serialized,p_signature:cacheSignature(config.key,context,serialized),p_failed:false});
   if(saved.error||!saved.data){studyDebug("save-generation-failed");await fail();return {error:"unavailable"};}
-  return {response,cached:false,source};
+  return {response,cached:false,source,generationId:g.id};
  }catch(error){
   if(fail)await fail().catch(()=>{});
   if(error instanceof StudyProviderError){

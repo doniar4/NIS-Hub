@@ -1,3 +1,6 @@
+import { ClassHomeworkPanel } from "@/components/class-homework";
+import { getTimetableMaterials } from "@/lib/schedule-material-queries";
+import { classGrade } from "@/lib/book-model";
 import { getNonSchoolDays } from "@/lib/calendar-queries";
 import { getI18n } from "@/lib/i18n-server";
 import { SiteShell } from "@/components/site-shell";
@@ -9,9 +12,11 @@ import { getWeeklySchedule } from "@/lib/weekly-queries";
 import { schoolDate } from "@/lib/validation";
 import { phase4Copy } from "@/lib/phase4-copy";
 export default async function SchedulePage() {
-  const { t, locale } = await getI18n(); const { profile } = await requireViewer("/schedule");
+  const { t, locale } = await getI18n(); const { profile,user } = await requireViewer("/schedule");
   const [{ classes,subjects }, lessons, nonSchoolDays] = await Promise.all([getCatalogOptions(),getWeeklySchedule(),getNonSchoolDays()]);
+  const materials=await getTimetableMaterials([...new Set(lessons.map(l=>l.subject_id))],[...new Set(classes.map(classGrade))]);
   return <SiteShell><PageIntro kicker={t.schoolDay} title={t.schedule}>{phase4Copy(locale).weeklyHint}</PageIntro>
-    <WeeklyScheduleBrowser lessons={lessons} classes={classes} subjects={subjects} initialClassId={profile.class_id ?? ""} date={schoolDate()} nonSchoolDays={nonSchoolDays}/>
+    <WeeklyScheduleBrowser materials={materials} lessons={lessons} classes={classes} subjects={subjects} initialClassId={profile.class_id ?? ""} date={schoolDate()} nonSchoolDays={nonSchoolDays}/>
+    <ClassHomeworkPanel userId={user.id} hasClass={!!profile.class_id} date={schoolDate()} subjects={subjects}/>
   </SiteShell>;
 }

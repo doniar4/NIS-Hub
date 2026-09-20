@@ -7,12 +7,12 @@ import { profileSchema } from "@/lib/validation";
 import type { ActionState } from "@/lib/action-state";
 export async function saveProfile(_state: ActionState, form: FormData): Promise<ActionState> {
     const { t, locale } = await getI18n();
-    const parsed = profileSchema.safeParse({ display_name: form.get("display_name"), class_id: form.get("class_id"), subjects: form.getAll("subjects").filter(Boolean) });
+    const parsed = profileSchema.safeParse({ bio: form.get("bio") ?? "", display_name: form.get("display_name"), class_id: form.get("class_id"), subjects: form.getAll("subjects").filter(Boolean) });
     if (!parsed.success)
         return { error: t.invalidInput };
     try {
         const { supabase } = await actionContext();
-        const { error } = await supabase.rpc("save_profile", { p_name: parsed.data.display_name, p_class: parsed.data.class_id, p_subjects: parsed.data.subjects });
+        const { error } = await supabase.rpc("save_profile_v053", { p_bio: parsed.data.bio, p_name: parsed.data.display_name, p_class: parsed.data.class_id, p_subjects: parsed.data.subjects });
         if (error)
             return { error: error.code === "23505" ? communityCopy(locale).nameTaken : t.saveError };
     }

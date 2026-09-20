@@ -8,6 +8,7 @@ export const dateSchema = z.iso.date("Укажите существующую д
 export const pageSchema = z.coerce.number().int().min(1).max(100000);
 export const credentialsSchema = z.object({ email: z.email("Проверьте email.").max(254), password: z.string().min(8, "Минимум 8 символов.").max(128) });
 export const profileSchema = z.object({
+  bio: z.string().trim().max(280).default(""),
   display_name: z.string().trim().min(1, "Введите имя.").max(60),
   class_id: optionalId,
   subjects: z.array(uuid).max(4).refine(values => new Set(values).size === values.length, "Выберите разные предметы."),
@@ -26,7 +27,7 @@ export const adminEntitySchema = z.enum(["books", "classes", "subjects", "schedu
 
 // A closed redirect allowlist also rejects protocol-relative URLs and encodings.
 export function safeNext(value: unknown): string {
-  return typeof value === "string" && /^\/(?:profile|admin|library|schedule|messages|diary|support(?:\/[0-9a-f-]+)?|books\/[0-9a-f-]+(?:\/read)?)$/.test(value) ? value : "/profile";
+  return typeof value === "string" && /^\/(?:profile|people(?:\/[0-9a-f-]+)?|friends|admin|library|schedule|messages|diary|support(?:\/[0-9a-f-]+)?|books\/[0-9a-f-]+(?:\/read)?)$/.test(value) ? value : "/profile";
 }
 export function canReadBook(book: { publication_status: string }) {
   return book.publication_status === "published";

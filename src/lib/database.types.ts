@@ -1,6 +1,7 @@
-export type DmThread = {id:string;peer_name:string;last_body:string|null;last_at:string;unread:number};
-export type DirectMessage = {id:string;thread_id:string;sender_id:string;body:string;client_id:string;created_at:string};
-export type WebNotification = {id:string;thread_id:string;actor_name:string;created_at:string;read_at:string|null};
+import type { Person } from "./people";
+export type DmThread = {peer_id:string;last_deleted:boolean;blocked:boolean;id:string;peer_name:string;last_body:string|null;last_at:string;unread:number};
+export type DirectMessage = {deleted_at:string|null;id:string;thread_id:string;sender_id:string;body:string;client_id:string;created_at:string};
+export type WebNotification = {body_preview:string;id:string;thread_id:string;actor_name:string;created_at:string;read_at:string|null};
 export type Profile = { id: string; display_name: string | null; class_id: string | null; avatar_path: string | null; bio: string | null; role: "student" | "admin"; created_at: string; updated_at: string };
 export type ClassRow = { id: string; name: string; grade: number | null; section: string | null; created_at: string };
 export type SubjectRow = { id: string; name: string; name_ru?: string | null; name_kz: string | null; name_en: string | null; short_name: string | null; created_at: string };
@@ -22,6 +23,8 @@ export type TicketStatus = "open"|"in_progress"|"resolved"|"closed";
 export type SupportTicket = {id:string;owner_id:string;category:TicketCategory;title:string;description:string;status:TicketStatus;created_at:string;updated_at:string;last_user_message_at:string;last_admin_message_at:string|null;needs_admin_reply:boolean};
 export type SupportMessage = {id:string;ticket_id:string;author_id:string|null;author_role:"student"|"admin";body:string;created_at:string};
 export type SupportStatusEvent = {id:string;ticket_id:string;actor_id:string|null;previous_status:TicketStatus;status:TicketStatus;created_at:string};
+export type ClassHomework={id:string;class_id:string;subject_id:string;due_date:string;body:string;created_by:string;created_at:string;updated_at:string;deleted_at:string|null;moderation_status:"visible"|"hidden"};
+export type CommunityReport={id:string;reporter_id:string;target_kind:"profile"|"message"|"homework";target_id:string;reason:"spam"|"harassment"|"privacy"|"other";detail:string;status:"open"|"resolved";created_at:string;resolved_at:string|null;resolved_by:string|null};
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 type Table<Row, Required extends keyof Row> = { Row: Row; Insert: Pick<Row, Required> & Partial<Row>; Update: Partial<Row>; Relationships: [] };
 // Application types for schema.sql and migrations through v0.5. Historical
@@ -29,6 +32,8 @@ type Table<Row, Required extends keyof Row> = { Row: Row; Insert: Pick<Row, Requ
 // owner's Supabase project after applying migrations; no cloud schema is assumed.
 export type Database = { public: {
   Tables: {
+    class_homework:Table<ClassHomework,"class_id"|"subject_id"|"due_date"|"body"|"created_by">;
+    community_reports:Table<CommunityReport,"reporter_id"|"target_kind"|"target_id"|"reason">;
     direct_messages: Table<DirectMessage,"thread_id"|"sender_id"|"body"|"client_id">;
     web_notifications: Table<{id:string;recipient_id:string;actor_id:string;thread_id:string;message_id:string;created_at:string;read_at:string|null},"recipient_id"|"actor_id"|"thread_id"|"message_id">;
     schedule_import_batches: Table<ScheduleVersion, "source_type"|"row_count"|"status"|"snapshot">;
@@ -55,6 +60,22 @@ export type Database = { public: {
   };
   Views: Record<string, never>;
   Functions: {
+    save_class_homework:{Args:{p_subject:string;p_due:string;p_body:string;p_id?:string|null};Returns:string};
+    delete_class_homework:{Args:{p_id:string};Returns:undefined};
+    moderate_class_homework:{Args:{p_id:string};Returns:undefined};
+    set_user_block:{Args:{p_peer:string;p_blocked:boolean};Returns:undefined};
+    set_dm_hidden:{Args:{p_thread:string;p_hidden:boolean};Returns:undefined};
+    delete_own_dm:{Args:{p_message:string};Returns:undefined};
+    dm_inbox_v053:{Args:Record<string,never>;Returns:DmThread[]};
+    dm_history_v053:{Args:{p_thread:string;p_before?:string|null;p_id?:string|null};Returns:DirectMessage[]};
+    notification_unread_v053:{Args:Record<string,never>;Returns:number};
+    notification_feed_v053:{Args:Record<string,never>;Returns:WebNotification[]};
+    report_community:{Args:{p_kind:string;p_target:string;p_reason:string;p_detail:string};Returns:string};
+    resolve_community_report:{Args:{p_id:string};Returns:undefined};
+    community_report_context:{Args:{p_id:string};Returns:string|null};
+    people_list:{Args:{p_scope?:string;p_query?:string;p_id?:string|null;p_offset?:number};Returns:Person[]};
+    friend_action:{Args:{p_peer:string;p_action:string};Returns:undefined};
+    save_profile_v053:{Args:{p_name:string;p_class:string|null;p_subjects:string[];p_bio:string};Returns:undefined};
     start_dm:{Args:{p_name:string};Returns:string};
     send_dm:{Args:{p_thread:string;p_body:string;p_client:string};Returns:string};
     dm_inbox:{Args:Record<string,never>;Returns:DmThread[]};

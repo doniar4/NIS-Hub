@@ -1,3 +1,5 @@
+import { CommunityNav } from "@/components/community-nav";
+import { v053Copy } from "@/lib/v053-copy";
 import { ProfilePortrait } from "@/components/profile-portrait";
 import { communityCopy } from "@/lib/community-copy";
 import { AVATAR_URL_TTL_SECONDS } from "@/lib/avatar-policy";
@@ -40,6 +42,7 @@ export default async function ProfilePage() {
         />
         <PageIntro title={t.profile}>{t.profileHint}</PageIntro>
       </div>
+      <CommunityNav locale={locale}/>
       <div className="profile-settings">
         <ActionForm
           action={saveProfile}
@@ -63,6 +66,7 @@ export default async function ProfilePage() {
             />
           </div>
           <p className="text-sm text-[var(--muted)]">{c.nameHint}</p>
+          <label className="block"><span className="field-label">{v053Copy(locale).bio}</span><textarea className="field" name="bio" maxLength={280} rows={4} defaultValue={profile.bio ?? ""} aria-describedby="bio-hint"/></label><p id="bio-hint" className="text-sm">{v053Copy(locale).bioHint}</p>
           <TopSubjects
             subjects={subjects}
             initial={[1, 2, 3, 4].map(
