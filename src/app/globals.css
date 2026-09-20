@@ -215,9 +215,9 @@ textarea.field { min-height: auto; line-height: 1.6; }
 .app-main { position: relative; isolation: isolate; max-width: 1600px; margin: 0 auto; padding: clamp(1.5rem, 3.4vw, 3.5rem); min-height: 70vh; overflow-x: clip; background-image: radial-gradient(ellipse 68rem 50rem at 96% 8%, color-mix(in srgb, var(--ornament-green) 11%, transparent), transparent 73%), radial-gradient(ellipse 54rem 48rem at 2% 65%, color-mix(in srgb, var(--ornament-gold) 9%, transparent), transparent 74%), radial-gradient(var(--paper-grain) .7px, transparent .7px); background-size: auto, auto, 4px 4px; }
 .page-content { position: relative; z-index: 1; min-width: 0; }
 .parallax-patterns { position: absolute; z-index: 0; inset: 0; overflow: hidden; pointer-events: none; }
-.parallax-pattern { position: absolute; opacity: .27; pointer-events: none; will-change: transform; }
+.parallax-pattern { position: absolute; opacity: .18; pointer-events: none; will-change: transform; }
 .parallax-pattern svg { width: 100%; height: auto; display: block; }
-:root[data-theme="dark"] .parallax-pattern { opacity: .2; }
+:root[data-theme="dark"] .parallax-pattern { opacity: .14; }
 @media (prefers-reduced-motion: reduce) { .parallax-patterns { display: none; } }
 .app-footer { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between; margin: 0 clamp(1.5rem, 3.4vw, 3.5rem); padding: 1rem 0; border-top: 1px solid var(--line-strong); color: var(--muted); font-size: .7rem; }
 .app-footer > div { display: flex; flex-wrap: wrap; gap: 1.4rem; }

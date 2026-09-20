@@ -6,7 +6,7 @@ import { BotanicalFlourish } from "./academic-art";
 /**
  * ParallaxBackground:
  * Renders the exact organic botanical flourish patterns from the sidebar,
- * gliding smoothly in the background layer with Apple-grade fluid inertial physics.
+ * gliding subtly in the background layer with slow, inertial motion.
  */
 export function ParallaxBackground() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -31,29 +31,38 @@ export function ParallaxBackground() {
     let currentPointerY = 0;
     let rafId: number | null = null;
     let isRunning = false;
+    let previousFrame = performance.now();
 
-    const tick = () => {
+    const tick = (time = performance.now()) => {
       if (motion.matches) {
         isRunning = false;
         return;
       }
-      const diff = targetScrollY - currentScrollY;
-      currentScrollY += diff * 0.27;
-      currentPointerX += (targetPointerX - currentPointerX) * 0.2;
-      currentPointerY += (targetPointerY - currentPointerY) * 0.2;
+      const elapsed = Math.min(48, Math.max(0, time - previousFrame));
+      previousFrame = time;
+      const scrollEase = 1 - Math.exp(-elapsed / 210);
+      const pointerEase = 1 - Math.exp(-elapsed / 260);
+      const scrollDiff = targetScrollY - currentScrollY;
+      const pointerDiffX = targetPointerX - currentPointerX;
+      const pointerDiffY = targetPointerY - currentPointerY;
+
+      // A long ease keeps quick wheel and trackpad gestures from snapping the artwork.
+      currentScrollY += scrollDiff * scrollEase;
+      currentPointerX += pointerDiffX * pointerEase;
+      currentPointerY += pointerDiffY * pointerEase;
 
       items.forEach((item) => {
-        const speed = parseFloat(item.dataset.parallaxSpeed || "0.62");
+        const speed = parseFloat(item.dataset.parallaxSpeed || "0.08");
         const rotate = parseFloat(item.dataset.parallaxRotate || "0");
         const y = currentScrollY * speed;
-        const depth = speed * 11;
+        const depth = 2.75 + speed * 16;
         item.style.transform = `translate3d(${currentPointerX * depth}px, ${y + currentPointerY * depth}px, 0) rotate(${rotate}deg)`;
       });
 
       if (
-        Math.abs(diff) > 0.15 ||
-        Math.abs(targetPointerX - currentPointerX) > 0.005 ||
-        Math.abs(targetPointerY - currentPointerY) > 0.005
+        Math.abs(scrollDiff) > 0.1 ||
+        Math.abs(pointerDiffX) > 0.003 ||
+        Math.abs(pointerDiffY) > 0.003
       ) {
         rafId = requestAnimationFrame(tick);
       } else {
@@ -77,6 +86,7 @@ export function ParallaxBackground() {
     const schedule = () => {
       if (!isRunning) {
         isRunning = true;
+        previousFrame = performance.now();
         rafId = requestAnimationFrame(tick);
       }
     };
@@ -112,7 +122,7 @@ export function ParallaxBackground() {
     <div ref={containerRef} className="parallax-patterns" aria-hidden="true">
       <div
         className="parallax-pattern"
-        data-parallax-speed="0.62"
+        data-parallax-speed="0.075"
         data-parallax-rotate="6"
         style={{
           right: "-5%",
@@ -125,7 +135,7 @@ export function ParallaxBackground() {
 
       <div
         className="parallax-pattern"
-        data-parallax-speed="0.55"
+        data-parallax-speed="0.055"
         data-parallax-rotate="-166"
         style={{
           left: "-7%",
@@ -138,7 +148,7 @@ export function ParallaxBackground() {
 
       <div
         className="parallax-pattern"
-        data-parallax-speed="0.68"
+        data-parallax-speed="0.09"
         data-parallax-rotate="12"
         style={{
           right: "-7%",
