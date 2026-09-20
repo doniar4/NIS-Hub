@@ -21,7 +21,6 @@ import { Sprout } from "./brand";
 import { BotanicalFlourish } from "./academic-art";
 import { CursorBloom } from "./cursor-bloom";
 import { communityCopy } from "@/lib/community-copy";
-import { vintageCopy } from "@/lib/vintage-copy";
 import { ParallaxBackground } from "./parallax-background";
 
 let memoryCollapsed = false;
@@ -193,12 +192,8 @@ export function AppFrame({
           </Link>
         </div>
 
-        <div className="sidebar-edition sidebar-label">
-          <span>NIS / НИШ / НЗМ</span>
-          <span>{vintageCopy(locale).space}</span>
-        </div>
-
-        <div className="sidebar-toggle-row">
+        <div className="sidebar-identity-row sidebar-toggle-row">
+          <div className="sidebar-edition sidebar-label"><span>NIS / НИШ / НЗМ</span></div>
           <button
             type="button"
             className="sidebar-collapse"

@@ -8,9 +8,16 @@ export function initialLibraryFilters(params: Record<string, string | string[] |
     grade: typeof params.grade === "string" ? params.grade.slice(0, 128) : defaultGrade,
     subject: typeof params.subject === "string" ? params.subject.slice(0, 128) : "" };
 }
+export const HIDDEN_BOOK_TITLE = "Проза о Tamerlane Esentaeve третем";
+export function normalizeLibrarySecret(value:string) {
+  return value.normalize("NFKC").toLocaleLowerCase("ru").replace(/ё/g,"е").trim().replace(/\s+/g," ");
+}
 export function filterBooks(books: LibraryBook[], { q, grade, subject }: LibraryFilters): LibraryBook[] {
+  const secret = normalizeLibrarySecret(q) === "ниш хабчик";
+  const egg = (book:LibraryBook) => normalizeLibrarySecret(book.title) === normalizeLibrarySecret(HIDDEN_BOOK_TITLE);
+  if (secret) return books.filter(egg);
   const search = q.trim().toLocaleLowerCase();
-  return books.filter(book => (!search || book.title.toLocaleLowerCase().includes(search))
+  return books.filter(book => !egg(book) && (!search || book.title.toLocaleLowerCase().includes(search))
     && (!grade || String(book.grade) === grade) && (!subject || book.subject_id === subject));
 }
 export function libraryFilterUrl(currentUrl: string, filters: LibraryFilters): string {

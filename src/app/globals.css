@@ -1352,3 +1352,34 @@ html[data-sidebar="collapsed"] .sidebar-toggle-row { justify-content: center; ma
   .icon-button:active:not(:disabled) { transform: none; }
 }
 @media (prefers-reduced-transparency: reduce) { .task-dialog::backdrop { backdrop-filter: none; background: rgb(8 20 15 / .85); } }
+
+/* v0.5.5: identity and collapse share one row; the brand stays independent. */
+.sidebar-identity-row.sidebar-toggle-row { display:flex; align-items:center; justify-content:space-between; gap:.35rem; margin:.8rem .3rem 1rem; padding-bottom:.6rem; border-bottom:1px solid var(--line-strong); }
+.sidebar-identity-row .sidebar-edition { flex:1; min-width:0; margin:0; padding:0; border:0; }
+.sidebar-identity-row .sidebar-edition > span:first-child { display:block; font-size:.65rem; letter-spacing:.09em; white-space:nowrap; }
+.sidebar-identity-row .sidebar-collapse { flex:0 0 44px; }
+html[data-sidebar="collapsed"] .sidebar-identity-row.sidebar-toggle-row { justify-content:center; margin:.8rem 0 1rem; }
+.sms-diary { display:grid; gap:1.25rem; margin-block:1.5rem; min-width:0; }
+.sms-connect { max-width:38rem; }
+.sms-connect h2 { margin-block:.7rem; }
+.sms-connect p { line-height:1.65; }
+.sms-connect form { display:grid; gap:.7rem; margin-top:1.5rem; }
+.sms-connect form input { width:100%; min-width:0; min-height:44px; }
+.sms-connect form button { margin-top:.7rem; }
+.sms-toolbar { display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:1rem; }
+.sms-toolbar p { margin-block:.35rem; }
+.sms-actions { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+.sms-subjects { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.25rem; }
+.sms-subject { min-width:0; overflow-wrap:anywhere; }
+.sms-subject-heading { display:flex; align-items:center; gap:1.1rem; }
+.sms-subject-heading .subject-motif-frame { flex:0 0 72px; width:72px; height:72px; margin:0; position:static; }
+.sms-subject h2 { font-size:1.35rem; }
+.sms-subject .sms-percent { font:2rem var(--font-display); color:var(--accent); margin-block:.4rem; }
+.sms-subject details { margin-top:1.25rem; border-top:1px solid var(--line); }
+.sms-subject summary { padding:1rem 0; min-height:44px; cursor:pointer; }
+.sms-assessments { list-style:none; margin:0; padding:0; display:grid; gap:.8rem; }
+.sms-assessments li { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1rem; padding-block:.75rem; border-bottom:1px solid var(--line); }
+.sms-assessments li div { display:grid; gap:.4rem; }
+.sms-assessments span,.sms-assessments time { font-size:.85rem; line-height:1.5; }
+@media(max-width:760px) { .sms-subjects { grid-template-columns:minmax(0,1fr); } .sms-subject-heading .subject-motif-frame { flex-basis:56px; width:56px; height:56px; } }
+@media(max-width:390px) { .sms-assessments li { grid-template-columns:minmax(0,1fr); gap:.5rem; } }

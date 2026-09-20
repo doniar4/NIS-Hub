@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { credentialsSchema, safeNext } from "@/lib/validation";
+import { clearSmsSession } from "@/lib/sms/session";
 import type { ActionState } from "@/lib/action-state";
 export async function authenticate(mode: "login" | "signup", _state: ActionState, form: FormData): Promise<ActionState> {
     const { t } = await getI18n();
@@ -43,6 +44,9 @@ export async function logout(_state: ActionState, _form: FormData): Promise<Acti
     void _form;
     const supabase = await createClient(true);
     if (supabase) {
+        // Clear the cookie before sign-out; a failed encrypted-row cleanup must not
+        // trap a user in NIS Hub. Unreadable overflow rows expire independently.
+        try { await clearSmsSession(supabase); } catch { /* No credential logging. */ }
         const { error } = await supabase.auth.signOut({ scope: "local" });
         if (error)
             return { error: t.logoutError };

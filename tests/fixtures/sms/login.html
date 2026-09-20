@@ -1,0 +1,8 @@
+<!doctype html><html><head>
+<!-- Minimal public SMS login structure verified 2026-09-20; values are synthetic. -->
+<script>Ext.apply(App.Server, {"Area":"root","ApplicationPath":"/","User":{"IsAuthenticated":false}});</script>
+<script src="/fixture-version/res/login/index/?v=fixture"></script>
+</head><body>
+<!-- Synthetic future hidden-field regression case, NOT observed on live SMS. -->
+<input type="hidden" name="__RequestVerificationToken" value="synthetic-csrf">
+</body></html>

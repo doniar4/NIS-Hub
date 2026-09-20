@@ -32,6 +32,7 @@ type Table<Row, Required extends keyof Row> = { Row: Row; Insert: Pick<Row, Requ
 // owner's Supabase project after applying migrations; no cloud schema is assumed.
 export type Database = { public: {
   Tables: {
+    sms_sessions: Table<{user_id:string;id:string;ciphertext:string;expires_at:string;created_at:string},"user_id"|"ciphertext"|"expires_at">;
     class_homework:Table<ClassHomework,"class_id"|"subject_id"|"due_date"|"body"|"created_by">;
     community_reports:Table<CommunityReport,"reporter_id"|"target_kind"|"target_id"|"reason">;
     direct_messages: Table<DirectMessage,"thread_id"|"sender_id"|"body"|"client_id">;
@@ -60,6 +61,7 @@ export type Database = { public: {
   };
   Views: Record<string, never>;
   Functions: {
+    save_sms_session:{Args:{p_ciphertext:string;p_expires:string};Returns:string};
     save_class_homework:{Args:{p_subject:string;p_due:string;p_body:string;p_id?:string|null};Returns:string};
     delete_class_homework:{Args:{p_id:string};Returns:undefined};
     moderate_class_homework:{Args:{p_id:string};Returns:undefined};

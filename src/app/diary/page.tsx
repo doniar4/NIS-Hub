@@ -1,17 +1,17 @@
 import { requireViewer } from "@/lib/auth";
 import { getI18n } from "@/lib/i18n-server";
-import { communityCopy } from "@/lib/community-copy";
+import { getCatalogOptions } from "@/lib/queries";
+import { smsCopy } from "@/lib/sms/copy";
+import { smsEnabled } from "@/lib/sms/config";
+import { hasSmsSession } from "@/lib/sms/session";
 import { SiteShell } from "@/components/site-shell";
 import { PageIntro } from "@/components/ui";
-import { DiaryPanel } from "@/components/diary-panel";
+import { SmsDiary } from "@/components/sms-diary";
 export default async function DiaryPage() {
   await requireViewer("/diary");
-  const { locale } = await getI18n(),
-    p = communityCopy(locale);
-  return (
-    <SiteShell>
-      <PageIntro title={p.diary}>{p.demo}</PageIntro>
-      <DiaryPanel />
-    </SiteShell>
-  );
+  const {locale}=await getI18n(), p=smsCopy(locale);
+  const {subjects}=await getCatalogOptions();
+  return <SiteShell><PageIntro title={p.title}>{p.intro}</PageIntro>
+    <SmsDiary enabled={smsEnabled()} sessionPresent={await hasSmsSession()} subjects={subjects}/>
+  </SiteShell>;
 }

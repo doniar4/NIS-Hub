@@ -167,7 +167,7 @@ test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, co
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),engineName+" 200% zoom overflow");
  await page.screenshot({path:join(artifacts,engineName+"-200-percent.png")});
  await page.evaluate(()=>{document.body.style.zoom="1";});
- const toggle=page.locator(".sidebar-toggle-row .sidebar-collapse"),brand=await page.locator(".sidebar-brand-row").boundingBox(),identity=await page.locator(".sidebar-edition").boundingBox(),toggleBox=await toggle.boundingBox();assert.ok(brand&&identity&&toggleBox&&toggleBox.y>=identity.y+identity.height-1);
+ const toggle=page.locator(".sidebar-toggle-row .sidebar-collapse"),brand=await page.locator(".sidebar-brand-row").boundingBox(),identity=await page.locator(".sidebar-edition").boundingBox(),toggleBox=await toggle.boundingBox();assert.ok(brand&&identity&&toggleBox&&Math.abs(toggleBox.y+toggleBox.height/2-identity.y-identity.height/2)<2 && toggleBox.x>=identity.x+identity.width);
  await toggle.click();await expect(page.locator("html")).toHaveAttribute("data-sidebar","collapsed");await toggle.focus();await page.keyboard.press("Enter");await expect(page.locator("html")).toHaveAttribute("data-sidebar","expanded");
  assert.equal(await page.locator(".app-sidebar nav a[href='/messages']").count(),0);assert.ok(await page.getByRole("link",{name:v053Copy("en").people,exact:true}).count());
  assert.deepEqual(errors,[]);await page.close();t.diagnostic(engineName+": layout matrix, full hitboxes, filter requests=0, real SQL community/homework; provider response fixture only.");
