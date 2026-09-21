@@ -1,0 +1,1432 @@
+{
+  "notice": "SANITIZED STRUCTURE ONLY; credentials, cookies, identifiers and grade values are never emitted",
+  "responseShapes": {
+    "/root/Home/GetMenuItems": {
+      "success": true,
+      "state": "number",
+      "data": [
+        {
+          "data": [
+            {
+              "pagePath": "string",
+              "target": "number",
+              "Security": {
+                "Rules": {
+                  "AllTeachers": {
+                    "Key": "string"
+                  },
+                  "AllClassHeaders": {
+                    "Key": "string"
+                  },
+                  "AllStudents": {
+                    "Key": "string"
+                  },
+                  "AllParents": {
+                    "Key": "string"
+                  }
+                },
+                "AllTeachers": {
+                  "Key": "string"
+                },
+                "AllClassHeaders": {
+                  "Key": "string"
+                },
+                "AllStudents": {
+                  "Key": "string"
+                },
+                "AllParents": {
+                  "Key": "string"
+                },
+                "Key": "string"
+              },
+              "leaf": true,
+              "selectable": true,
+              "id": "[id-1]",
+              "text": "string",
+              "iconCls": "string",
+              "collapseOnClick": false,
+              "helpPageUrl": null
+            }
+          ],
+          "leaf": false,
+          "selectable": false,
+          "expanded": false,
+          "id": "string",
+          "text": "string",
+          "iconCls": "string",
+          "collapseOnClick": false,
+          "helpPageUrl": null
+        },
+        {
+          "data": [
+            {
+              "pagePath": "string",
+              "target": "number",
+              "Security": {
+                "Rules": {
+                  "AllDataAccess": {
+                    "Key": "string"
+                  },
+                  "Create": {
+                    "Key": "string"
+                  },
+                  "Update": {
+                    "Key": "string"
+                  },
+                  "Delete": {
+                    "Key": "string"
+                  },
+                  "CommentEducationRoute": {
+                    "Key": "string"
+                  }
+                },
+                "AllDataAccess": {
+                  "Key": "string"
+                },
+                "Create": {
+                  "Key": "string"
+                },
+                "Update": {
+                  "Key": "string"
+                },
+                "Delete": {
+                  "Key": "string"
+                },
+                "CommentEducationRoute": {
+                  "Key": "string"
+                },
+                "Key": "string"
+              },
+              "leaf": true,
+              "selectable": true,
+              "id": "[id-2]",
+              "text": "string",
+              "iconCls": "string",
+              "collapseOnClick": false,
+              "helpPageUrl": null
+            }
+          ],
+          "leaf": false,
+          "selectable": false,
+          "expanded": false,
+          "id": "string",
+          "text": "string",
+          "iconCls": "string",
+          "collapseOnClick": false,
+          "helpPageUrl": null
+        },
+        {
+          "data": [
+            {
+              "pagePath": "string",
+              "target": "number",
+              "Security": {
+                "Rules": {},
+                "Key": "string"
+              },
+              "leaf": true,
+              "selectable": true,
+              "id": "[id-3]",
+              "text": "string",
+              "iconCls": "string",
+              "collapseOnClick": false,
+              "helpPageUrl": null
+            },
+            {
+              "pagePath": "string",
+              "target": "number",
+              "Security": {
+                "Rules": {
+                  "AllLoads": {
+                    "Key": "string"
+                  }
+                },
+                "AllLoads": {
+                  "Key": "string"
+                },
+                "Key": "string"
+              },
+              "leaf": true,
+              "selectable": true,
+              "id": "[id-4]",
+              "text": "string",
+              "iconCls": "string",
+              "collapseOnClick": false,
+              "helpPageUrl": null
+            },
+            {
+              "pagePath": "string",
+              "target": "number",
+              "Security": {
+                "Rules": {
+                  "AllStudents": {
+                    "Key": "string"
+                  }
+                },
+                "AllStudents": {
+                  "Key": "string"
+                },
+                "Key": "string"
+              },
+              "leaf": true,
+              "selectable": true,
+              "id": "[id-5]",
+              "text": "string",
+              "iconCls": "string",
+              "collapseOnClick": false,
+              "helpPageUrl": null
+            }
+          ],
+          "leaf": false,
+          "selectable": false,
+          "expanded": false,
+          "id": "string",
+          "text": "string",
+          "iconCls": "string",
+          "collapseOnClick": false,
+          "helpPageUrl": null
+        },
+        {
+          "data": [
+            {
+              "pagePath": "string",
+              "target": "number",
+              "Security": {
+                "Rules": {
+                  "AllSchools": {
+                    "Key": "string"
+                  },
+                  "AllDataAccess": {
+                    "Key": "string"
+                  },
+                  "EditMark": {
+                    "Key": "string"
+                  },
+                  "RemoveMark": {
+                    "Key": "string"
+                  },
+                  "PrintRepotSummary": {
+                    "Key": "string"
+                  }
+                },
+                "AllSchools": {
+                  "Key": "string"
+                },
+                "AllDataAccess": {
+                  "Key": "string"
+                },
+                "EditMark": {
+                  "Key": "string"
+                },
+                "RemoveMark": {
+                  "Key": "string"
+                },
+                "PrintRepotSummary": {
+                  "Key": "string"
+                },
+                "Key": "string"
+              },
+              "leaf": true,
+              "selectable": true,
+              "id": "[id-6]",
+              "text": "string",
+              "iconCls": "string",
+              "collapseOnClick": false,
+              "helpPageUrl": null
+            }
+          ],
+          "leaf": false,
+          "selectable": false,
+          "expanded": false,
+          "id": "string",
+          "text": "string",
+          "iconCls": "string",
+          "collapseOnClick": false,
+          "helpPageUrl": null
+        }
+      ],
+      "message": "string",
+      "details": null,
+      "code": null,
+      "closable": null,
+      "refreshPage": null,
+      "title": null,
+      "duration": null,
+      "total": null
+    },
+    "/Home/GetChartData": {
+      "success": true,
+      "state": "number",
+      "data": null,
+      "message": "string",
+      "details": null,
+      "code": null,
+      "closable": null,
+      "refreshPage": null,
+      "title": null,
+      "duration": null,
+      "total": null
+    },
+    "/webpages/public/GetPageByAlias": {
+      "success": true,
+      "state": "number",
+      "data": {
+        "Alias": "string",
+        "IsSystem": false,
+        "Body": "string",
+        "BodyKz": "string",
+        "BodyRu": "string",
+        "BodyEn": "string",
+        "Title": {
+          "kk-kz": "string",
+          "ru-ru": "string",
+          "en-us": "string"
+        },
+        "Id": "[id-8]"
+      },
+      "message": "string",
+      "details": null,
+      "code": null,
+      "closable": null,
+      "refreshPage": null,
+      "title": null,
+      "duration": null,
+      "total": null
+    },
+    "/Ref/GetSchoolYears": {
+      "success": true,
+      "state": "number",
+      "data": [
+        {
+          "Name": "string",
+          "Data": {
+            "IsActual": true,
+            "BeginDate": "string",
+            "EndDate": "string"
+          },
+          "Id": "[id-9]"
+        },
+        {
+          "Name": "string",
+          "Data": {
+            "IsActual": false,
+            "BeginDate": "string",
+            "EndDate": "string"
+          },
+          "Id": "[id-10]"
+        },
+        {
+          "Name": "string",
+          "Data": {
+            "IsActual": false,
+            "BeginDate": "string",
+            "EndDate": "string"
+          },
+          "Id": "[id-11]"
+        },
+        {
+          "Name": "string",
+          "Data": {
+            "IsActual": false,
+            "BeginDate": "string",
+            "EndDate": "string"
+          },
+          "Id": "[id-12]"
+        },
+        {
+          "Name": "string",
+          "Data": {
+            "IsActual": false,
+            "BeginDate": "string",
+            "EndDate": "string"
+          },
+          "Id": "[id-13]"
+        },
+        {
+          "Name": "string",
+          "Data": {
+            "IsActual": false,
+            "BeginDate": "string",
+            "EndDate": "string"
+          },
+          "Id": "[id-14]"
+        },
+        {
+          "Name": "string",
+          "Data": {
+            "IsActual": false,
+            "BeginDate": "string",
+            "EndDate": "string"
+          },
+          "Id": "[id-15]"
+        },
+        {
+          "Name": "string",
+          "Data": {
+            "IsActual": false,
+            "BeginDate": "string",
+            "EndDate": "string"
+          },
+          "Id": "[id-16]"
+        },
+        {
+          "Name": "string",
+          "Data": {
+            "IsActual": false,
+            "BeginDate": "string",
+            "EndDate": "string"
+          },
+          "Id": "[id-17]"
+        },
+        {
+          "Name": "string",
+          "Data": {
+            "IsActual": false,
+            "BeginDate": "string",
+            "EndDate": "string"
+          },
+          "Id": "[id-18]"
+        },
+        {
+          "Name": "string",
+          "Data": {
+            "IsActual": false,
+            "BeginDate": "string",
+            "EndDate": "string"
+          },
+          "Id": "[id-19]"
+        },
+        {
+          "Name": "string",
+          "Data": {
+            "IsActual": false,
+            "BeginDate": "string",
+            "EndDate": "string"
+          },
+          "Id": "[id-20]"
+        }
+      ],
+      "message": "string",
+      "details": null,
+      "code": null,
+      "closable": null,
+      "refreshPage": null,
+      "title": null,
+      "duration": null,
+      "total": null
+    },
+    "/Ref/GetPeriods": {
+      "success": true,
+      "state": "number",
+      "data": [
+        {
+          "Name": "string",
+          "Data": null,
+          "Id": "[id-21]"
+        },
+        {
+          "Name": "string",
+          "Data": null,
+          "Id": "[id-22]"
+        },
+        {
+          "Name": "string",
+          "Data": null,
+          "Id": "[id-23]"
+        },
+        {
+          "Name": "string",
+          "Data": null,
+          "Id": "[id-24]"
+        }
+      ],
+      "message": "string",
+      "details": null,
+      "code": null,
+      "closable": null,
+      "refreshPage": null,
+      "title": null,
+      "duration": null,
+      "total": null
+    },
+    "/JceDiary/GetParallels": {
+      "success": true,
+      "state": "number",
+      "data": [
+        {
+          "Name": "string",
+          "Data": null,
+          "Id": "[id-25]"
+        }
+      ],
+      "message": "string",
+      "details": null,
+      "code": null,
+      "closable": null,
+      "refreshPage": null,
+      "title": null,
+      "duration": null,
+      "total": null
+    },
+    "/JceDiary/GetKlasses": {
+      "success": true,
+      "state": "number",
+      "data": [
+        {
+          "Name": "string",
+          "SchoolYearId": "[id-9]",
+          "SchoolYearMultiString": {
+            "kk-kz": "string",
+            "ru-ru": "string",
+            "en-us": "string"
+          },
+          "SchoolYearName": "string",
+          "OrganizationId": "[id-26]",
+          "OrganizationMultiString": {
+            "kk-kz": "string",
+            "ru-ru": "string",
+            "en-us": "string"
+          },
+          "OrganizationName": "string",
+          "ParallelId": "[id-25]",
+          "ParallelMultiString": {
+            "kk-kz": "string",
+            "ru-ru": "string",
+            "en-us": "string"
+          },
+          "ParallelName": "string",
+          "LetterName": "string",
+          "Language": "number",
+          "LanguageName": "string",
+          "IsBlocked": false,
+          "Id": "[id-27]"
+        }
+      ],
+      "message": "string",
+      "details": null,
+      "code": null,
+      "closable": null,
+      "refreshPage": null,
+      "title": null,
+      "duration": null,
+      "total": null
+    },
+    "/JceDiary/GetStudents": {
+      "success": true,
+      "state": "number",
+      "data": [
+        {
+          "Name": "string",
+          "Data": null,
+          "Id": "[id-28]"
+        }
+      ],
+      "message": "string",
+      "details": null,
+      "code": null,
+      "closable": null,
+      "refreshPage": null,
+      "title": null,
+      "duration": null,
+      "total": null
+    },
+    "/JceDiary/GetJceDiary": {
+      "success": true,
+      "state": "number",
+      "data": {
+        "Url": "/jce/Diary/Index?shId=[id-29]&qId=[id-30]&pId=[id-31]&lId=[redacted]&studId=[id-32]&subjects=[id-33]&subjects=[id-34]&subjects=[id-35]&subjects=[id-36]&subjects=[id-37]&subjects=[id-38]&subjects=[id-39]&subjects=[id-40]&subjects=[id-41]&subjects=[id-42]&subjects=[id-43]&subjects=[id-44]&subjects=[id-45]&subjects=[id-46]&subjects=[id-47]&subjects=[id-48]&subjects=[id-49]&subjects=[id-49]&subjects=[id-49]&subjects=[id-49]&subjects=[id-49]&subjects=[id-50]&subjects=[id-50]&subjects=[id-50]&subjects=[id-50]&subjects=[id-50]&subjects=[id-51]&subjects=[id-52]&subjects=[id-53]&subjects=[id-54]&subjects=[id-55]&subjects=[id-56]&subjects=[id-57]&subjects=[id-58]&subjects=[id-59]&subjects=[id-60]&subjects=[id-61]&theme=[redacted]&lang=[redacted]&ch=[redacted]"
+      },
+      "message": "string",
+      "details": null,
+      "code": null,
+      "closable": null,
+      "refreshPage": null,
+      "title": null,
+      "duration": null,
+      "total": null
+    },
+    "/Jce/Diary/GetSubjects": {
+      "success": true,
+      "state": "number",
+      "data": [
+        {
+          "Name": "string",
+          "JournalId": "[id-62]",
+          "Score": "number",
+          "Mark": "number",
+          "MarkComment": null,
+          "Evaluations": [
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {},
+              "Id": "[id-63]"
+            },
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {
+                "[id-64]": "number",
+                "[id-65]": "number",
+                "[id-66]": "number",
+                "[id-67]": "number"
+              },
+              "Id": "[id-68]"
+            }
+          ],
+          "Id": "[id-69]"
+        },
+        {
+          "Name": "string",
+          "JournalId": "[id-70]",
+          "Score": "number",
+          "Mark": "number",
+          "MarkComment": null,
+          "Evaluations": [
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {},
+              "Id": "[id-71]"
+            },
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {
+                "[id-72]": "number",
+                "[id-73]": "number",
+                "[id-74]": "number",
+                "[id-75]": "number"
+              },
+              "Id": "[id-76]"
+            }
+          ],
+          "Id": "[id-77]"
+        },
+        {
+          "Name": "string",
+          "JournalId": "[id-78]",
+          "Score": "number",
+          "Mark": "number",
+          "MarkComment": null,
+          "Evaluations": [
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {},
+              "Id": "[id-79]"
+            },
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {
+                "[id-80]": "number",
+                "[id-81]": "number"
+              },
+              "Id": "[id-82]"
+            }
+          ],
+          "Id": "[id-83]"
+        },
+        {
+          "Name": "string",
+          "JournalId": "[id-84]",
+          "Score": "number",
+          "Mark": "number",
+          "MarkComment": null,
+          "Evaluations": [
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {},
+              "Id": "[id-85]"
+            },
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {
+                "[id-86]": "number",
+                "[id-87]": "number",
+                "[id-88]": "number"
+              },
+              "Id": "[id-89]"
+            }
+          ],
+          "Id": "[id-90]"
+        },
+        {
+          "Name": "string",
+          "JournalId": "[id-91]",
+          "Score": "number",
+          "Mark": "number",
+          "MarkComment": null,
+          "Evaluations": [
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {},
+              "Id": "[id-92]"
+            },
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {
+                "[id-93]": "number",
+                "[id-94]": "number"
+              },
+              "Id": "[id-95]"
+            }
+          ],
+          "Id": "[id-96]"
+        },
+        {
+          "Name": "string",
+          "JournalId": "[id-97]",
+          "Score": "number",
+          "Mark": "number",
+          "MarkComment": null,
+          "Evaluations": [
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {},
+              "Id": "[id-98]"
+            },
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {
+                "[id-99]": "number"
+              },
+              "Id": "[id-100]"
+            }
+          ],
+          "Id": "[id-101]"
+        },
+        {
+          "Name": "string",
+          "JournalId": "[id-102]",
+          "Score": "number",
+          "Mark": "number",
+          "MarkComment": null,
+          "Evaluations": [
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {},
+              "Id": "[id-103]"
+            },
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {
+                "[id-104]": "number"
+              },
+              "Id": "[id-105]"
+            }
+          ],
+          "Id": "[id-106]"
+        },
+        {
+          "Name": "string",
+          "JournalId": "[id-107]",
+          "Score": "number",
+          "Mark": "number",
+          "MarkComment": null,
+          "Evaluations": [
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {},
+              "Id": "[id-108]"
+            },
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {
+                "[id-109]": "number",
+                "[id-110]": "number",
+                "[id-111]": "number",
+                "[id-112]": "number"
+              },
+              "Id": "[id-113]"
+            }
+          ],
+          "Id": "[id-114]"
+        },
+        {
+          "Name": "string",
+          "JournalId": "[id-115]",
+          "Score": "number",
+          "Mark": "number",
+          "MarkComment": null,
+          "Evaluations": [
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {},
+              "Id": "[id-116]"
+            },
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {
+                "[id-117]": "number",
+                "[id-118]": "number",
+                "[id-119]": "number"
+              },
+              "Id": "[id-120]"
+            }
+          ],
+          "Id": "[id-121]"
+        },
+        {
+          "Name": "string",
+          "JournalId": "[id-122]",
+          "Score": "number",
+          "Mark": "number",
+          "MarkComment": null,
+          "Evaluations": [
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {},
+              "Id": "[id-123]"
+            },
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {
+                "[id-124]": "number"
+              },
+              "Id": "[id-125]"
+            }
+          ],
+          "Id": "[id-126]"
+        },
+        {
+          "Name": "string",
+          "JournalId": "[id-127]",
+          "Score": "number",
+          "Mark": "number",
+          "MarkComment": null,
+          "Evaluations": [
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {},
+              "Id": "[id-128]"
+            },
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {
+                "[id-129]": "number",
+                "[id-130]": "number",
+                "[id-131]": "number"
+              },
+              "Id": "[id-132]"
+            }
+          ],
+          "Id": "[id-133]"
+        },
+        {
+          "Name": "string",
+          "JournalId": "[id-134]",
+          "Score": "number",
+          "Mark": "number",
+          "MarkComment": null,
+          "Evaluations": [
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {},
+              "Id": "[id-135]"
+            },
+            {
+              "Type": "number",
+              "EvalType": "number",
+              "Formula": "number",
+              "Name": "string",
+              "ShortName": "string",
+              "Percent": "number",
+              "IsCanDontConsider": false,
+              "MaxScores": {
+                "[id-136]": "number",
+                "[id-137]": "number"
+              },
+              "Id": "[id-138]"
+            }
+          ],
+          "Id": "[id-139]"
+        }
+      ],
+      "message": "string",
+      "details": null,
+      "code": null,
+      "closable": null,
+      "refreshPage": null,
+      "title": null,
+      "duration": null,
+      "total": null
+    },
+    "/Jce/Diary/GetResultByEvalution": {
+      "success": true,
+      "state": "number",
+      "data": [
+        {
+          "Name": "string",
+          "Description": "string",
+          "Score": "number",
+          "MaxScore": "number",
+          "Disabled": false,
+          "Comment": null,
+          "RubricId": null,
+          "Id": "[id-72]"
+        },
+        {
+          "Name": "string",
+          "Description": "string",
+          "Score": "number",
+          "MaxScore": "number",
+          "Disabled": false,
+          "Comment": null,
+          "RubricId": null,
+          "Id": "[id-73]"
+        },
+        {
+          "Name": "string",
+          "Description": "string",
+          "Score": "number",
+          "MaxScore": "number",
+          "Disabled": false,
+          "Comment": null,
+          "RubricId": null,
+          "Id": "[id-74]"
+        },
+        {
+          "Name": "string",
+          "Description": "string",
+          "Score": "number",
+          "MaxScore": "number",
+          "Disabled": false,
+          "Comment": null,
+          "RubricId": null,
+          "Id": "[id-75]"
+        }
+      ],
+      "message": "string",
+      "details": null,
+      "code": null,
+      "closable": null,
+      "refreshPage": null,
+      "title": null,
+      "duration": null,
+      "total": null
+    }
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/Root/Account/Login",
+      "query": {
+        "ReturnUrl": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/c0d35c9f3be74f03acfe4f3bb55a472f/res/login/index/",
+      "query": {
+        "v": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/c0d35c9f3be74f03acfe4f3bb55a472f/res/css/login/index/",
+      "query": {
+        "v": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/Resources/js/registration",
+      "query": {
+        "v": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/Resources/css/registration_css/",
+      "query": {
+        "v": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "POST",
+      "path": "/root/Account/LogOn",
+      "query": {},
+      "fieldNames": [
+        "login",
+        "password",
+        "twoFactorAuthCode",
+        "captchaInput",
+        "application2FACode"
+      ],
+      "fieldValues": {
+        "login": "[redacted]",
+        "password": "[redacted]",
+        "twoFactorAuthCode": "[redacted]",
+        "captchaInput": "[redacted]",
+        "application2FACode": "[redacted]"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "query": {},
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/root",
+      "query": {},
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/c0d35c9f3be74f03acfe4f3bb55a472f/res/home/index/",
+      "query": {
+        "v": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/c0d35c9f3be74f03acfe4f3bb55a472f/res/css/home/index/",
+      "query": {
+        "v": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/Home/MainPage",
+      "query": {
+        "lang": "ru-ru",
+        "_dc": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/root/Home/GetMenuItems",
+      "query": {
+        "_dc": "[redacted]",
+        "page": "1",
+        "start": "0",
+        "limit": "100",
+        "node": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/home/",
+      "query": {
+        "v": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/homecss/",
+      "query": {
+        "v": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/webpages/public/Show",
+      "query": {
+        "alias": "[redacted]",
+        "lang": "ru-ru"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "POST",
+      "path": "/Home/GetChartData",
+      "query": {
+        "_dc": "[redacted]"
+      },
+      "fieldNames": [
+        "page",
+        "start",
+        "limit"
+      ],
+      "fieldValues": {
+        "page": "1",
+        "start": "0",
+        "limit": "100"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/Resources/js/strings.js",
+      "query": {},
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/[id]c8f4b7f8e198a[id]b/app/pagesShow/",
+      "query": {
+        "v": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "POST",
+      "path": "/webpages/public/GetPageByAlias",
+      "query": {
+        "alias": "[redacted]",
+        "lang": "ru-ru"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/jcediary/index/0",
+      "query": {
+        "_dc": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/JCEJournal/JceDiary/",
+      "query": {
+        "v": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "POST",
+      "path": "/Ref/GetSchoolYears",
+      "query": {
+        "fullData": "true",
+        "_dc": "[redacted]"
+      },
+      "fieldNames": [
+        "page",
+        "start",
+        "limit"
+      ],
+      "fieldValues": {
+        "page": "1",
+        "start": "0",
+        "limit": "100"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/Ref/GetPeriods",
+      "query": {
+        "_dc": "[redacted]"
+      },
+      "fieldNames": [
+        "schoolYearId",
+        "page",
+        "start",
+        "limit"
+      ],
+      "fieldValues": {
+        "schoolYearId": "[id-9]",
+        "page": "1",
+        "start": "0",
+        "limit": "100"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/JceDiary/GetParallels",
+      "query": {
+        "_dc": "[redacted]"
+      },
+      "fieldNames": [
+        "periodId",
+        "page",
+        "start",
+        "limit"
+      ],
+      "fieldValues": {
+        "periodId": "[id-24]",
+        "page": "1",
+        "start": "0",
+        "limit": "100"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/JceDiary/GetKlasses",
+      "query": {
+        "_dc": "[redacted]"
+      },
+      "fieldNames": [
+        "periodId",
+        "parallelId",
+        "page",
+        "start",
+        "limit"
+      ],
+      "fieldValues": {
+        "periodId": "[id-24]",
+        "parallelId": "[id-25]",
+        "page": "1",
+        "start": "0",
+        "limit": "100"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/JceDiary/GetStudents",
+      "query": {
+        "_dc": "[redacted]"
+      },
+      "fieldNames": [
+        "periodId",
+        "klassId",
+        "page",
+        "start",
+        "limit"
+      ],
+      "fieldValues": {
+        "periodId": "[id-24]",
+        "klassId": "[id-27]",
+        "page": "1",
+        "start": "0",
+        "limit": "100"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/JceDiary/GetJceDiary",
+      "query": {},
+      "fieldNames": [
+        "periodId",
+        "parallelId",
+        "klassId",
+        "studentId"
+      ],
+      "fieldValues": {
+        "periodId": "[id-24]",
+        "parallelId": "[id-25]",
+        "klassId": "[id-27]",
+        "studentId": "[id-28]"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/jce/Diary/Index",
+      "query": {
+        "shId": "[id-29]",
+        "qId": "[id-30]",
+        "pId": "[id-31]",
+        "lId": "[redacted]",
+        "studId": "[id-32]",
+        "subjects": "[id-61]",
+        "theme": "default",
+        "lang": "ru-RU",
+        "ch": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "GET",
+      "path": "/Jce/diary/",
+      "query": {
+        "v": "[redacted]"
+      },
+      "fieldNames": [],
+      "fieldValues": {}
+    },
+    {
+      "method": "POST",
+      "path": "/Jce/Diary/GetSubjects",
+      "query": {
+        "_dc": "[redacted]"
+      },
+      "fieldNames": [
+        "page",
+        "start",
+        "limit"
+      ],
+      "fieldValues": {
+        "page": "1",
+        "start": "0",
+        "limit": "100"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/Jce/Diary/GetResultByEvalution",
+      "query": {
+        "_dc": "[redacted]"
+      },
+      "fieldNames": [
+        "journalId",
+        "evalId",
+        "page",
+        "start",
+        "limit"
+      ],
+      "fieldValues": {
+        "journalId": "[id-70]",
+        "evalId": "[id-71]",
+        "page": "1",
+        "start": "0",
+        "limit": "100"
+      }
+    }
+  ]
+}
