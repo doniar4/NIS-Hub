@@ -40,7 +40,7 @@ export class SmsHttp {
     try {
       for (let redirect = 0; redirect <= 5; redirect++) {
         if (++this.calls > 24) throw new SmsError("sms_changed");
-        const cookie = this.cookies.filter(c => (c.expires === undefined || c.expires > Date.now()) && (url.pathname === c.path || url.pathname.startsWith(c.path.endsWith("/") ? c.path : c.path + "/"))).sort((a,b) => b.path.length-a.path.length).map(c => c.name + "=" + c.value).join("; ");
+        const cookie = this.cookies.filter(c => (c.expires === undefined || c.expires > Date.now()) && (url.pathname.toLowerCase() === c.path.toLowerCase() || url.pathname.toLowerCase().startsWith(c.path.toLowerCase().endsWith("/") ? c.path.toLowerCase() : c.path.toLowerCase() + "/"))).sort((a,b) => b.path.length-a.path.length).map(c => c.name + "=" + c.value).join("; ");
         const response = await this.transport(url, { method, cache: "no-store", redirect: "manual", signal: controller.signal,
           headers: { "User-Agent": "Mozilla/5.0", Accept: kind === "script" ? "text/javascript, application/javascript" : kind === "json" ? "application/json, text/json" : "text/html, application/json", "Accept-Language": "ru-RU",
             ...(cookie ? {Cookie: cookie} : {}), ...(method === "POST" ? {"Content-Type":"application/x-www-form-urlencoded",Origin:this.config.origin,Referer:safeReferer} : {}) },
