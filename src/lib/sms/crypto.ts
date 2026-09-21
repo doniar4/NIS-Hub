@@ -18,7 +18,7 @@ export function openSession(raw: string, key: Buffer, userId: string, now = Date
     cipher.setAuthTag(data.subarray(12,28)); cipher.setAAD(Buffer.from("nis-sms-v1:" + userId));
     const value = JSON.parse(Buffer.concat([cipher.update(data.subarray(28)), cipher.final()]).toString("utf8")) as SmsSession;
     if (value.version !== 1 || !Number.isSafeInteger(value.expires) || value.expires <= now || value.expires > now + SMS_MAX_AGE_MS || !Array.isArray(value.cookies) || value.cookies.length > 40) throw new Error();
-    if (value.cookies.some(c => !/^[!#$%&'*+.^_`|~0-9a-z-]+$/i.test(c.name) || typeof c.value !== "string" || /[\x00-\x20\x7f;,]/.test(c.value) || !c.path?.startsWith("/") || (c.expires !== undefined && !Number.isFinite(c.expires)))) throw new Error();
+    if (value.cookies.some(c => !c.name || typeof c.value !== "string" || !c.path?.startsWith("/") || (c.expires !== undefined && !Number.isFinite(c.expires)))) throw new Error();
     return value;
   } catch { throw new SmsError("session_expired"); }
 }
