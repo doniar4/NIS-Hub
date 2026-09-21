@@ -61,9 +61,11 @@ export async function fetchDiarySubject(http:SmsHttp,selection:SmsDiarySelection
   const loaded=await context(http,undefined,selection),subject=loaded.snapshot.subjects.find(item=>item.sourceId===subjectId);
   if(!loaded.referer||!subject?.journalId||!subject.evaluations)throw new SmsError("sms_changed");
   const assessments:SmsAssessment[]=[];
-  for(const evaluation of subject.evaluations){
-    const body=await json(http,"/Jce/Diary/GetResultByEvalution",{journalId:subject.journalId,evalId:evaluation.id},loaded.referer);
-    assessments.push(...parseJceAssessmentRows(body,subject.subject,evaluation.type));
+  const jId = subject.journalId;
+  const ref = loaded.referer;
+  const bodies = await Promise.all(subject.evaluations.map(e => json(http,"/Jce/Diary/GetResultByEvalution",{journalId:jId,evalId:e.id},ref)));
+  for(let i=0; i<subject.evaluations.length; i++){
+    assessments.push(...parseJceAssessmentRows(bodies[i],subject.subject,subject.evaluations[i].type));
   }
   return assessments;
 }
