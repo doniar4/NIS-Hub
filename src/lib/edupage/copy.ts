@@ -1,0 +1,52 @@
+import type {Locale} from "../i18n";
+const copy={
+  title:["Расписание EduPage","EduPage кестесі","EduPage timetable"],
+  check:["Проверить EduPage","EduPage тексеру","Check EduPage"],
+  sync:["Синхронизировать","Синхрондау","Sync timetable"],
+  checked:["Последняя проверка","Соңғы тексеру","Last checked"],
+  synced:["Последняя синхронизация","Соңғы синхрондау","Last successful sync"],
+  version:["Активная версия","Белсенді нұсқа","Active version"],
+  ready:["Готов к проверке","Тексеруге дайын","Ready to check"],
+  disabled:["Источник выключен. Настройте EDUPAGE_TIMETABLE_ENABLED.","Дереккөз өшірулі. EDUPAGE_TIMETABLE_ENABLED баптаңыз.","Source disabled. Configure EDUPAGE_TIMETABLE_ENABLED."],
+  migration:["Примените миграцию v0.5.8. Ручной импорт доступен ниже.","v0.5.8 миграциясын қолданыңыз. Төменде қолмен импорттау қолжетімді.","Apply the v0.5.8 migration. Manual import remains available below."],
+  scope:["Классы для синхронизации","Синхрондалатын сыныптар","Classes to sync"],
+  all:["Все опубликованные классы","Барлық жарияланған сыныптар","All published classes"],
+  aliases:["Соответствия справочнику","Анықтамалық сәйкестіктері","Catalog mappings"],
+  class:["Класс","Сынып","Class"],
+  subject:["Предмет","Пән","Subject"],
+  auto:["Не сопоставлено","Сәйкестік жоқ","Unmapped"],
+  hint:["Изменили выбор — снова нажмите «Проверить EduPage». Неизвестные соответствия и пересечения блокируют синхронизацию.",
+    "Таңдау өзгерсе, «EduPage тексеру» түймесін қайта басыңыз. Белгісіз сәйкестіктер мен қабаттасулар синхрондауды бұғаттайды.",
+    "After changing a selection, check EduPage again. Unknown mappings and overlapping lessons block sync."],
+  confirm:["Подтверждаю замену ВСЕХ строк расписания выбранных классов, включая прежние периоды. Остальные классы не изменятся. Прежняя версия сохранится для отката.",
+    "Таңдалған сыныптардың БАРЛЫҚ кесте жолдарын, соның ішінде бұрынғы кезеңдерді, ауыстыруды растаймын. Басқа сыныптар өзгермейді. Бұрынғы нұсқа қайтару үшін сақталады.",
+    "Replace ALL timetable rows of the selected classes, including earlier validity periods. Other classes remain unchanged. The previous version is retained for rollback."],
+  added:["Добавлено","Қосылды","Added"],changed:["Изменено","Өзгерді","Changed"],removed:["Удалено","Жойылды","Removed"],unchanged:["Без изменений","Өзгеріссіз","Unchanged"],
+  issues:["Проблемы","Мәселелер","Problems"],conflict:["Пересечение групп/уроков","Топтар/сабақтар қабаттасады","Overlapping groups/lessons"],
+  duplicate:["Повтор слота","Слот қайталанады","Duplicate slot"],values:["Недопустимые/пустые данные","Жарамсыз/бос деректер","Invalid/empty data"],
+  subgroup:["Группа","Топ","Group"],groupHint:["Показаны все подгруппы класса; выберите занятие своей группы.","Сыныптың барлық топтары көрсетілген; өз тобыңыздың сабағын таңдаңыз.","All class subgroups are shown; choose your group's lesson."],
+  saved:["Расписание синхронизировано; создана версия для отката.","Кесте синхрондалды; қайтару нұсқасы жасалды.","Timetable synced; a rollback version was created."],
+  noChanges:["Изменений нет; новая версия не создавалась.","Өзгеріс жоқ; жаңа нұсқа жасалмады.","No changes; no new version was created."],
+  more:["Показать ещё","Тағы көрсету","Show more"],
+  waiting:["Проверка…","Тексерілуде…","Checking…"],
+}as const;
+const errors={
+  disabled:copy.disabled,
+  login_required:["EduPage требует входа. Синхронизация остановлена; пароль не нужен.","EduPage кіруді талап етеді. Синхрондау тоқтатылды; құпиясөз қажет емес.","EduPage requires login. Sync stopped; do not provide credentials."],
+  unavailable:["EduPage недоступен. Сохранённое расписание не изменено.","EduPage қолжетімсіз. Сақталған кесте өзгермеді.","EduPage unavailable. Saved timetable is unchanged."],
+  timeout:["EduPage не ответил вовремя. Повторите позже.","EduPage уақытында жауап бермеді. Кейін қайталаңыз.","EduPage timed out. Try again later."],
+  source_changed:["Формат EduPage изменился. Импорт остановлен для проверки.","EduPage пішімі өзгерді. Тексеру үшін импорт тоқтатылды.","EduPage format changed. Import stopped for review."],
+  unsupported:["Этот вариант недель, периодов или подгрупп пока не поддерживается.","Бұл апта, кезең немесе топ нұсқасы әзірше қолдау таппайды.","This week, period or subgroup format is not supported yet."],
+  mapping:["Проверьте соответствия и конфликты в предпросмотре.","Алдын ала қараудағы сәйкестіктер мен қайшылықтарды тексеріңіз.","Resolve mappings and conflicts in the preview."],
+  conflict:copy.conflict,
+  stale:["Расписание или источник изменились. Создайте новый предпросмотр.","Кесте немесе дереккөз өзгерді. Қайта тексеріңіз.","The source or timetable changed. Create a new preview."],
+  confirmation:["Подтвердите свежий предпросмотр.","Жаңа алдын ала қарауды растаңыз.","Confirm a fresh preview."],
+  database:["Синхронизация не подтверждена. Обновите страницу; проверьте миграцию и версию.","Синхрондау расталмады. Бетті жаңартып, миграция мен нұсқаны тексеріңіз.","Sync was not confirmed. Refresh and check the migration and active version."],
+  admin:["Нужна сессия администратора.","Әкімші сессиясы қажет.","An administrator session is required."],
+  busy:["Проверка уже выполняется.","Тексеру орындалып жатыр.","A check is already running."],
+}as const;
+export function eduPageCopy(locale:Locale){
+ const n=locale==="ru"?0:locale==="kk"?1:2;
+ return {...Object.fromEntries(Object.entries(copy).map(([k,v])=>[k,v[n]])) as {[K in keyof typeof copy]:string},
+ errors:Object.fromEntries(Object.entries(errors).map(([k,v])=>[k,v[n]])) as {[K in keyof typeof errors]:string}};
+}

@@ -15,9 +15,10 @@ export type AiGeneration = {id:string;user_id:string;book_variant_id:string;cont
 export type Bookmark = { id: string; profile_id: string; book_id: string; page_number: number; created_at: string };
 export type Progress = { profile_id: string; book_id: string; page_number: number; updated_at: string };
 export type Lesson = { id: string; class_id: string; date: string; lesson_number: number; subject_id: string; teacher: string | null; room: string | null; created_at: string };
-export type WeeklyLesson = { id: string; class_id: string; weekday: number; lesson_start: number; lesson_end: number; start_time: string | null; end_time: string | null; subject_id: string; teacher: string | null; room: string | null; effective_from: string | null; effective_to: string | null; created_at: string; updated_at: string };
+export type WeeklyLesson = { subgroup_key?: string; subgroup_label?: string | null; audience?: string; id: string; class_id: string; weekday: number; lesson_start: number; lesson_end: number; start_time: string | null; end_time: string | null; subject_id: string; teacher: string | null; room: string | null; effective_from: string | null; effective_to: string | null; created_at: string; updated_at: string };
+export type EduPageState = {id:boolean;aliases:Json;last_checked:string|null;last_synced:string|null;last_error:string|null;publication:string|null;version_id:string|null};
 export type NonSchoolDay = {id:string;start_date:string;end_date:string;type:"holiday"|"vacation"|"cancelled"|"other";label:string;created_by:string|null;created_at:string};
-export type ScheduleVersion = {id:string;created_at:string;created_by:string|null;source_type:"baseline"|"csv_tsv"|"delete"|"restore";row_count:number;note:string;status:"active"|"superseded";previous_id:string|null;restored_from:string|null;snapshot:Json};
+export type ScheduleVersion = {id:string;created_at:string;created_by:string|null;source_type:"baseline"|"csv_tsv"|"delete"|"restore"|"edupage";row_count:number;note:string;status:"active"|"superseded";previous_id:string|null;restored_from:string|null;snapshot:Json};
 export type TicketCategory = "platform"|"schedule"|"library"|"account"|"data"|"other";
 export type TicketStatus = "open"|"in_progress"|"resolved"|"closed";
 export type SupportTicket = {id:string;owner_id:string;category:TicketCategory;title:string;description:string;status:TicketStatus;created_at:string;updated_at:string;last_user_message_at:string;last_admin_message_at:string|null;needs_admin_reply:boolean};
@@ -32,6 +33,7 @@ type Table<Row, Required extends keyof Row> = { Row: Row; Insert: Pick<Row, Requ
 // owner's Supabase project after applying migrations; no cloud schema is assumed.
 export type Database = { public: {
   Tables: {
+    edupage_sync_state: Table<EduPageState, "id">;
     sms_sessions: Table<{user_id:string;id:string;ciphertext:string;expires_at:string;created_at:string},"user_id"|"ciphertext"|"expires_at">;
     class_homework:Table<ClassHomework,"class_id"|"subject_id"|"due_date"|"body"|"created_by">;
     community_reports:Table<CommunityReport,"reporter_id"|"target_kind"|"target_id"|"reason">;
@@ -61,6 +63,7 @@ export type Database = { public: {
   };
   Views: Record<string, never>;
   Functions: {
+    sync_edupage_schedule:{Args:{p_lessons:Json;p_classes:string[];p_expected_active:string;p_note:string;p_aliases:Json};Returns:string};
     save_sms_session:{Args:{p_ciphertext:string;p_expires:string};Returns:string};
     save_class_homework:{Args:{p_subject:string;p_due:string;p_body:string;p_id?:string|null};Returns:string};
     delete_class_homework:{Args:{p_id:string};Returns:undefined};

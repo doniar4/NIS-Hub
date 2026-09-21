@@ -95,7 +95,7 @@ export function parseTimetable(raw: string, classes: ClassRow[], subjects: Subje
   for (const item of valid) {
     const a = item.entry;
     for (const b of existing) {
-      if (replaced.has(key(b)) || a.class_id !== b.class_id || a.weekday !== b.weekday || !dateOverlap(a,b)) continue;
+      if ((!b.subgroup_key && replaced.has(key(b))) || a.class_id !== b.class_id || a.weekday !== b.weekday || !dateOverlap(a,b)) continue;
       if ((a.lesson_start <= b.lesson_end && b.lesson_start <= a.lesson_end) ||
         (a.start_time && a.end_time && b.start_time && b.end_time && a.start_time < b.end_time.slice(0,5) && b.start_time.slice(0,5) < a.end_time)) {
         if (!result.issues.some(i=>i.row===item.row && i.code==="conflict")) result.issues.push({row:item.row,code:"conflict"});

@@ -1,3 +1,5 @@
+import {EduPageSync} from "@/components/edupage-sync";
+import {getEduPageStatus} from "@/lib/edupage/state";
 import {adminCopy} from "@/lib/admin-copy";
 import { AdminOverview } from "@/components/admin-overview";
 import { subjectMap } from "@/lib/catalog";
@@ -46,6 +48,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const variantResult=book?await db.from("book_variants").select("*").eq("book_id",book.id).order("created_at"):{data:[],error:null};
   if(variantResult.error)throw new Error(p.bookError);
   const lessons = section === "schedule" ? await getWeeklySchedule() : [];
+  const edupage = section === "schedule" ? await getEduPageStatus() : null;
   const classRow = section === "classes" ? classes.find(c => c.id === params.id) : undefined;
   const subject = section === "subjects" ? subjects.find(s => s.id === params.id) : undefined;
   const lesson = section === "schedule" ? lessons.find(l => l.id === params.id) : undefined;
@@ -54,10 +57,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const rows = section === "books" ? books.map(b => ({ id: b.id, name: b.title, detail: p[b.publication_status] }))
     : section === "classes" ? classes.map(c => ({ id: c.id, name: c.name, detail: "" }))
     : section === "subjects" ? subjects.map(s => ({ id: s.id, name: subjectName(s,locale), detail: "" }))
-    : lessons.map(l => ({ id: l.id, name: classes.find(c => c.id === l.class_id)?.name+" · "+p.shortDays[l.weekday-1]+" · "+lessonRange(l), detail: subjectName(subjectsById.get(l.subject_id),locale)+" · "+(l.effective_from||"…")+" — "+(l.effective_to||"…") }));
+    : lessons.map(l => ({ id: l.id, name: classes.find(c => c.id === l.class_id)?.name+" · "+p.shortDays[l.weekday-1]+" · "+lessonRange(l), detail: subjectName(subjectsById.get(l.subject_id),locale)+(l.subgroup_label?" · "+l.subgroup_label:"")+" · "+(l.effective_from||"…")+" — "+(l.effective_to||"…") }));
   return <SiteShell><PageIntro kicker={v.adminReply} title={v.dashboard}>{v.dashboardHint}</PageIntro>
     <Link className="text-link" href="/admin">{v.dashboard}</Link><nav className="my-8 flex flex-wrap gap-3" aria-label={v.dashboard}>{tabs.map(([key,label]) => <Link key={key} aria-current={section===key ? "page" : undefined} className={"button "+(section===key ? "" : "button-secondary")} href={"/admin?entity="+key}>{label}</Link>)}</nav>
-    {section==="schedule" && <><WeeklyScheduleBrowser lessons={lessons} classes={classes} subjects={subjects} initialClassId={lesson?.class_id ?? classes[0]?.id ?? ""} date={schoolDate()} nonSchoolDays={nonSchoolDays}/><div id="import"/><WeeklyImport classes={classes} subjects={subjects} lessons={lessons} action={importWeeklySchedule}/></>}
+    {section==="schedule" && <>{edupage && <EduPageSync initial={edupage} classes={classes} subjects={subjects}/>}<WeeklyScheduleBrowser lessons={lessons} classes={classes} subjects={subjects} initialClassId={lesson?.class_id ?? classes[0]?.id ?? ""} date={schoolDate()} nonSchoolDays={nonSchoolDays}/><div id="import"/><WeeklyImport classes={classes} subjects={subjects} lessons={lessons} action={importWeeklySchedule}/></>}
     <div className="mt-10 grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
       <section><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="section-title">{a.records}</h2><Link className="text-sm underline" href={"/admin?entity="+section}>{a.create}</Link></div>
         {section==="books" && <p className="my-4 text-sm text-[var(--muted)]">{a.limit}</p>}

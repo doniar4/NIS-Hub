@@ -1,5 +1,6 @@
 "use client";
 
+import {eduPageCopy} from "@/lib/edupage/copy";
 import { materialKey, type MaterialMap } from "@/lib/schedule-materials";
 import { LessonActions } from "./lesson-actions";
 import { classGrade, librarySubjectHref } from "@/lib/book-model";
@@ -49,6 +50,8 @@ export function WeeklyLessonList({
   const subjectsById = useMemo(() => subjectMap(subjects), [subjects]);
 
   return (
+    <>
+    {lessons.some(row=>row.subgroup_label)&&<p className="my-3 text-sm text-[var(--muted)]">{eduPageCopy(locale).groupHint}</p>}
     <ol className="lesson-list">
       {lessons.map((row) => (
         <li key={row.id} className="timetable-row lesson-row">
@@ -65,6 +68,7 @@ export function WeeklyLessonList({
           </div>
           <div className="lesson-info">
             <h3>{subjectName(subjectsById.get(row.subject_id), locale)}</h3>
+            {row.subgroup_label && <p className="lesson-room break-words">{eduPageCopy(locale).subgroup}: {row.subgroup_label}</p>}
             {row.room && (
               <p className="lesson-room">
                 {t.room}: {normalizeRoom(row.room)}
@@ -85,6 +89,7 @@ export function WeeklyLessonList({
         </li>
       ))}
     </ol>
+    </>
   );
 }
 

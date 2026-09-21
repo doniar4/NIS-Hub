@@ -7,7 +7,7 @@ import {lessonRange} from "@/lib/weekly-schedule";
 import {phase4Copy} from "@/lib/phase4-copy";
 export function ScheduleDiff({before,after,subjects,classes,locale}:{before:LessonSnapshot[];after:LessonSnapshot[];subjects:SubjectRow[];classes:ClassRow[];locale:Locale}){
  const diff=scheduleDiff(before,after),t=v05Copy(locale),map=subjectMap(subjects),classMap=new Map(classes.map(c=>[c.id,c.name]));
- const slot=(row:LessonSnapshot)=>[classMap.get(row.class_id)??row.class_id,phase4Copy(locale).shortDays[row.weekday-1],lessonRange(row)].join(" · ");
+ const slot=(row:LessonSnapshot)=>[classMap.get(row.class_id)??row.class_id,phase4Copy(locale).shortDays[row.weekday-1],lessonRange(row),row.subgroup_label].filter(Boolean).join(" · ");
  const details=(row:LessonSnapshot)=>[slot(row),subjectName(map.get(row.subject_id),locale),row.start_time?.slice(0,5),row.end_time?.slice(0,5),normalizeRoom(row.room),row.effective_from??"…",row.effective_to??"…"].filter(Boolean).join(" · ");
  return <div className="space-y-4">
  <p>{t.added}: {diff.added.length} · {t.removed}: {diff.removed.length} · {t.changed}: {diff.changed.length}</p>
