@@ -289,8 +289,9 @@ export function AppFrame({
           </div>
         </header>
 
-        <main id="main" tabIndex={-1} className="app-main">
+        <div className="app-canvas">
           <ParallaxBackground />
+        <main id="main" tabIndex={-1} className="app-main">
 
           <div className="page-content">{children}</div>
         </main>
@@ -303,6 +304,7 @@ export function AppFrame({
             <Link href="/terms">{t.terms}</Link>
           </div>
         </footer>
+        </div>
       </div>
 
       <dialog

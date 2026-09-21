@@ -71,6 +71,27 @@ test("v055 Chromium/WebKit: live UI states, no credential persistence, no pollin
 	 await page.evaluate(()=>{document.body.style.zoom="1";});
 	 for(const path of ["/home-schedule","/schedule"]){await page.goto(origin+path+"?locale=ru");await expect(page.locator(".lesson-row")).toHaveCount(2);await expect(page.locator(".lesson-row > .subject-motif-frame")).toHaveCount(2);assert.ok(await page.locator(".lesson-row > .subject-motif-frame").first().evaluate(element=>Number.parseFloat(getComputedStyle(element).opacity)>0));}
 	 await page.screenshot({path:join(dir,engineName+"-schedule-motifs.png"),fullPage:true});
+ await page.goto(origin+"/home-motion?locale=ru");
+ const day=page.locator(".timetable-day");
+ await expect(day.locator("time")).toHaveAttribute("datetime","2026-09-21");
+ await page.locator(".timetable-heading button").last().click();
+ await expect(day.locator("time")).toHaveAttribute("datetime","2026-09-22");
+ await page.locator(".timetable-heading button").first().click();
+ await expect(day.locator("time")).toHaveAttribute("datetime","2026-09-21");
+ await page.locator(".study-route h3 button").nth(1).click();
+ await expect(page.locator(".study-route").nth(1)).toHaveAttribute("data-expanded","true");
+ await expect(page.locator(".route-reveal").first()).toHaveAttribute("inert","");
+ for(const width of [1280,390,320]){
+ await page.setViewportSize({width,height:900});
+ await page.waitForTimeout(550);
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+ const motif=await page.locator(".lesson-row > .subject-motif-frame").first().boundingBox(),actions=await page.locator(".lesson-actions").first().boundingBox();
+ assert.ok(motif&&actions&&motif.x+motif.width<actions.x);
+ await page.screenshot({path:join(dir,engineName+"-home-motion-"+width+".png"),fullPage:true});
+ }
+ await page.emulateMedia({reducedMotion:"reduce"});
+ assert.equal(await day.evaluate(el=>getComputedStyle(el).animationName),"none");
+ await page.emulateMedia({reducedMotion:"no-preference"});
 	 await page.goto(origin+"/library");await expect(page.locator(".library-card")).toHaveCount(1);
  const search=page.locator('input[type="search"]').last(),requests:string[]=[];const track=(r:{url():string})=>requests.push(r.url());await page.waitForLoadState("networkidle");page.on("request",track);
  await search.fill("Проза о Tamerlane Esentaeve третем");await expect(page.locator(".library-card")).toHaveCount(0);

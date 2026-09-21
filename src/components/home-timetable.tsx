@@ -113,6 +113,7 @@ export function HomeTimetable({
         </div>
       </div>
 
+      <div key={date} className="timetable-day" data-direction={jump?.direction === -1 ? "previous" : "next"}>
       <p className="mt-2 font-medium">
         <time dateTime={date}>{formatSchoolDate(date, locale)}</time>
       </p>
@@ -190,6 +191,7 @@ export function HomeTimetable({
           {classId ? t.noToday : t.chooseProfileClass}
         </p>
       )}
+      </div>
     </section>
   );
 }

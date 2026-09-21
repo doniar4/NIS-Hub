@@ -19,11 +19,11 @@ export function StudyRoutes() {
   ];
   return <div className="study-routes">{routes.map((route, index) => <section key={route.kind} className="study-route" data-expanded={active === index}>
     <h3><button type="button" id={`${id}-trigger-${index}`} aria-expanded={active === index} aria-controls={`${id}-panel-${index}`} onClick={() => setActive(index)}>
-      <span>{route.title}</span><span aria-hidden="true" className="route-plus">{active === index ? "−" : "+"}</span>
+      <span>{route.title}</span><span aria-hidden="true" className="route-plus">+</span>
     </button></h3>
     <div className="route-art" aria-hidden="true"><RouteIllustration kind={route.kind} /></div>
-    <div id={`${id}-panel-${index}`} role="region" aria-labelledby={`${id}-trigger-${index}`} hidden={active !== index} className="route-detail">
+    <div id={`${id}-panel-${index}`} role="region" aria-labelledby={`${id}-trigger-${index}`} aria-hidden={active !== index} inert={active !== index} className="route-reveal"><div className="route-detail">
       <p>{route.hint}</p><Link href={route.href} className="section-link">{route.action}<ArrowRightIcon size={17} /></Link>
-    </div>
+    </div></div>
   </section>)}</div>;
 }
