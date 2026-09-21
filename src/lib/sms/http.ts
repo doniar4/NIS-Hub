@@ -21,7 +21,7 @@ export class SmsHttp {
       let path = url.pathname.slice(0, url.pathname.lastIndexOf("/") + 1) || "/", expires: number | undefined, maxAge: number | undefined;
       for (const part of parts) {
         const split = part.indexOf("="), key = (split < 0 ? part : part.slice(0, split)).trim().toLowerCase(), val = split < 0 ? "" : part.slice(split + 1).trim();
-        if (key === "domain" && val.replace(/^\./, "").toLowerCase() !== url.hostname) throw new SmsError("sms_changed");
+        if (key === "domain") { const d = val.replace(/^\./, "").toLowerCase(); if (d !== url.hostname && !url.hostname.endsWith("." + d)) throw new SmsError("sms_changed"); }
         if (key === "path" && val.startsWith("/") && !/[\x00-\x20\x7f;]/.test(val)) path = val;
         if (key === "expires" && Number.isFinite(Date.parse(val))) expires = Date.parse(val);
         if (key === "max-age" && /^-?\d+$/.test(val)) maxAge = Number(val);
