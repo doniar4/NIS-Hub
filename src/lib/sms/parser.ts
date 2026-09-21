@@ -145,7 +145,7 @@ export function parseJceAssessmentRows(raw:string,subject:string,type:SmsAssessm
     if(row.Description!==undefined&&row.Description!==null&&(typeof row.Description!=="string"||row.Description.length>2000))throw new SmsError("parse_failed");
     if(row.Comment!==undefined&&row.Comment!==null&&(typeof row.Comment!=="string"||row.Comment.length>2000))throw new SmsError("parse_failed");
     if(row.Id!==undefined)sourceId(row.Id);if(row.RubricId!==undefined&&row.RubricId!==null)sourceId(row.RubricId);
-    if(disabled||(score!==undefined&&score<0))return [];
+    if((disabled && score!==undefined) || (score!==undefined&&score<0))return [];
     if(score===undefined && type==="formative")return [];
     const usableMax=max!==undefined&&max>=0?max:undefined;if((usableMax===0&&score!==undefined)||(usableMax!==undefined&&score!==undefined&&score>usableMax))throw new SmsError("parse_failed");
     const percent=usableMax===undefined||score===undefined?undefined:Math.round(score/usableMax*1000)/10;
