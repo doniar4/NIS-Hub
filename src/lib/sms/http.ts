@@ -17,7 +17,7 @@ export class SmsHttp {
       const [pair, ...parts] = header.split(";"), at = pair.indexOf("=");
       if (at < 1) continue;
       const name = pair.slice(0, at).trim(), value = pair.slice(at + 1).trim();
-      if (!/^[!#$%&'*+.^_`|~0-9a-z-]+$/i.test(name) || /[\x00-\x20\x7f;,]/.test(value) || value.length > 12000) throw new SmsError("sms_changed");
+      if (!name || value.length > 12000) throw new SmsError("sms_changed");
       let path = url.pathname.slice(0, url.pathname.lastIndexOf("/") + 1) || "/", expires: number | undefined, maxAge: number | undefined;
       for (const part of parts) {
         const split = part.indexOf("="), key = (split < 0 ? part : part.slice(0, split)).trim().toLowerCase(), val = split < 0 ? "" : part.slice(split + 1).trim();
