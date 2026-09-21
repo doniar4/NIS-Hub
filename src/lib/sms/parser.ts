@@ -124,9 +124,9 @@ export function parseJceSubjects(raw:string):SmsSubjectSummary[] {
       for(const [id,maximum] of Object.entries(maxima)){sourceId(id);numeric(maximum,-1,10000);}
       return {id:sourceId(evaluation.Id),label,...(shortLabel?{shortLabel}:{}),type:assessmentType(shortLabel,label)};
     });
-    const rawScore = row.Score;
+    const rawScore = row.Score === "" ? undefined : row.Score;
     const score = rawScore === null || rawScore === undefined ? undefined : numeric(rawScore, 0, 100);
-    const rawMark = row.Mark;
+    const rawMark = row.Mark === "" ? undefined : row.Mark;
     const mark = rawMark === null || rawMark === undefined ? undefined : numeric(rawMark, 0, 10);
     if((mark!==undefined&&!Number.isInteger(mark))||(row.MarkComment!==null&&row.MarkComment!==undefined&&(typeof row.MarkComment!=="string"||row.MarkComment.length>1000)))throw new SmsError("parse_failed");
     return {subject,sourceId:sourceId(row.Id),journalId:sourceId(row.JournalId),...(score!==undefined?{percent:score,percentSource:"official_display" as const}:{}),...(mark===1?{notAttested:true}:mark&&mark>1?{currentMark:mark}:{}),evaluations:sources,assessments:[]};
@@ -138,16 +138,16 @@ export function parseJceAssessmentRows(raw:string,subject:string,type:SmsAssessm
     const row=object(item),disabled=row.Disabled;
     if(typeof disabled!=="boolean")throw new SmsError("sms_changed");
     const title=text(row.Name,200);
-    const rawScore = row.Score;
+    const rawScore = row.Score === "" ? undefined : row.Score;
     const score = rawScore === null || rawScore === undefined ? undefined : numeric(rawScore, -1, 10000);
-    const rawMax = row.MaxScore;
+    const rawMax = row.MaxScore === "" ? undefined : row.MaxScore;
     const max = rawMax === null || rawMax === undefined ? undefined : numeric(rawMax, -1, 10000);
     if(row.Description!==undefined&&row.Description!==null&&(typeof row.Description!=="string"||row.Description.length>2000))throw new SmsError("parse_failed");
     if(row.Comment!==undefined&&row.Comment!==null&&(typeof row.Comment!=="string"||row.Comment.length>2000))throw new SmsError("parse_failed");
     if(row.Id!==undefined)sourceId(row.Id);if(row.RubricId!==undefined&&row.RubricId!==null)sourceId(row.RubricId);
-    if(disabled||score===undefined||score<0)return [];
-    const usableMax=max!==undefined&&max>=0?max:undefined;if(usableMax===0||usableMax!==undefined&&score>usableMax)throw new SmsError("parse_failed");
-    const percent=usableMax===undefined?undefined:Math.round(score/usableMax*1000)/10;
-    return [{subject,title,type,score,max:usableMax,percent,percentSource:percent===undefined?undefined:"derived" as const}];
+    if(disabled||(score!==undefined&&score<0))return [];
+    const usableMax=max!==undefined&&max>=0?max:undefined;if(usableMax===0||(usableMax!==undefined&&score!==undefined&&score>usableMax))throw new SmsError("parse_failed");
+    const percent=usableMax===undefined||score===undefined?undefined:Math.round(score/usableMax*1000)/10;
+    return [{subject,title,type,...(score!==undefined?{score}:{}),...(usableMax!==undefined?{max:usableMax}:{}),...(percent!==undefined?{percent,percentSource:"derived" as const}:{})}];
   });
 }
