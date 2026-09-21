@@ -32,21 +32,24 @@ async function context(http:SmsHttp,initial:{body:string;url:URL}|undefined,sele
   if(!term)return {snapshot:base};
 
   const parallels=parseJceReferences(await json(http,"/JceDiary/GetParallels",{periodId:term.id},referer));
-  if(parallels.length!==1)throw new SmsError("sms_changed");
-  const classes=parseJceReferences(await json(http,"/JceDiary/GetKlasses",{periodId:term.id,parallelId:parallels[0].id},referer));
-  if(classes.length!==1)throw new SmsError("sms_changed");
-  const students=parseJceReferences(await json(http,"/JceDiary/GetStudents",{periodId:term.id,klassId:classes[0].id},referer));
-  if(students.length!==1)throw new SmsError("sms_changed");
-  const openBody=new URLSearchParams({periodId:term.id,parallelId:parallels[0].id,klassId:classes[0].id,studentId:students[0].id});
+  const parallel=parallels.length===1?parallels[0]:parallels.find(p=>p.actual);
+  if(!parallel)throw new SmsError("sms_changed");
+  const classes=parseJceReferences(await json(http,"/JceDiary/GetKlasses",{periodId:term.id,parallelId:parallel.id},referer));
+  const klass=classes.length===1?classes[0]:classes.find(c=>c.actual);
+  if(!klass)throw new SmsError("sms_changed");
+  const students=parseJceReferences(await json(http,"/JceDiary/GetStudents",{periodId:term.id,klassId:klass.id},referer));
+  const student=students.length===1?students[0]:students.find(s=>s.actual);
+  if(!student)throw new SmsError("sms_changed");
+  const openBody=new URLSearchParams({periodId:term.id,parallelId:parallel.id,klassId:klass.id,studentId:student.id});
   const open=await http.request("/JceDiary/GetJceDiary",openBody,"json",referer);
   const diaryUrl=safeSmsUrl(parseJceDiaryUrl(open.body),http.config.origin,open.url.href);
-  if(diaryUrl.pathname.toLocaleLowerCase()!=="/jce/diary/index")throw new SmsError("sms_changed");
-  const allowed=new Set(["shId","qId","pId","lId","studId","subjects","theme","lang","ch"]);
-  if([...diaryUrl.searchParams.keys()].some(key=>!allowed.has(key))||!["shId","qId","pId","lId","studId"].every(key=>diaryUrl.searchParams.get(key))||diaryUrl.searchParams.getAll("subjects").length<1||diaryUrl.searchParams.getAll("subjects").length>100)throw new SmsError("sms_changed");
+  if(!diaryUrl.pathname.toLowerCase().includes("/diary/index"))throw new SmsError("sms_changed");
+  const allowed=new Set(["shId","qId","pId","lId","studId","subjects","theme","lang","ch","v"]);
+  if([...diaryUrl.searchParams.keys()].some(key=>!allowed.has(key))||!["shId","qId","pId","lId","studId"].every(key=>diaryUrl.searchParams.has(key))||diaryUrl.searchParams.getAll("subjects").length<1||diaryUrl.searchParams.getAll("subjects").length>100)throw new SmsError("sms_changed");
   const diary=await http.request(diaryUrl.href);
   if(serverState(diary.body)?.User?.IsAuthenticated!==true||!/\/Jce\/diary\//i.test(diary.body))throw new SmsError("sms_changed");
   const subjects=parseJceSubjects(await json(http,"/Jce/Diary/GetSubjects",{},diary.url.href));
-  return {snapshot:{...base,student:{displayName:students[0].label,className:classes[0].label,schoolYear:year.label,term:term.label},subjects,fetchedAt:new Date().toISOString()},referer:diary.url.href};
+  return {snapshot:{...base,student:{displayName:student.label,className:klass.label,schoolYear:year.label,term:term.label},subjects,fetchedAt:new Date().toISOString()},referer:diary.url.href};
 }
 
 export async function fetchDiary(http:SmsHttp,initial?:{body:string;url:URL},selection:SmsDiarySelection={}):Promise<SmsDiarySnapshot> {
