@@ -17,8 +17,9 @@ test("Actual SMS action: auth first, transient credentials, safe errors, secure 
  const html=readFileSync("tests/fixtures/sms/login.html","utf8"), script='name:"login";name:"password";App.buildUrl("LogOn","Account");loginForm.submit(';
  for(const scenario of ["normal","overflow","unauth","bad"]){
   const jar=new Map<string,{value:string;options?:Record<string,unknown>}>(),rows:{ciphertext:string}[]=[],calls:string[]=[],logs:unknown[]=[];
-  const chain={eq:()=>chain,not:()=>chain,then:(resolve:(value:unknown)=>void)=>{rows.length=0;resolve({error:null});}};
-  const auth={user:{id:"owner"},supabase:{from:(table:string)=>{assert.equal(table,"sms_sessions");return {delete:()=>chain};},rpc:async(name:string,args:{p_ciphertext:string;p_expires:string})=>{assert.equal(name,"save_sms_session");rows.push({ciphertext:args.p_ciphertext});assert.ok(Date.parse(args.p_expires)>Date.now());return {data:"00000000-0000-4000-8000-000000000001",error:null};}}};
+  const deletion={eq:()=>deletion,not:()=>deletion,then:(resolve:(value:unknown)=>void)=>{rows.length=0;resolve({error:null});}};
+  const selection={eq:()=>selection,gt:()=>selection,maybeSingle:async()=>({data:rows[0]||null,error:null})};
+  const auth={user:{id:"owner"},supabase:{from:(table:string)=>{assert.equal(table,"sms_sessions");return {delete:()=>deletion,select:()=>selection};},rpc:async(name:string,args:{p_ciphertext:string;p_expires:string})=>{assert.equal(name,"save_sms_session");rows.splice(0,rows.length,{ciphertext:args.p_ciphertext});assert.ok(Date.parse(args.p_expires)>Date.now());return {data:"00000000-0000-4000-8000-000000000001",error:null};}}};
   const mod={exports:{} as {connectSms:(form:FormData)=>Promise<SmsResult>;disconnectSms:()=>Promise<SmsResult>}};
   runInNewContext(compiled.outputFiles[0].text,{
    module:mod,exports:mod.exports,require,Buffer,URL,URLSearchParams,Uint8Array,AbortController,setTimeout,clearTimeout,scenario,auth,
@@ -31,7 +32,11 @@ test("Actual SMS action: auth first, transient credentials, safe errors, secure 
     if(input.pathname.endsWith("/Login"))return respond(html,"text/html","Uralsk_SessionID=synthetic; Path=/");
     if(input.pathname.includes("/res/"))return respond(script,"text/javascript");
     if(input.pathname.endsWith("/LogOn"))return respond(JSON.stringify(scenario==="bad"?{success:false,message:"PRIVATE_UPSTREAM_DETAIL"}:{success:true,data:{url:"/root"}}),"application/json","auth="+(scenario==="overflow"?"x".repeat(4000):"synthetic-cookie")+"; Path=/");
-    return respond('<script>Ext.apply(App.Server, {"User":{"IsAuthenticated":true}});</script>');
+    if(input.pathname==="/root")return respond('<script>Ext.apply(App.Server, {"User":{"IsAuthenticated":true}});</script>');
+    if(input.pathname==="/jcediary/index/0")return respond('<script src="/JCEJournal/JceDiary/app.js"></script>');
+    if(input.pathname==="/Ref/GetSchoolYears")return respond(JSON.stringify({success:true,data:[{Id:"11111111-1111-4111-8111-111111111111",Name:"2026–2027",Data:{IsActual:true}}],total:1}),"application/json");
+    if(input.pathname==="/Ref/GetPeriods")return respond(JSON.stringify({success:true,data:[{Id:"22222222-2222-4222-8222-222222222222",Name:"I четверть",Data:null}],total:1}),"application/json");
+    throw Error("Unexpected SMS route: "+input.pathname);
    }
   });
   const form=new FormData();form.set("iin","000000000001");form.set("password","synthetic-not-real");
@@ -41,7 +46,7 @@ test("Actual SMS action: auth first, transient credentials, safe errors, secure 
    assert.equal(form.has("password"),false);assert.equal(form.has("iin"),false);
    if(scenario==="bad"){assert.equal(result.connected,false);assert.equal(result.error,"bad_credentials");assert.equal(jar.size,0);}
    else{
-    assert.equal(result.connected,true);assert.equal(result.error,"sms_changed");assert.equal(result.snapshot,undefined);
+    assert.equal(result.connected,true);assert.equal(result.error,undefined);assert.equal(result.snapshot?.student.schoolYear,"2026–2027");assert.equal(result.snapshot?.filters?.termId,undefined);
     const cookie=jar.get("__Host-nis-sms");assert.ok(cookie);assert.equal(cookie.options?.httpOnly,true);assert.equal(cookie.options?.secure,true);assert.equal(cookie.options?.sameSite,"lax");assert.equal(cookie.options?.path,"/");assert.ok(Number(cookie.options?.maxAge)<=1800);
     assert.ok(!cookie.value.includes("synthetic"));assert.equal(cookie.value.startsWith("id."),scenario==="overflow");assert.equal(rows.length,scenario==="overflow"?1:0);assert.ok(!JSON.stringify(rows).includes("synthetic"));
     await mod.exports.disconnectSms();assert.equal(jar.size,0);assert.equal(rows.length,0);

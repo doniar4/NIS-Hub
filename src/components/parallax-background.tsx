@@ -55,7 +55,7 @@ export function ParallaxBackground() {
         const speed = parseFloat(item.dataset.parallaxSpeed || "0.08");
         const rotate = parseFloat(item.dataset.parallaxRotate || "0");
         const y = currentScrollY * speed;
-        const depth = 2.75 + speed * 16;
+        const depth = 4.5 + speed * 24;
         item.style.transform = `translate3d(${currentPointerX * depth}px, ${y + currentPointerY * depth}px, 0) rotate(${rotate}deg)`;
       });
 
@@ -122,7 +122,7 @@ export function ParallaxBackground() {
     <div ref={containerRef} className="parallax-patterns" aria-hidden="true">
       <div
         className="parallax-pattern"
-        data-parallax-speed="0.075"
+        data-parallax-speed="0.095"
         data-parallax-rotate="6"
         style={{
           right: "-5%",
@@ -135,7 +135,7 @@ export function ParallaxBackground() {
 
       <div
         className="parallax-pattern"
-        data-parallax-speed="0.055"
+        data-parallax-speed="0.072"
         data-parallax-rotate="-166"
         style={{
           left: "-7%",
@@ -148,7 +148,7 @@ export function ParallaxBackground() {
 
       <div
         className="parallax-pattern"
-        data-parallax-speed="0.09"
+        data-parallax-speed="0.112"
         data-parallax-rotate="12"
         style={{
           right: "-7%",

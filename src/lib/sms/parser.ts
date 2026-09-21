@@ -1,6 +1,6 @@
 import { attr, document, nodes, nodeText } from "./html";
 import { SmsError } from "./errors";
-import type { SmsAssessment, SmsDiarySnapshot, SmsSubjectSummary } from "./types";
+import type { SmsAssessment, SmsDiarySnapshot, SmsEvaluationSource, SmsFilterOption, SmsSubjectSummary } from "./types";
 const normalize = (s: string) => s.normalize("NFKC").toLocaleLowerCase("ru").replace(/\s+/g," ").trim();
 const labels: Record<string,string> = {
   "предмет":"subject","пән":"subject","subject":"subject",
@@ -25,8 +25,8 @@ function date(raw: string): string | undefined {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(result) || !Number.isFinite(Date.parse(result)) || new Date(result).toISOString().slice(0,10) !== result) throw new SmsError("parse_failed");
   return result;
 }
-// Semantic table adapter. Synthetic fixtures exercise this boundary; a live,
-// authenticated SMS fixture is still required before claiming portal coverage.
+// Legacy semantic-table adapter kept for compatibility with earlier fixtures.
+// The verified JCE Diary JSON contract is parsed by the strict adapters below.
 export function parseGrades(html: string, now = new Date()): SmsDiarySnapshot {
   const root = document(html), subjects = new Map<string,SmsSubjectSummary>();
   let recognized = false, count = 0;
@@ -82,4 +82,65 @@ export function gradeFilters(html: string) {
     result.push({name,label:kind,options});
   }
   return result;
+}
+
+type JsonObject = Record<string,unknown>;
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function object(value:unknown):JsonObject { if(!value||typeof value!=="object"||Array.isArray(value))throw new SmsError("sms_changed");return value as JsonObject; }
+function text(value:unknown,max=200) { if(typeof value!=="string"||!value.trim()||value.length>max||/\d{12}/.test(value))throw new SmsError("parse_failed");return value.trim(); }
+function sourceId(value:unknown) { if(typeof value!=="string"||!uuid.test(value))throw new SmsError("sms_changed");return value; }
+function numeric(value:unknown,min:number,max:number) { if(typeof value!=="number"||!Number.isFinite(value)||value<min||value>max)throw new SmsError("parse_failed");return value; }
+function envelope(raw:string,max=100):{data:unknown[];total?:number} {
+  let value:unknown;try{value=JSON.parse(raw);}catch{throw new SmsError("sms_changed");}
+  const root=object(value);if(root.success!==true||!Array.isArray(root.data)||root.data.length>max)throw new SmsError("sms_changed");
+  if(root.total!==undefined&&root.total!==null)numeric(root.total,0,500);
+  return {data:root.data,total:typeof root.total==="number"?root.total:undefined};
+}
+export type JceReference = SmsFilterOption & {actual?:boolean};
+export function parseJceReferences(raw:string,max=100):JceReference[] {
+  return envelope(raw,max).data.map(item=>{const row=object(item),data=row.Data===null||row.Data===undefined?undefined:object(row.Data);return {id:sourceId(row.Id),label:text(row.Name,160),...(data?.IsActual===true?{actual:true}:{})};});
+}
+export function parseJceDiaryUrl(raw:string) {
+  let value:unknown;try{value=JSON.parse(raw);}catch{throw new SmsError("sms_changed");}
+  const root=object(value),data=object(root.data);if(root.success!==true||typeof data.Url!=="string"||data.Url.length>12000)throw new SmsError("sms_changed");return data.Url;
+}
+function assessmentType(...values:string[]):SmsAssessment["type"] {
+  const value=normalize(values.join(" "));
+  if(/(^|\s)(сор|бжб|sor)(\s|$)|суммативн\S* оцениван\S* (за )?раздел|бөлім\S* жиынтық/.test(value))return "sor";
+  if(/(^|\s)(соч|тжб|soch)(\s|$)|суммативн\S* оцениван\S* (за )?(четверт|тоқсан)|тоқсан\S* жиынтық/.test(value))return "soch";
+  if(/(^|\s)(фо|қб|formative)(\s|$)|форматив|қалыптастыру/.test(value))return "formative";
+  return "other";
+}
+export function parseJceSubjects(raw:string):SmsSubjectSummary[] {
+  return envelope(raw,100).data.map(item=>{
+    const row=object(item),subject=text(row.Name,160),evaluations=row.Evaluations;
+    if(!Array.isArray(evaluations)||evaluations.length>12)throw new SmsError("sms_changed");
+    const sources:SmsEvaluationSource[]=evaluations.map(value=>{
+      const evaluation=object(value),label=text(evaluation.Name,200),shortLabel=typeof evaluation.ShortName==="string"?evaluation.ShortName.trim():"";
+      if(shortLabel.length>80)throw new SmsError("parse_failed");
+      numeric(evaluation.Type,-100,100);numeric(evaluation.EvalType,-100,100);numeric(evaluation.Formula,-100,100);numeric(evaluation.Percent,0,100);
+      if(typeof evaluation.IsCanDontConsider!=="boolean")throw new SmsError("sms_changed");
+      const maxima=object(evaluation.MaxScores);if(Object.keys(maxima).length>200)throw new SmsError("sms_changed");
+      for(const [id,maximum] of Object.entries(maxima)){sourceId(id);numeric(maximum,-1,10000);}
+      return {id:sourceId(evaluation.Id),label,...(shortLabel?{shortLabel}:{}),type:assessmentType(shortLabel,label)};
+    });
+    const score=numeric(row.Score,0,100),mark=numeric(row.Mark,0,10);
+    if(!Number.isInteger(mark)||(row.MarkComment!==null&&row.MarkComment!==undefined&&(typeof row.MarkComment!=="string"||row.MarkComment.length>1000)))throw new SmsError("parse_failed");
+    return {subject,sourceId:sourceId(row.Id),journalId:sourceId(row.JournalId),percent:score,percentSource:"official_display" as const,...(mark===1?{notAttested:true}:mark>1?{currentMark:mark}:{}),evaluations:sources,assessments:[]};
+  });
+}
+export function parseJceAssessmentRows(raw:string,subject:string,type:SmsAssessment["type"]):SmsAssessment[] {
+  const parsed=envelope(raw,100);if(parsed.total!==undefined&&parsed.total>parsed.data.length)throw new SmsError("sms_changed");
+  return parsed.data.flatMap(item=>{
+    const row=object(item),disabled=row.Disabled;
+    if(typeof disabled!=="boolean")throw new SmsError("sms_changed");
+    const title=text(row.Name,200),score=numeric(row.Score,-1,10000),max=numeric(row.MaxScore,-1,10000);
+    if(row.Description!==undefined&&row.Description!==null&&(typeof row.Description!=="string"||row.Description.length>2000))throw new SmsError("parse_failed");
+    if(row.Comment!==undefined&&row.Comment!==null&&(typeof row.Comment!=="string"||row.Comment.length>2000))throw new SmsError("parse_failed");
+    if(row.Id!==undefined)sourceId(row.Id);if(row.RubricId!==undefined&&row.RubricId!==null)sourceId(row.RubricId);
+    if(disabled||score<0)return [];
+    const usableMax=max>=0?max:undefined;if(usableMax===0||usableMax!==undefined&&score>usableMax)throw new SmsError("parse_failed");
+    const percent=usableMax===undefined?undefined:Math.round(score/usableMax*1000)/10;
+    return [{subject,title,type,score,max:usableMax,percent,percentSource:percent===undefined?undefined:"derived" as const}];
+  });
 }
