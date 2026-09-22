@@ -38,12 +38,14 @@ export function LibraryBrowser({
   subjects,
   initial,
   truncated,
+  studyIntent = false,
 }: {
   books: LibraryBook[];
   classes: ClassRow[];
   subjects: SubjectRow[];
   initial: LibraryFilters;
   truncated: boolean;
+  studyIntent?: boolean;
 }) {
   const { t, locale } = useI18n();
   const p = v051Copy(locale);
@@ -124,7 +126,7 @@ export function LibraryBrowser({
     <section aria-label={t.library}>
       <div
         role="search"
-        className="mt-8 grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(8rem,1.7fr)_minmax(6rem,.7fr)_minmax(10rem,1fr)_auto]"
+        className="library-filters mt-8 grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(8rem,1.7fr)_minmax(6rem,.7fr)_minmax(10rem,1fr)_auto]"
       >
         <label>
           <span className="field-label">
@@ -261,13 +263,13 @@ export function LibraryBrowser({
           {t.noMaterialsHint}
         </EmptyState>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="library-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredBooks.map((book) => (
             <li
               key={book.id}
               className="min-w-0"
             >
-              <Link prefetch={false} href={"/books/" + book.id + "/read"} className="library-card border border-[var(--line)] bg-[var(--surface)] p-6 h-full" aria-label={t.openMaterial + ": " + book.title}>
+              <Link prefetch={false} href={"/books/" + book.id + "/read" + (studyIntent ? "#ai-study" : "")} className="library-card border border-[var(--line)] bg-[var(--surface)] p-6 h-full" aria-label={t.openMaterial + ": " + book.title}>
               <SubjectMotif
                 subject={subjectsById.get(
                   book.subject_id,

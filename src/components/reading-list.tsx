@@ -7,12 +7,14 @@ import { BookCover } from "./book-cover";
 export async function ReadingList({
   bookmarks = false,
   limit,
+  reading: suppliedReading,
 }: {
   bookmarks?: boolean;
   limit?: number;
+  reading?: Awaited<ReturnType<typeof getReading>>;
 }) {
   const { t } = await getI18n();
-  const reading = await getReading();
+  const reading = suppliedReading ?? await getReading();
   const entries = bookmarks
     ? reading.bookmarks
     : reading.progress;

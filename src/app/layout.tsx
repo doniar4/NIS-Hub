@@ -6,6 +6,7 @@ import "@/styles/tokens.css";
 import "@/styles/primitives.css";
 import "@/styles/shell.css";
 import "@/styles/motion.css";
+import "@/styles/pages.css";
 import {experienceBootstrap} from "@/lib/experience";
 import {FullLoadIntro} from "@/components/full-load-intro";
 import { themeBootstrap } from "@/lib/theme";

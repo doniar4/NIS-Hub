@@ -22,7 +22,7 @@ import { WeeklyLessonList } from "./weekly-schedule";
 
 import { PanelGlyph } from "./academic-art";
 
-import { vintageCopy } from "@/lib/vintage-copy";
+
 
 export function HomeTimetable({
   lessons,
@@ -32,6 +32,7 @@ export function HomeTimetable({
   nonSchoolDays,
   grade = null,
   materials = {},
+  selectedDate, onDateChange, selectedId, onLessonSelect,
 }: {
   lessons: WeeklyLesson[];
   subjects: SubjectRow[];
@@ -40,11 +41,14 @@ export function HomeTimetable({
   nonSchoolDays: CalendarDay[];
   grade?: number | null;
   materials?: MaterialMap;
+  selectedDate?: string; onDateChange?: (date:string)=>void; selectedId?:string; onLessonSelect?:(id:string)=>void;
 }) {
   const { locale, t } = useI18n();
   const p = v05Copy(locale);
 
-  const [date, setDate] = useState(today);
+  const [internalDate, setInternalDate] = useState(today);
+  const date=selectedDate??internalDate;
+  const setDate=(value:string)=>{setInternalDate(value);onDateChange?.(value);};
 
   // Store intent, not translated text: a locale change re-renders every explanation.
   const [jump, setJump] = useState<{
@@ -87,7 +91,7 @@ export function HomeTimetable({
             </h2>
 
             <p className="panel-caption">
-              {date === today ? vintageCopy(locale).todayHint : t.schedule}
+              {t.schedule}
             </p>
           </div>
         </div>
@@ -179,6 +183,7 @@ export function HomeTimetable({
         </div>
       ) : rows.length ? (
         <WeeklyLessonList
+          selectedId={selectedId} onSelect={onLessonSelect}
           lessons={rows}
           date={date}
           canAddHomework={!!classId}
