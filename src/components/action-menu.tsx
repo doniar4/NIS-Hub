@@ -103,7 +103,7 @@ export function ActionMenu({
             aria-label={label}
             className="action-popover"
             onBlur={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget as Node))
+              if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node))
                 setOpen(false);
             }}
             onKeyDown={(event) => {

@@ -6,7 +6,7 @@
 .dashboard-secondary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1.25rem; margin-top:1.25rem; }
 .dashboard-primary > *, .dashboard-secondary > * { min-width:0; }
 .selected-lesson { min-width:0; padding:clamp(1.4rem,3.4vw,3rem); display:flex; align-items:center; background:linear-gradient(135deg,var(--glass),color-mix(in srgb,var(--accent-wash) 55%,var(--glass))); overflow:hidden; }
-.selected-lesson-content { width:100%; min-width:0; animation:content-arrive var(--motion-normal) var(--ease-out) both; }
+.selected-lesson-content { width:100%; min-width:0; animation:glass-enter var(--motion-normal) var(--ease-out) both; }
 .selected-lesson time { font-size:.82rem; color:var(--text-secondary); }
 .selected-lesson .eyebrow { font-size:.72rem; letter-spacing:.08em; color:var(--accent); margin-bottom:.65rem; }
 .selected-lesson-title { margin:2rem 0 1.5rem; }
@@ -141,3 +141,7 @@
  .selected-lesson-content { animation:none; }
  .sms-subject:hover { transform:none; }
 }
+
+.lesson-row .timetable-materials { width:44px; height:44px; min-width:44px; padding:.6rem; }
+.lesson-row .timetable-materials span { display:none; }
+.lesson-row .lesson-actions { gap:.25rem; }

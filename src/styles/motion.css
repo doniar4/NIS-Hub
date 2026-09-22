@@ -11,3 +11,6 @@
  *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
  .button:active,.icon-button:active,.library-card:hover,.dashboard-card:hover,.sms-subject:hover { transform:none!important; }
 }
+
+@keyframes study-pulse { 50% { opacity:.55; } }
+.ai-study-action-btn[aria-busy="true"] .ai-wand-icon { animation:study-pulse 1.2s ease-in-out infinite; }

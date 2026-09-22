@@ -16,8 +16,8 @@ export function DiaryMotion({ children }: { children: ReactNode }) {
       media.add("(prefers-reduced-motion: no-preference)", () => {
         gsap.from("[data-diary-arrive]", {
           autoAlpha: 0,
-          y: 14,
-          duration: 0.58,
+          y: 10,
+          duration: 0.34,
           stagger: 0.07,
           ease: "power3.out",
           clearProps: "transform,opacity,visibility",
@@ -30,9 +30,9 @@ export function DiaryMotion({ children }: { children: ReactNode }) {
         cards.forEach((card, index) => {
           gsap.from(card, {
             autoAlpha: 0,
-            y: 22,
-            scale: 0.975,
-            duration: 0.62,
+            y: 10,
+            scale: 0.99,
+            duration: 0.36,
             delay: Math.min(index * 0.045, 0.24),
             ease: "power3.out",
             clearProps: "transform,opacity,visibility",

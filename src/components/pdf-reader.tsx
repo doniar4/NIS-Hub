@@ -1,5 +1,7 @@
 "use client";
 
+import { PdfThumbnails } from "./pdf-thumbnails";
+import { designCopy } from "@/lib/design-copy";
 import { saveReading } from "@/app/actions/reading";
 import { useI18n } from "@/components/locale-provider";
 import { BookmarkIcon } from "@/components/icons";
@@ -32,7 +34,6 @@ function PdfPage({
   fit,
   zoom,
   root,
-  onVisible,
 }: {
   pdf: PDFDocumentProxy;
   number: number;
@@ -41,7 +42,6 @@ function PdfPage({
   fit: "width" | "page";
   zoom: number;
   root: HTMLDivElement | null;
-  onVisible: (page: number) => void;
 }) {
   const element = useRef<HTMLDivElement>(null);
   const canvasHost = useRef<HTMLDivElement>(null);
@@ -62,9 +62,7 @@ function PdfPage({
 
         setNearby(true);
 
-        if (entry.intersectionRatio >= 0.5) {
-          onVisible(number);
-        }
+
       },
       {
         root,
@@ -76,7 +74,7 @@ function PdfPage({
     observer.observe(element.current);
 
     return () => observer.disconnect();
-  }, [number, onVisible, root]);
+  }, [number, root]);
 
   useEffect(() => {
     if (!nearby) return;
@@ -207,6 +205,8 @@ export function PdfReader({
 }) {
   const { t, locale } = useI18n();
   const v = v051Copy(locale);
+  const c = designCopy(locale);
+  const [thumbnails,setThumbnails]=useState(false);
 
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
   const [page, setPage] = useState(initialPage);
@@ -240,6 +240,9 @@ export function PdfReader({
     useState<HTMLDivElement | null>(null);
 
   const positioned = useRef(false);
+  const currentPage = useRef(initialPage);
+  const navigationAnchor = useRef<number|null>(initialPage);
+  useEffect(()=>{currentPage.current=page;},[page]);
 
   const savedPage = useRef<number | null>(null);
 
@@ -252,6 +255,8 @@ export function PdfReader({
   }, [t]);
 
   const visiblePage = useCallback((next: number) => {
+    if(currentPage.current===next)return;
+    currentPage.current=next;
     setText("");
     setTextFailed(false);
     setPage(next);
@@ -278,7 +283,7 @@ export function PdfReader({
       setWidth(
         Math.max(
           180,
-          Math.floor(entry.contentRect.width),
+          Math.floor(entry.contentRect.width)-24,
         ),
       );
     });
@@ -289,7 +294,7 @@ export function PdfReader({
   }, []);
 
   const goTo = useCallback(
-    (next: number, smooth = true) => {
+    (next: number) => {
       if (
         !pdf ||
         !Number.isInteger(next) ||
@@ -300,21 +305,57 @@ export function PdfReader({
       }
 
       setMessage("");
-      setText("");
-      setTextFailed(false);
+      if(currentPage.current!==next){setText("");setTextFailed(false);}
+      currentPage.current=next;
       setPage(next);
 
-      scrollRoot
-        ?.querySelector<HTMLElement>(
-          `[data-page="${next}"]`,
-        )
-        ?.scrollIntoView({
-          behavior: smooth ? "smooth" : "auto",
-          block: "start",
-        });
+      navigationAnchor.current=next;
+      const target=scrollRoot?.querySelector<HTMLElement>(`[data-page="${next}"]`);
+      if(scrollRoot&&target)scrollRoot.scrollTo({
+        top:scrollRoot.scrollTop+target.getBoundingClientRect().top-scrollRoot.getBoundingClientRect().top-scrollRoot.clientTop,
+        behavior:"instant",
+      });
     },
     [pdf, scrollRoot],
   );
+
+  useEffect(() => {
+    if(!scrollRoot)return;
+    let frame=0;
+    const update=()=>{
+      frame=0;
+      if(navigationAnchor.current!==null)return;
+      const bounds=scrollRoot.getBoundingClientRect(),marker=bounds.top+Math.min(80,bounds.height*.2);
+      // Preload margins are never evidence of the current reading page.
+      for(const element of scrollRoot.querySelectorAll<HTMLElement>("[data-page]")){
+        const rect=element.getBoundingClientRect();
+        if(rect.bottom>marker&&rect.top<bounds.bottom){visiblePage(Number(element.dataset.page));break;}
+      }
+    };
+    const onScroll=()=>{if(!frame)frame=requestAnimationFrame(update);};
+    const manual=()=>{navigationAnchor.current=null;};
+    scrollRoot.addEventListener("scroll",onScroll,{passive:true});
+    scrollRoot.addEventListener("wheel",manual,{passive:true});
+    scrollRoot.addEventListener("touchstart",manual,{passive:true});
+    scrollRoot.addEventListener("pointerdown",manual);
+    return ()=>{scrollRoot.removeEventListener("scroll",onScroll);scrollRoot.removeEventListener("wheel",manual);scrollRoot.removeEventListener("touchstart",manual);scrollRoot.removeEventListener("pointerdown",manual);cancelAnimationFrame(frame);};
+  },[scrollRoot,visiblePage]);
+
+  useEffect(()=>{
+    if(!scrollRoot||!pdf)return;
+    let frame=0;
+    const anchor=()=>{
+      frame=0;
+      const number=navigationAnchor.current;
+      if(number===null)return;
+      const element=scrollRoot.querySelector<HTMLElement>(`[data-page="${number}"]`);
+      if(element)scrollRoot.scrollTo({top:scrollRoot.scrollTop+element.getBoundingClientRect().top-scrollRoot.getBoundingClientRect().top-scrollRoot.clientTop,behavior:"instant"});
+    };
+    const observer=new ResizeObserver(()=>{if(!frame)frame=requestAnimationFrame(anchor);});
+    for(const element of scrollRoot.children)observer.observe(element);
+    return ()=>{observer.disconnect();cancelAnimationFrame(frame);};
+  },[scrollRoot,pdf]);
+  useEffect(()=>{navigationAnchor.current=currentPage.current;},[width,height,fit,zoom]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -470,7 +511,7 @@ export function PdfReader({
     }
 
     const timer = window.setTimeout(() => {
-      goTo(page, false);
+      goTo(page);
       positioned.current = true;
     });
 
@@ -586,7 +627,7 @@ export function PdfReader({
   return (
     <section
       aria-label={t.reader}
-      className="space-y-5"
+      className="pdf-reader"
     >
       {error ? (
         <div
@@ -626,13 +667,15 @@ export function PdfReader({
         </p>
       )}
 
+      <div className="reader-stage" data-thumbnails={thumbnails}>
+        {pdf&&thumbnails&&<PdfThumbnails pdf={pdf} page={page} onSelect={goTo}/>}
       <div
         ref={viewportRef}
         className="w-full min-w-0"
       >
         <div
           ref={setScrollRoot}
-          className="h-[calc(100vh-16rem)] min-h-[18.75rem] max-h-[900px] overflow-x-auto overflow-y-auto overscroll-contain border border-[var(--line)] bg-[var(--surface)]"
+          className="pdf-scroll-viewport"
           aria-busy={busy}
           tabIndex={0}
           aria-label={t.reader}
@@ -652,13 +695,13 @@ export function PdfReader({
                   fit={fit}
                   zoom={zoom}
                   root={scrollRoot}
-                  onVisible={visiblePage}
                 />
               ),
             )}
         </div>
       </div>
 
+      </div>
       {!busy && !error && (
         <details className="border border-[var(--line)] p-4">
           <summary className="cursor-pointer text-sm font-semibold">
@@ -700,12 +743,13 @@ export function PdfReader({
 
       {!error && (
         <div
-          className="reader-controls sticky bottom-0 z-20 flex flex-wrap items-end gap-2 border border-[var(--line)] bg-[var(--surface)] p-3"
+          className="reader-controls"
           style={{
             paddingBottom:
               "max(0.75rem, env(safe-area-inset-bottom))",
           }}
         >
+          <button type="button" className="button button-secondary thumbnail-toggle" disabled={!pdf} aria-pressed={thumbnails} onClick={()=>setThumbnails(value=>!value)} aria-label={c.thumbnails}>▤</button>
           <button
             className="button button-secondary"
             disabled={

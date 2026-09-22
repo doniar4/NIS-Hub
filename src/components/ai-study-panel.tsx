@@ -14,11 +14,11 @@ const labels={
  en:{overview:"Overview",concepts:"Key concepts",definitions:"Definitions",facts:"Formulas and facts",confusions:"Potential confusions",mistakes:"Source-based mistakes",questions:"Self-check",checklist:"Checklist"}
 };
 export type AiPanelConfig={enabled:boolean;maxPages:number;maxChars:number;dailyLimit:number};
-export function AiStudyPanel({variantId,totalPages,initialPage,config}:{variantId:string;totalPages:number|null;initialPage:number;config:AiPanelConfig}){
+export function AiStudyPanel({variantId,totalPages,initialPage,config,defaultOpen=false}:{variantId:string;totalPages:number|null;initialPage:number;config:AiPanelConfig;defaultOpen?:boolean}){
  const {locale,t}=useI18n(),p=v051Copy(locale);
  const [start,setStart]=useState(String(initialPage)),[end,setEnd]=useState(String(initialPage)),[mode,setMode]=useState<StudyInput["mode"]>("summary");
  const [result,setResult]=useState<StudyResult|null>(null),[pending,transition]=useTransition();
- return <aside className="ai-study-panel"><details className="surface-card"><summary className="ai-study-summary"><MagicWandIcon aria-hidden="true"/><span><strong>{p.ai}</strong><small>{communityCopy(locale).aiHelp}</small></span><ChevronDownIcon className="ai-study-chevron" aria-hidden="true"/></summary>
+ return <aside className="ai-study-panel"><details className="surface-card" open={defaultOpen}><summary className="ai-study-summary"><MagicWandIcon aria-hidden="true"/><span><strong>{p.ai}</strong><small>{communityCopy(locale).aiHelp}</small></span><ChevronDownIcon className="ai-study-chevron" aria-hidden="true"/></summary>
  {!config.enabled?<p className="mt-4">{p.aiDisabled}</p>:<div className="mt-5 space-y-5"><p className="text-sm">{p.aiConsent}</p>
  <p className="text-sm text-[var(--muted)]">{p.limit}<br/>{config.maxPages} {t.pages} · {config.maxChars.toLocaleString(locale)} · {config.dailyLimit}/24h</p>
  <form className="space-y-4" onSubmit={event=>{event.preventDefault();setResult(null);transition(async()=>{try{setResult(await generateStudy({variantId,start:Number(start),end:Number(end),mode,locale}));}catch{setResult({error:"failed"});}});}}>

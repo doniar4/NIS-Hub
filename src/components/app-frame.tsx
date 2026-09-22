@@ -14,6 +14,7 @@ import {
   useState,
   useSyncExternalStore,
   type ReactNode,
+  type CSSProperties,
 } from "react";
 
 import { useI18n } from "./locale-provider";
@@ -144,7 +145,7 @@ export function AppFrame({
   };
 
   const navigation = (mobile: boolean) => (
-    <nav aria-label={t.mainNav}>
+    <nav aria-label={t.mainNav} className="sidebar-navigation" data-has-active={links.some(([href])=>href==="/" ? pathname===href : pathname.startsWith(href))} style={{"--active-route":Math.max(0,links.findIndex(([href])=>href==="/" ? pathname===href : pathname.startsWith(href)))} as CSSProperties}>
       {links.map(([href, label]) => (
         <Link
           key={href}

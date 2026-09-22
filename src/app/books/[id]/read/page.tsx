@@ -1,3 +1,4 @@
+import { ReaderWorkspace } from "@/components/reader-workspace";
 import { AiStudyPanel } from "@/components/ai-study-panel";
 import { aiStudyConfig } from "@/lib/ai-study-config";
 import { EditionPicker } from "@/components/edition-picker";
@@ -93,17 +94,7 @@ export default async function ReadPage({
         />
       </div>
 
-      {/* Reader immediately at top */}
-      <div className="reader-workspace flex flex-col gap-8">
-        <PdfReader
-          key={edition.id}
-          bookId={id}
-          variantId={edition.id}
-          initialPage={Math.min(startPage, edition.page_count ?? 100000)}
-          initialBookmarks={bookmarks.data.map((b) => b.page_number)}
-        />
-
-        {/* Book Information Section below the book */}
+      <ReaderWorkspace information={
         <section
           className="surface-card book-details-panel border border-[var(--line)] bg-[var(--surface)] p-6 rounded-lg"
           aria-label={t.aboutMaterial}
@@ -125,9 +116,8 @@ export default async function ReadPage({
           </dl>
         </section>
 
-        {/* AI Study Panel below the book and info */}
-        <div className="ai-study-wrapper">
-          <AiStudyPanel
+        } inspector={
+          <AiStudyPanel defaultOpen
             key={edition.id + "-ai"}
             variantId={edition.id}
             initialPage={Math.min(startPage, edition.page_count ?? 1000)}
@@ -139,8 +129,11 @@ export default async function ReadPage({
               dailyLimit: ai.dailyLimit,
             }}
           />
-        </div>
-      </div>
+        }>
+          <PdfReader key={edition.id} bookId={id} variantId={edition.id}
+            initialPage={Math.min(startPage, edition.page_count ?? 100000)}
+            initialBookmarks={bookmarks.data.map(b=>b.page_number)}/>
+      </ReaderWorkspace>
     </SiteShell>
   );
 }

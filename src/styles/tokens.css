@@ -12,7 +12,7 @@
  --radius-sm:12px; --radius:22px; --radius-lg:28px; --radius-pill:999px;
  --blur:20px; --shadow:0 8px 30px rgb(35 58 109 / .06);
  --glass-shadow:inset 0 1px 0 var(--glass-highlight),inset 0 -1px 0 rgb(100 130 190 / .08),0 12px 40px rgb(38 61 120 / .09);
- --motion-fast:160ms; --motion:320ms; --ease-out:cubic-bezier(.22,1,.36,1);
+ --motion-fast:160ms; --motion:320ms; --motion-normal:320ms; --ease-out:cubic-bezier(.22,1,.36,1);
  --sidebar-width:15rem; --sidebar-motion:var(--motion) var(--ease-out);
  --layer-notifications:40; --layer-cursor:60;
  /* Compatibility aliases for existing functional components. */

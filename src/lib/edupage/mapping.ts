@@ -4,7 +4,7 @@ import type { EduPageSnapshot, SourceReference } from "./types";
 import { audiencesOverlap } from "./groups";
 import { EduPageError } from "./errors";
 export type EduPageAliases = { classes: Record<string,string>; subjects: Record<string,string> };
-export type MappingIssue = { code: "class"|"subject"|"conflict"|"duplicate"|"values"; label: string };
+export type MappingIssue = { code: "class"|"subject"|"conflict"|"duplicate"|"values"; label: string; sourceClass?: string };
 export const normalizeAlias = (value: string) => value.normalize("NFKC").trim().replace(/\s+/g," ").toLowerCase();
 export const normalizeClass = (value: string) => normalizeAlias(value).replace(/\s/g,"");
 export function validateAliases(value: unknown): EduPageAliases {
@@ -33,26 +33,37 @@ export function resolveReference(source: SourceReference, catalog: {id:string;na
 }
 export function mapEduPage(snapshot: EduPageSnapshot, classes: ClassRow[], subjects: SubjectRow[],
   aliases: EduPageAliases, selected: string[] = []) {
-  const issues: MappingIssue[] = [], rows: WeeklyInput[] = [];
+  const issues: MappingIssue[] = [], rows: WeeklyInput[] = [], blocked = new Set<string>();
+  const sourceName=(id:string)=>snapshot.classes.find(c=>c.id===id)?.name??id;
+  const addIssue=(code:MappingIssue["code"],label:string,sourceClass?:string)=>{
+    issues.push({code,label,...(sourceClass?{sourceClass}:{})});
+    if(sourceClass)blocked.add(sourceClass);
+  };
   const classCatalog = classes.map(c=>({id:c.id,names:[c.name]}));
   const subjectCatalog = subjects.map(s=>({id:s.id,names:[s.name,s.name_ru,s.name_kz,s.name_en,s.short_name]}));
   const sourceClasses = snapshot.classes.filter(c=>!selected.length || selected.includes(c.id));
   if (selected.some(id=>!snapshot.classes.some(c=>c.id===id)) || !sourceClasses.length) throw new EduPageError("mapping");
   const classMap = new Map(sourceClasses.map(c=>[c.id,resolveReference(c,classCatalog,aliases.classes,true)]));
   const targetClasses = [...classMap.values()].filter((id):id is string=>!!id);
-  for(const c of sourceClasses) if(!classMap.get(c.id)) issues.push({code:"class",label:c.name});
-  if(new Set(targetClasses).size!==targetClasses.length) issues.push({code:"class",label:sourceClasses.map(c=>c.name).join(", ")});
+  for(const c of sourceClasses) if(!classMap.get(c.id)) addIssue("class",c.name,c.id);
+  const byTarget = new Map<string,string[]>();
+  for(const [source,target] of classMap) if(target)byTarget.set(target,[...(byTarget.get(target)??[]),source]);
+  for(const sources of byTarget.values()) if(sources.length>1)
+    for(const source of sources)addIssue("class",sourceName(source),source);
   const sourceLessons = snapshot.lessons.filter(row=>classMap.has(row.sourceClass));
   const used = new Set(sourceLessons.map(l=>l.sourceSubject));
   const sourceSubjects = snapshot.subjects.filter(s=>used.has(s.id));
   const subjectMap = new Map(sourceSubjects.map(s=>[s.id,resolveReference(s,subjectCatalog,aliases.subjects)]));
-  for(const s of sourceSubjects) if(!subjectMap.get(s.id)) issues.push({code:"subject",label:s.name});
-  for(const c of sourceClasses) if(!sourceLessons.some(l=>l.sourceClass===c.id)) issues.push({code:"values",label:c.name});
+  for(const s of sourceSubjects) if(!subjectMap.get(s.id)){
+    const affected=[...new Set(sourceLessons.filter(l=>l.sourceSubject===s.id).map(l=>l.sourceClass))];
+    for(const sourceClass of affected)addIssue("subject",s.name+" · "+sourceName(sourceClass),sourceClass);
+  }
+  for(const c of sourceClasses) if(!sourceLessons.some(l=>l.sourceClass===c.id)) addIssue("values",c.name,c.id);
   for(const lesson of sourceLessons) {
     const class_id=classMap.get(lesson.sourceClass),subject_id=subjectMap.get(lesson.sourceSubject);
     if(!class_id || !subject_id) continue;
     const room=lesson.rooms.join(" / ") || null, teacher=lesson.teachers.join(" / ") || null;
-    if((room?.length??0)>40 || (teacher?.length??0)>100) {issues.push({code:"values",label:sourceClasses.find(c=>c.id===lesson.sourceClass)!.name});continue;}
+    if((room?.length??0)>40 || (teacher?.length??0)>100) {addIssue("values",sourceName(lesson.sourceClass),lesson.sourceClass);continue;}
     rows.push({class_id,subject_id,weekday:lesson.weekday,lesson_start:lesson.lesson_start,lesson_end:lesson.lesson_end,
       start_time:lesson.start_time,end_time:lesson.end_time,room,teacher,effective_from:snapshot.publication.effectiveFrom,
       effective_to:snapshot.publication.effectiveTo,subgroup_key:lesson.subgroup_key,subgroup_label:lesson.subgroup_label,audience:lesson.audience});
@@ -60,15 +71,19 @@ export function mapEduPage(snapshot: EduPageSnapshot, classes: ClassRow[], subje
   const keys = new Set<string>();
   for (let i=0;i<rows.length;i++) {
     const a=rows[i], key=lessonIdentity(a), label=classes.find(c=>c.id===a.class_id)!.name+" · "+a.weekday+" · "+a.lesson_start+"–"+a.lesson_end;
-    if(keys.has(key)) issues.push({code:"duplicate",label}); keys.add(key);
+    if(keys.has(key)) addIssue("duplicate",label,sourceLessons.find(l=>classMap.get(l.sourceClass)===a.class_id)?.sourceClass); keys.add(key);
     for(let j=0;j<i;j++){
       const b=rows[j];
       if(a.class_id!==b.class_id || a.weekday!==b.weekday || !audiencesOverlap(a.audience,b.audience))continue;
       if((a.lesson_start<=b.lesson_end && b.lesson_start<=a.lesson_end) ||
         (a.start_time && a.end_time && b.start_time && b.end_time && a.start_time<b.end_time && b.start_time<a.end_time))
-        issues.push({code:"conflict",label});
+        addIssue("conflict",label,sourceLessons.find(l=>classMap.get(l.sourceClass)===a.class_id)?.sourceClass);
     }
   }
-  return {rows,issues,scope:[...new Set(targetClasses)].sort(),sourceClasses,sourceSubjects};
+  const blockedTargets=new Set([...blocked].map(id=>classMap.get(id)).filter((id):id is string=>!!id));
+  const safeRows=rows.filter(row=>!blockedTargets.has(row.class_id));
+  const scope=[...new Set(targetClasses.filter(id=>!blockedTargets.has(id)))].sort();
+  const blockedClasses=sourceClasses.filter(c=>blocked.has(c.id));
+  return {rows:safeRows,issues,scope,sourceClasses,sourceSubjects,blockedClasses};
 }
 export const lessonIdentity=(row:WeeklyInput)=>[row.class_id,row.weekday,row.lesson_start,row.lesson_end,row.subgroup_key??""].join("/");
