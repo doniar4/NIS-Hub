@@ -35,12 +35,12 @@ export default async function ProfilePage() {
       : null;
   return (
     <SiteShell>
-      <div className="profile-heading">
+      <div className="profile-heading surface-card">
         <ProfilePortrait
           url={avatar?.data?.signedUrl ?? null}
           name={profile.display_name ?? ""}
         />
-        <PageIntro title={t.profile}>{t.profileHint}</PageIntro>
+        <div><PageIntro title={profile.display_name || t.profile}>{t.profileHint}</PageIntro><p>{classes.find(row=>row.id===profile.class_id)?.name}</p></div>
       </div>
       <CommunityNav locale={locale}/>
       <div className="profile-settings">
@@ -83,7 +83,7 @@ export default async function ProfilePage() {
           hidePreview
         />
       </div>
-      <div className="mt-14 grid gap-10 lg:grid-cols-2">
+      <div className="profile-reading mt-8 grid gap-6 lg:grid-cols-2">
         <section>
           <h2 className="section-title border-b border-[var(--line)] pb-4">
             {t.continueReading}

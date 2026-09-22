@@ -61,12 +61,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   return <SiteShell><PageIntro kicker={v.adminReply} title={v.dashboard}>{v.dashboardHint}</PageIntro>
     <Link className="text-link" href="/admin">{v.dashboard}</Link><nav className="my-8 flex flex-wrap gap-3" aria-label={v.dashboard}>{tabs.map(([key,label]) => <Link key={key} aria-current={section===key ? "page" : undefined} className={"button "+(section===key ? "" : "button-secondary")} href={"/admin?entity="+key}>{label}</Link>)}</nav>
     {section==="schedule" && <>{edupage && <EduPageSync initial={edupage} classes={classes} subjects={subjects}/>}<WeeklyScheduleBrowser lessons={lessons} classes={classes} subjects={subjects} initialClassId={lesson?.class_id ?? classes[0]?.id ?? ""} date={schoolDate()} nonSchoolDays={nonSchoolDays}/><div id="import"/><WeeklyImport classes={classes} subjects={subjects} lessons={lessons} action={importWeeklySchedule}/></>}
-    <div className="mt-10 grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
-      <section><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="section-title">{a.records}</h2><Link className="text-sm underline" href={"/admin?entity="+section}>{a.create}</Link></div>
+    <div className="admin-workspace mt-10">
+      <section className="surface-card admin-records"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="section-title">{a.records}</h2><Link className="text-sm underline" href={"/admin?entity="+section}>{a.create}</Link></div>
         {section==="books" && <p className="my-4 text-sm text-[var(--muted)]">{a.limit}</p>}
-        <ul className="max-h-[40rem] overflow-auto divide-y divide-[var(--line)]">{rows.map(row => <li className="py-4" key={row.id}><Link className="block break-words font-semibold underline underline-offset-4" href={"/admin?entity="+section+"&id="+row.id}>{row.name}</Link>{row.detail && <p className="mt-1 text-sm text-[var(--muted)]">{row.detail}</p>}</li>)}</ul>{!rows.length && <p>{v.empty}</p>}
+        <ul className="max-h-[40rem] overflow-auto divide-y divide-[var(--line)]">{rows.map(row => <li className="py-4" key={row.id}><Link aria-current={params.id===row.id?"page":undefined} className="block break-words font-semibold underline underline-offset-4" href={"/admin?entity="+section+"&id="+row.id}>{row.name}</Link>{row.detail && <p className="mt-1 text-sm text-[var(--muted)]">{row.detail}</p>}</li>)}</ul>{!rows.length && <p>{v.empty}</p>}
       </section>
-      <section key={section+"-"+(params.id ?? "new")}><h2 className="section-title mb-6">{selected ? a.edit : a.new}</h2>
+      <section className="surface-card admin-editor" key={section+"-"+(params.id ?? "new")}><h2 className="section-title mb-6">{selected ? a.edit : a.new}</h2>
         {section==="books" && <BookEditor id={book?.id ?? randomUUID()} book={book} variants={variantResult.data} classes={classes} subjects={subjects} action={saveBook}/>}
         {(section==="classes" || section==="subjects") && <ActionForm action={saveAdminRecord} label={a.save}>
           <input type="hidden" name="entity" value={section}/><input type="hidden" name="id" value={params.id ?? ""}/>

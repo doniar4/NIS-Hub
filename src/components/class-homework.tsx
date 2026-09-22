@@ -30,23 +30,24 @@ export function ClassHomeworkPanel({
     [offset, setOffset] = useState(0),
     [revision, setRevision] = useState(0),
     [pending, start] = useTransition(),
-    [loading, setLoading] = useState(true),
+    [loading, setLoading] = useState(hasClass),
     [edit, setEdit] = useState<ClassHomework | null>(null);
   useEffect(() => {
+    if(!hasClass)return;
     let active = true;
     void loadHomework(date, offset).then((r) => {
       if (!active) return;
-      if ("error" in r) setError(r.error);
+      if ("error" in r) {setError(r.error);setRows([]);}
       else {
         setRows(r.data);
         setError(null);
       }
       setLoading(false);
-    });
+    }).catch(()=>{if(active){setRows([]);setError("failed");setLoading(false);}});
     return () => {
       active = false;
     };
-  }, [date, offset, revision]);
+  }, [date, offset, revision, hasClass]);
   useEffect(() => {
     const refresh = () => {
       setLoading(true);
@@ -110,7 +111,7 @@ export function ClassHomeworkPanel({
                         onClick={() =>
                           start(async () => {
                             const r = await deleteHomework(row.id);
-                            if ("error" in r) setError(r.error);
+                            if ("error" in r) {setError(r.error);setRows([]);}
                             else reload();
                           })
                         }
@@ -163,7 +164,7 @@ export function ClassHomeworkPanel({
                   date,
                   body: f.get("body"),
                 });
-                if ("error" in r) setError(r.error);
+                if ("error" in r) {setError(r.error);setRows([]);}
                 else {
                   setEdit(null);
                   reload();

@@ -1,0 +1,39 @@
+:root {
+ color-scheme:light;
+ --font-display:"Outfit Variable","Noto Sans Variable",sans-serif;
+ --font-body:"Noto Sans Variable","Outfit Variable",sans-serif;
+ --bg:#edf2fc; --bg-accent-1:#d8e4ff; --bg-accent-2:#e9ddfa;
+ --surface:#f8faff; --surface-elevated:#fff;
+ --glass:rgb(255 255 255 / .66); --glass-strong:rgb(249 251 255 / .9);
+ --glass-border:rgb(255 255 255 / .85); --glass-highlight:rgb(255 255 255 / .95);
+ --text:#182238; --text-secondary:#526079; --line:#d7dfed; --line-strong:#a8b7cf;
+ --accent:#275bdd; --accent-hover:#1747b8; --accent-wash:#e3ecff;
+ --success:#18724f; --warning:#895500; --danger:#b12a41;
+ --radius-sm:12px; --radius:22px; --radius-lg:28px; --radius-pill:999px;
+ --blur:20px; --shadow:0 8px 30px rgb(35 58 109 / .06);
+ --glass-shadow:inset 0 1px 0 var(--glass-highlight),inset 0 -1px 0 rgb(100 130 190 / .08),0 12px 40px rgb(38 61 120 / .09);
+ --motion-fast:160ms; --motion:320ms; --motion-normal:320ms; --ease-out:cubic-bezier(.22,1,.36,1);
+ --sidebar-width:15rem; --sidebar-motion:var(--motion) var(--ease-out);
+ --layer-notifications:40; --layer-cursor:60;
+ /* Compatibility aliases for existing functional components. */
+ --canvas:var(--bg); --ink:var(--text); --muted:var(--text-secondary);
+ --sidebar:var(--accent-wash); --sidebar-hover:#e6edfb; --sidebar-active:#dce7ff;
+ --accent-dark:var(--accent-hover); --button-ink:#fff; --bronze:var(--accent); --focus:var(--accent);
+ --ornament-green:var(--accent); --ornament-gold:#7162c1; --ornament-leaf:transparent;
+ --banner:var(--accent-wash); --hover:#eef3ff; --notice-bg:#e8effe; --notice-ink:#29467f; --error-bg:#fceaf0;
+ --art-paper:var(--surface); --art-cover:#c4d5f5; --paper-grain:transparent; --panel-shadow:var(--shadow);
+ --panel-tint:#d3e2fb; --panel-warm:#e8dff7; --panel-cool:#d7edf4;
+}
+:root[data-theme="dark"] {
+ color-scheme:dark; --bg:#0d1422; --bg-accent-1:#182943; --bg-accent-2:#27233e;
+ --surface:#172131; --surface-elevated:#202c3f;
+ --glass:rgb(25 37 57 / .77); --glass-strong:rgb(26 38 57 / .94);
+ --glass-border:rgb(176 202 255 / .16); --glass-highlight:rgb(206 223 255 / .13);
+ --text:#eff4ff; --text-secondary:#b1bfd6; --line:#33425b; --line-strong:#61718c;
+ --accent:#94b7ff; --accent-hover:#bbd2ff; --accent-wash:#243a61;
+ --success:#8bdbb6; --warning:#f2c779; --danger:#ffb0be; --shadow:0 8px 30px rgb(0 0 0 / .13);
+ --glass-shadow:inset 0 1px 0 var(--glass-highlight),inset 0 -1px 0 rgb(0 0 0 / .22),0 16px 40px rgb(0 0 0 / .18);
+ --sidebar-hover:#24324a; --sidebar-active:#293f64; --button-ink:#10203e;
+ --ornament-gold:#b6a3fa; --hover:#202e45; --notice-bg:#203252; --notice-ink:#c7d9ff; --error-bg:#442637;
+ --art-cover:#374b6d; --panel-tint:#253a5a; --panel-warm:#352d4d; --panel-cool:#223e4d;
+}

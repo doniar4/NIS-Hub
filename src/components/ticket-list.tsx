@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {StatusChip} from "./design/status-chip";
 import {notFound} from "next/navigation";
 import {database} from "@/lib/queries";
 import {getI18n} from "@/lib/i18n-server";
@@ -12,7 +13,7 @@ export async function TicketList({admin=false,status,page=0}:{admin?:boolean;sta
  const {data,error}=await query;if(error)throw new Error("Tickets unavailable");
  return <><nav className="my-6 flex flex-wrap gap-3" aria-label={t.status}>{[["",t.all],...Object.entries(t.statuses)].map(([key,label])=><Link key={key} className="text-link" aria-current={(status??"")===key?"page":undefined} href={path+(key?"?status="+key:"")}>{label}</Link>)}</nav>
  <p className="text-sm">{t.scope}</p><ul className="mt-4 divide-y divide-[var(--line)]">{data.map(row=><li className="py-5" key={row.id}>
- <Link className="text-link font-semibold break-words" href={"/support/"+row.id}>{row.title}</Link><p>{t.categories[row.category]} · {t.statuses[row.status]} · {row.created_at.slice(0,10)}</p>
+ <Link className="text-link font-semibold break-words" href={"/support/"+row.id}>{row.title}</Link><p>{t.categories[row.category]} · <StatusChip tone={row.status==="resolved"?"success":row.status==="in_progress"?"warning":"neutral"}>{t.statuses[row.status]}</StatusChip> · {row.created_at.slice(0,10)}</p>
  {admin&&row.needs_admin_reply&&["open","in_progress"].includes(row.status)&&<p className="text-sm">{t.unread}</p>}
  </li>)}</ul>{!data.length&&<p>{t.empty}</p>}<nav className="my-6 flex gap-4" aria-label={t.support}>
  {page>0&&<Link className="text-link" href={path}>{t.newer}</Link>}{data.length===100&&<Link className="text-link" href={path+"?page="+(page+1)+(status?"&status="+status:"")}>{t.older}</Link>}</nav></>;

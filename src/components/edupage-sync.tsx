@@ -78,7 +78,9 @@ export function EduPageSync({initial,classes,subjects,action=syncEduPage}:{
       </div></details>
       <p>{t.hint}</p>
       <div role="status">{t.added}: {preview.diff.added.length} · {t.changed}: {preview.diff.changed.length} · {t.removed}: {preview.diff.removed.length} · {t.unchanged}: {preview.diff.unchanged.length}</div>
+      {!!preview.blockedClasses.length&&<p role="status">{t.partial}: {preview.scope.length} · {t.skipped}: {preview.blockedClasses.length}</p>}
       {!!preview.issues.length&&<div role="alert"><h3>{t.issues}: {preview.issues.length}</h3>
+        <p>{t.issuesHint}</p>
         <ul className="space-y-2 break-words">{preview.issues.slice(0,visible).map((issue,i)=><li key={i}>{t[issue.code]}: {issue.label}</li>)}</ul>
       </div>}
       {(["added","changed","removed","unchanged"] as const).map(kind=><details key={kind}>
@@ -88,10 +90,11 @@ export function EduPageSync({initial,classes,subjects,action=syncEduPage}:{
       </details>)}
       {Math.max(preview.issues.length,...Object.values(preview.diff).map(rows=>rows.length))>visible&&
         <button type="button" className="button button-secondary" onClick={()=>setVisible(n=>n+100)}>{t.more}</button>}
-      <label className="flex items-start gap-3"><input type="checkbox" checked={confirmed} disabled={pending||dirty||!!preview.issues.length}
+      <label className="flex items-start gap-3"><input type="checkbox" checked={confirmed}
+        disabled={pending||dirty||!preview.scope.length||!preview.rows.length}
         onChange={e=>setConfirmed(e.target.checked)}/><span>{t.confirm}</span></label>
       <button type="button" className="button" onClick={()=>run("confirm")}
-        disabled={pending||dirty||!confirmed||!!preview.issues.length}>{t.sync}</button>
+        disabled={pending||dirty||!confirmed||!preview.scope.length||!preview.rows.length}>{t.sync}</button>
     </>}
   </section>;
 }

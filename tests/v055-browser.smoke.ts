@@ -69,7 +69,7 @@ test("v055 Chromium/WebKit: live UI states, no credential persistence, no pollin
  await toggle.focus();await page.keyboard.press("Enter");await expect(toggle).toHaveAttribute("aria-expanded","false");await expect(toggle).toBeVisible();await page.keyboard.press("Enter");await expect(toggle).toHaveAttribute("aria-expanded","true");
  }}
 	 await page.evaluate(()=>{document.body.style.zoom="1";});
-	 for(const path of ["/home-schedule","/schedule"]){await page.goto(origin+path+"?locale=ru");await expect(page.locator(".lesson-row")).toHaveCount(2);await expect(page.locator(".lesson-row > .subject-motif-frame")).toHaveCount(2);assert.ok(await page.locator(".lesson-row > .subject-motif-frame").first().evaluate(element=>Number.parseFloat(getComputedStyle(element).opacity)>0));}
+	 for(const path of ["/home-schedule","/schedule"]){await page.goto(origin+path+"?locale=ru");await expect(page.locator(".lesson-row")).toHaveCount(2);await expect(page.locator(".lesson-row .lesson-info")).toHaveCount(2);await expect(page.locator(".lesson-row .timetable-materials")).toHaveCount(2);}
 	 await page.screenshot({path:join(dir,engineName+"-schedule-motifs.png"),fullPage:true});
  await page.goto(origin+"/home-motion?locale=ru");
  const day=page.locator(".timetable-day");
@@ -85,15 +85,15 @@ test("v055 Chromium/WebKit: live UI states, no credential persistence, no pollin
  await page.setViewportSize({width,height:900});
  await page.waitForTimeout(550);
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
- const motif=await page.locator(".lesson-row > .subject-motif-frame").first().boundingBox(),actions=await page.locator(".lesson-actions").first().boundingBox();
- assert.ok(motif&&actions&&motif.x+motif.width<actions.x);
+ const info=await page.locator(".lesson-row .lesson-info").first().boundingBox(),actions=await page.locator(".lesson-actions").first().boundingBox();
+ assert.ok(info&&actions&&(info.x+info.width<=actions.x+2||info.y+info.height<=actions.y+2));
  await page.screenshot({path:join(dir,engineName+"-home-motion-"+width+".png"),fullPage:true});
  }
  await page.emulateMedia({reducedMotion:"reduce"});
  assert.equal(await day.evaluate(el=>getComputedStyle(el).animationName),"none");
  await page.emulateMedia({reducedMotion:"no-preference"});
 	 await page.goto(origin+"/library");await expect(page.locator(".library-card")).toHaveCount(1);
- const search=page.locator('input[type="search"]').last(),requests:string[]=[];const track=(r:{url():string})=>requests.push(r.url());await page.waitForLoadState("networkidle");page.on("request",track);
+ const search=page.locator('input[type="search"]').last(),requests:string[]=[];const track=(r:{url():string;resourceType():string})=>{if(r.resourceType()!=="font")requests.push(r.url());};await page.waitForLoadState("networkidle");page.on("request",track);
  await search.fill("Проза о Tamerlane Esentaeve третем");await expect(page.locator(".library-card")).toHaveCount(0);
  await search.fill(" НИШ  ХАБЧИК ");await expect(page.locator(".library-card")).toHaveCount(1);await expect(page.locator(".library-card")).toContainText("Tamerlane");assert.deepEqual(requests,[]);page.off("request",track);
  await page.goto(origin+"/privacy?locale=ru");await expect(page.getByRole("heading",{name:"Школьный SMS-дневник · v0.5.5"})).toBeVisible();

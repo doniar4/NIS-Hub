@@ -16,8 +16,10 @@ import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 export function ActionMenu({
   label,
   children,
+  icon,
 }: {
   label: string;
+  icon?: ReactNode;
   children: (close: () => void) => ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -45,7 +47,7 @@ export function ActionMenu({
     };
     position();
     panel.current
-      ?.querySelector<HTMLButtonElement>("button:not(:disabled)")
+      ?.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled)')
       ?.focus({ preventScroll: true });
     window.addEventListener("resize", position);
     window.addEventListener("scroll", position, true);
@@ -90,7 +92,7 @@ export function ActionMenu({
           }
         }}
       >
-        <DotsHorizontalIcon />
+        {icon ?? <DotsHorizontalIcon aria-hidden="true"/>}
       </button>
       {open &&
         createPortal(
@@ -101,7 +103,7 @@ export function ActionMenu({
             aria-label={label}
             className="action-popover"
             onBlur={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget as Node))
+              if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node))
                 setOpen(false);
             }}
             onKeyDown={(event) => {
@@ -110,12 +112,12 @@ export function ActionMenu({
                 close();
               }
               const items = Array.from(
-                event.currentTarget.querySelectorAll<HTMLButtonElement>(
-                  "button:not(:disabled)",
+                event.currentTarget.querySelectorAll<HTMLElement>(
+                  '[role="menuitem"]:not(:disabled)',
                 ),
               );
               const index = items.indexOf(
-                document.activeElement as HTMLButtonElement,
+                document.activeElement as HTMLElement,
               );
               const next =
                 event.key === "ArrowDown"

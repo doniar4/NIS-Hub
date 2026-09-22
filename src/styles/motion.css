@@ -1,0 +1,16 @@
+@keyframes glass-enter { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes glass-pop { from { opacity:0; transform:scale(.985); } to { opacity:1; transform:scale(1); } }
+@media(prefers-reduced-motion:no-preference) {
+ .page-content { animation:glass-enter 340ms var(--ease-out) both; }
+ .app-sidebar { animation:glass-pop 360ms var(--ease-out) both; }
+ .mobile-drawer[open],.action-popover,.notification-popover { animation:glass-pop 220ms var(--ease-out) both; }
+ .button:active:not(:disabled),.icon-button:active:not(:disabled) { transform:scale(.98); }
+ .library-card:hover,.dashboard-card:hover { transform:translateY(-2px); }
+}
+@media(prefers-reduced-motion:reduce) {
+ *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
+ .button:active,.icon-button:active,.library-card:hover,.dashboard-card:hover,.sms-subject:hover { transform:none!important; }
+}
+
+@keyframes study-pulse { 50% { opacity:.55; } }
+.ai-study-action-btn[aria-busy="true"] .ai-wand-icon { animation:study-pulse 1.2s ease-in-out infinite; }

@@ -6,6 +6,7 @@ import {
   MagnifyingGlassIcon,
   ChatBubbleIcon,
   ReaderIcon,
+  GridIcon,
 } from "@radix-ui/react-icons";
 import {
   useEffect,
@@ -13,13 +14,14 @@ import {
   useState,
   useSyncExternalStore,
   type ReactNode,
+  type CSSProperties,
 } from "react";
 
 import { useI18n } from "./locale-provider";
 import { v05Copy } from "@/lib/v05-copy";
 import { Sprout } from "./brand";
-import { BotanicalFlourish } from "./academic-art";
-import { CursorBloom } from "./cursor-bloom";
+import { ActionMenu } from "./action-menu";
+
 import { communityCopy } from "@/lib/community-copy";
 import { ParallaxBackground } from "./parallax-background";
 
@@ -75,12 +77,14 @@ export function AppFrame({
   preferences,
   account,
   avatar,
+  profileAccount,
   admin = false,
 }: {
   children: ReactNode;
   preferences: ReactNode;
   account: ReactNode;
   avatar: ReactNode;
+  profileAccount?: ReactNode;
   admin?: boolean;
 }) {
   const { locale, t } = useI18n();
@@ -141,7 +145,7 @@ export function AppFrame({
   };
 
   const navigation = (mobile: boolean) => (
-    <nav aria-label={t.mainNav}>
+    <nav aria-label={t.mainNav} className="sidebar-navigation" data-has-active={links.some(([href])=>href==="/" ? pathname===href : pathname.startsWith(href))} style={{"--active-route":Math.max(0,links.findIndex(([href])=>href==="/" ? pathname===href : pathname.startsWith(href)))} as CSSProperties}>
       {links.map(([href, label]) => (
         <Link
           key={href}
@@ -175,13 +179,13 @@ export function AppFrame({
 
   return (
     <div className="app-frame">
-      <CursorBloom />
+      <ParallaxBackground />
       <a className="skip-link" href="#main">
         {t.skip}
       </a>
 
       <aside id="desktop-navigation" className="app-sidebar">
-        <BotanicalFlourish className="sidebar-flourish" />
+
 
         <div className="sidebar-brand-row">
           <Link className="brand-link" href="/" aria-label="NIS Hub">
@@ -232,6 +236,7 @@ export function AppFrame({
         {navigation(false)}
 
         <div className="sidebar-bottom" inert={collapsed}>
+          {profileAccount && <div className="sidebar-account">{profileAccount}{account}</div>}
           <div className="sidebar-legal">
             <Link href="/privacy">{t.privacy}</Link>
             <Link href="/terms">{t.terms}</Link>
@@ -246,7 +251,7 @@ export function AppFrame({
           <button
             ref={menuButton}
             type="button"
-            className="button button-secondary mobile-menu"
+            className="icon-button mobile-menu app-launcher-mobile"
             aria-label={p.menu}
             aria-controls="mobile-navigation"
             aria-expanded={mobileOpen}
@@ -258,6 +263,9 @@ export function AppFrame({
             ☰
           </button>
 
+          <div className="app-launcher"><ActionMenu label={p.menu} icon={<GridIcon aria-hidden="true"/>}>
+            {close => links.map(([href,label]) => <Link role="menuitem" className="menu-action" key={href} href={href} prefetch={false} onClick={close}>{renderNavIcon(href)}{label}</Link>)}
+          </ActionMenu></div>
           <form
             action="/library"
             method="get"
@@ -290,7 +298,7 @@ export function AppFrame({
         </header>
 
         <div className="app-canvas">
-          <ParallaxBackground />
+
         <main id="main" tabIndex={-1} className="app-main">
 
           <div className="page-content">{children}</div>
@@ -323,7 +331,7 @@ export function AppFrame({
         }}
       >
         <div>
-          <BotanicalFlourish className="drawer-flourish" />
+
 
           <div className="flex items-center justify-between gap-3">
             <Link className="brand-link" href="/" onClick={close}>
@@ -344,6 +352,7 @@ export function AppFrame({
           </div>
 
           {navigation(true)}
+          {profileAccount && <div className="sidebar-account">{profileAccount}{account}</div>}
 
           <div className="sidebar-legal">
             <Link href="/privacy" onClick={close}>

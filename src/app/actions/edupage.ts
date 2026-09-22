@@ -28,13 +28,14 @@ export async function syncEduPage(input:unknown):Promise<EduPageActionResult>{
     const preview=prepareEduPage(live.snapshot,live.sourceHash,active.data.id,lessons,classes,subjects,aliases,value.scope as string[]);
     if(value.intent==="preview"){
       const {error}=await supabase.from("edupage_sync_state").upsert({id:true,last_checked:live.checkedAt,
-        last_error:preview.issues.length?"mapping":null});
+        last_error:preview.scope.length?null:"mapping"});
       if(error)throw new EduPageError("database");
       return {preview,checkedAt:live.checkedAt};
     }
     if(value.fingerprint!==preview.fingerprint)throw new EduPageError("stale");
-    if(preview.issues.length)throw new EduPageError("mapping");
-    if(!preview.rows.length)throw new EduPageError("source_changed");
+    // Safe partial sync: classes with unresolved mappings/conflicts are excluded
+    // from preview.scope/rows, so their existing timetable is preserved.
+    if(!preview.scope.length||!preview.rows.length)throw new EduPageError("mapping");
     if(!preview.diff.added.length&&!preview.diff.changed.length&&!preview.diff.removed.length){
       const {error}=await supabase.from("edupage_sync_state").upsert({id:true,aliases,
         last_checked:live.checkedAt,last_error:null});

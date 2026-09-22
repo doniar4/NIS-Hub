@@ -38,7 +38,7 @@ export function TaskDialog({
       if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         gsap.fromTo(
           dialog.current,
-          { opacity: 0, y: 18, scale: 0.97 },
+          { opacity: 0, y: 10, scale: 0.97 },
           {
             opacity: 1,
             y: 0,

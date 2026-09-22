@@ -18,6 +18,6 @@ export default async function LibraryPage({ searchParams }: {
   const grade=classGrade(classes.find(c=>c.id===legacyClass));
   const initial = initialLibraryFilters(params,grade?String(grade):"");
   return <SiteShell><PageIntro kicker={t.materials} title={t.library}>{t.libraryHint}</PageIntro>
-    <LibraryBrowser key={JSON.stringify(initial)} books={catalog.books} truncated={catalog.truncated} classes={classes} subjects={subjects} initial={initial}/>
+    <LibraryBrowser studyIntent={params.study==="1"} key={JSON.stringify(initial)} books={catalog.books} truncated={catalog.truncated} classes={classes} subjects={subjects} initial={initial}/>
   </SiteShell>;
 }
