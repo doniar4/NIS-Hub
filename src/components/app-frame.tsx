@@ -24,6 +24,7 @@ import { ActionMenu } from "./action-menu";
 
 import { communityCopy } from "@/lib/community-copy";
 import { ParallaxBackground } from "./parallax-background";
+import { GlassLighting } from "./design/glass-lighting";
 
 let memoryCollapsed = false;
 
@@ -180,11 +181,12 @@ export function AppFrame({
   return (
     <div className="app-frame">
       <ParallaxBackground />
+      <GlassLighting />
       <a className="skip-link" href="#main">
         {t.skip}
       </a>
 
-      <aside id="desktop-navigation" className="app-sidebar">
+      <aside id="desktop-navigation" className="app-sidebar" data-material="nav">
 
 
         <div className="sidebar-brand-row">
@@ -271,7 +273,7 @@ export function AppFrame({
             method="get"
             role="search"
             aria-label={p.search}
-            className="global-search"
+            className="global-search" data-material="search"
           >
             <label className="sr-only" htmlFor="global-search">
               {p.search}
@@ -318,7 +320,7 @@ export function AppFrame({
       <dialog
         ref={dialog}
         id="mobile-navigation"
-        className="mobile-drawer"
+        className="mobile-drawer" data-material="popover"
         aria-label={p.menu}
         onClose={() => {
           setMobileOpen(false);

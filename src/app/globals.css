@@ -3,9 +3,10 @@
 @import "../styles/tokens.css";
 @import "../styles/primitives.css";
 @import "../styles/shell.css";
-@import "../styles/motion.css";
 @import "../styles/pages.css";
 @import "../styles/workspaces.css";
+@import "../styles/materials.css";
+@import "../styles/motion.css";
 
 /* Retained component styles live below the new semantic design system. */
 @layer legacy {

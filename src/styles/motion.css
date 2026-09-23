@@ -1,16 +1,37 @@
 @keyframes glass-enter { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-@keyframes glass-pop { from { opacity:0; transform:scale(.985); } to { opacity:1; transform:scale(1); } }
+@keyframes glass-pop { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:scale(1); } }
+@keyframes glass-side { from { opacity:0; transform:translateX(10px) scale(.96); } to { opacity:1; transform:translateX(0) scale(1); } }
+@keyframes glass-sheet { from { opacity:0; transform:translateY(12px) scale(.96); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes ambient-drift { to { transform:translate(5vw,4vh) scale(1.07); } }
 @media(prefers-reduced-motion:no-preference) {
- .page-content { animation:glass-enter 340ms var(--ease-out) both; }
- .app-sidebar { animation:glass-pop 360ms var(--ease-out) both; }
- .mobile-drawer[open],.action-popover,.notification-popover { animation:glass-pop 220ms var(--ease-out) both; }
- .button:active:not(:disabled),.icon-button:active:not(:disabled) { transform:scale(.98); }
+ /* No forwards opacity/transform on ancestors: glass must see the real backdrop after entrance. */
+ .page-content { animation:glass-enter 340ms var(--ease-out) backwards; }
+ .app-sidebar { animation:glass-pop 420ms var(--ease-out) backwards; }
+ .mobile-drawer[open] { transform-origin:left center; animation:glass-side 360ms var(--ease-spring) backwards; }
+ .action-popover,.notification-popover { transform-origin:top right; animation:glass-pop 280ms var(--ease-spring) backwards; }
+ .app-launcher .action-popover { transform-origin:top left; }
+ .reader-inspector[open] { transform-origin:right top; animation:glass-side 360ms var(--ease-spring) backwards; }
+ .selected-lesson-content { animation:glass-enter 320ms var(--ease-out) backwards; }
+ .global-search:hover { transform:translateY(-1px); }
+ .global-search:active { transform:scale(.99); }
+ .button:hover:not(:disabled),.icon-button:hover:not(:disabled) { transform:translateY(-1px) scale(1.01); }
+ .button:active:not(:disabled),.icon-button:active:not(:disabled),.ai-generate-button:active:not(:disabled),.ai-study-action-btn:active:not(:disabled) { transform:scale(.98); }
  .library-card:hover,.dashboard-card:hover { transform:translateY(-2px); }
+ .timetable-row.lesson-row { transition:background 240ms,box-shadow 240ms,border-color 240ms; }
 }
-@media(prefers-reduced-motion:reduce) {
- *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
- .button:active,.icon-button:active,.library-card:hover,.dashboard-card:hover,.sms-subject:hover { transform:none!important; }
+@media(min-width:1024px) and (prefers-reduced-motion:no-preference) {
+ .ambient-blob { animation:ambient-drift 36s ease-in-out infinite alternate; }
+ .ambient-violet { animation-delay:-18s; animation-duration:44s; animation-direction:alternate-reverse; }
+ .ambient-cyan { animation-delay:-9s; animation-duration:48s; }
 }
-
+@media(max-width:1279px) and (prefers-reduced-motion:no-preference) {
+ .reader-inspector[open] { transform-origin:bottom center; animation-name:glass-sheet; }
+}
 @keyframes study-pulse { 50% { opacity:.55; } }
 .ai-study-action-btn[aria-busy="true"] .ai-wand-icon { animation:study-pulse 1.2s ease-in-out infinite; }
+@media(prefers-reduced-motion:reduce) {
+ *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
+ .button:active,.button:hover,.icon-button:active,.icon-button:hover,.global-search:hover,.global-search:active,.library-card:hover,.dashboard-card:hover,.sms-subject:hover { transform:none!important; }
+ /* Preserve the capsule's route position; only remove its hover expansion. */
+ .sidebar-navigation:has(.sidebar-link[aria-current="page"]:hover)::before { transform:translateY(calc(var(--active-route) * 52px)); filter:none; }
+}

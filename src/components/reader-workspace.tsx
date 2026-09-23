@@ -34,7 +34,7 @@ export function ReaderWorkspace({children,inspector,information}:{children:React
       <button ref={trigger} className="button button-secondary" aria-expanded={open} aria-controls="ai-study" onClick={()=>setOpen(!open)}>{c.openStudy} <span aria-hidden="true">✦</span></button>
     </div>
     <div className="reader-main">{children}</div>
-    <dialog ref={dialog} id="ai-study" className="reader-inspector" aria-label="AI Study" onCancel={event=>{event.preventDefault();close();}}
+    <dialog ref={dialog} id="ai-study" className="reader-inspector" data-material="inspector" aria-label="AI Study" onCancel={event=>{event.preventDefault();close();}}
       onClick={event=>{if(event.target!==event.currentTarget)return;const rect=event.currentTarget.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)close();}}>
       <header className="inspector-heading"><h2>AI Study <span className="status-chip">beta</span></h2><button className="icon-button" aria-label={c.close} onClick={close}>×</button></header>
       {inspector}

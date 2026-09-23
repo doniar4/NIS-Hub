@@ -11,7 +11,7 @@
 .reader-main { min-width:0; }
 .pdf-reader { display:flex; flex-direction:column; gap:.75rem; }
 .pdf-reader > [role="status"],.pdf-reader > [role="alert"] { order:0; }
-.reader-controls { order:1; display:flex; flex-wrap:wrap; align-items:center; gap:.4rem; position:sticky; top:8px; z-index:20; padding:.6rem; border:1px solid var(--glass-border); border-radius:var(--radius); background:var(--glass-strong); box-shadow:var(--glass-shadow); backdrop-filter:blur(var(--blur)); -webkit-backdrop-filter:blur(var(--blur)); }
+.reader-controls { order:1; display:flex; flex-wrap:wrap; align-items:center; gap:.4rem; position:sticky; top:8px; z-index:20; padding:.6rem; border:1px solid var(--glass-border); border-radius:var(--radius); background:var(--glass-strong); box-shadow:var(--glass-shadow); -webkit-backdrop-filter:blur(var(--blur)); backdrop-filter:blur(var(--blur)); }
 .reader-controls .button { min-height:40px; font-size:.75rem; padding:.5rem .65rem; white-space:normal; }
 .reader-controls .field { min-height:40px; padding:.45rem; font-size:.8rem; }
 .reader-controls .field-label { position:absolute!important; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); margin:0; }
@@ -31,7 +31,7 @@
 .thumbnail-canvas { display:block; min-height:115px; background:white; border:1px solid var(--line); }
 .thumbnail-canvas canvas { max-width:100%; height:auto; display:block; }
 .pdf-thumbnail > span:last-child { display:block; margin-top:.35rem; }
-.reader-inspector { color:var(--text); border:1px solid var(--glass-border); border-radius:var(--radius); background:var(--glass-strong); box-shadow:var(--glass-shadow); backdrop-filter:blur(var(--blur)); -webkit-backdrop-filter:blur(var(--blur)); }
+.reader-inspector { color:var(--text); border:1px solid var(--glass-border); border-radius:var(--radius); background:var(--glass-strong); box-shadow:var(--glass-shadow); -webkit-backdrop-filter:blur(var(--blur)); backdrop-filter:blur(var(--blur)); }
 .reader-inspector::backdrop { background:rgb(8 15 32/.45); backdrop-filter:blur(4px); }
 .reader-inspector:not([open]) { display:none; }
 .inspector-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
@@ -83,7 +83,7 @@
  .glass-surface,.app-sidebar,.global-search,.library-filters,.reader-controls,.reader-inspector,.mobile-drawer,.notification-popover,.action-popover { background:var(--surface-elevated); }
 }
 @media(prefers-reduced-transparency:reduce) {
- .glass-surface,.app-sidebar,.global-search,.library-filters,.reader-controls,.reader-inspector,.mobile-drawer,.notification-popover,.action-popover { background:var(--surface-elevated)!important; backdrop-filter:none!important; -webkit-backdrop-filter:none!important; }
+ .glass-surface,.app-sidebar,.global-search,.library-filters,.reader-controls,.reader-inspector,.mobile-drawer,.notification-popover,.action-popover { background:var(--surface-elevated)!important; -webkit-backdrop-filter:none!important; backdrop-filter:none!important; }
 }
 
 .pdf-scroll-viewport [data-page] { width:max-content; min-width:100%; }

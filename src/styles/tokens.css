@@ -2,38 +2,53 @@
  color-scheme:light;
  --font-display:"Outfit Variable","Noto Sans Variable",sans-serif;
  --font-body:"Noto Sans Variable","Outfit Variable",sans-serif;
- --bg:#edf2fc; --bg-accent-1:#d8e4ff; --bg-accent-2:#e9ddfa;
- --surface:#f8faff; --surface-elevated:#fff;
- --glass:rgb(255 255 255 / .66); --glass-strong:rgb(249 251 255 / .9);
- --glass-border:rgb(255 255 255 / .85); --glass-highlight:rgb(255 255 255 / .95);
- --text:#182238; --text-secondary:#526079; --line:#d7dfed; --line-strong:#a8b7cf;
- --accent:#275bdd; --accent-hover:#1747b8; --accent-wash:#e3ecff;
- --success:#18724f; --warning:#895500; --danger:#b12a41;
- --radius-sm:12px; --radius:22px; --radius-lg:28px; --radius-pill:999px;
- --blur:20px; --shadow:0 8px 30px rgb(35 58 109 / .06);
- --glass-shadow:inset 0 1px 0 var(--glass-highlight),inset 0 -1px 0 rgb(100 130 190 / .08),0 12px 40px rgb(38 61 120 / .09);
- --motion-fast:160ms; --motion:320ms; --motion-normal:320ms; --ease-out:cubic-bezier(.22,1,.36,1);
+ --bg:#e9edf5; --bg-accent-1:#a6badb; --bg-accent-2:#c7b8db; --bg-accent-3:#b0cdd6;
+ --surface:rgb(251 252 255 / .88); --surface-elevated:#f9fbff;
+ /* Transmission differs by role. These are fills, not opacity on content. */
+ --glass:rgb(248 251 255 / .28); --glass-strong:rgb(249 251 255 / .65);
+ --glass-nav:rgb(244 249 255 / .25); --glass-toolbar:rgb(250 252 255 / .42);
+ --glass-hero:rgb(243 247 255 / .36); --glass-inspector:rgb(244 248 255 / .54);
+ --glass-border:rgb(255 255 255 / .62); --glass-highlight:rgb(255 255 255 / .94);
+ --glass-sheen:rgb(255 255 255 / .54); --glass-reflection:rgb(146 159 220 / .12);
+ --glass-edge-shade:rgb(69 82 120 / .14); --glass-pointer:rgb(255 255 255 / .55);
+ --glass-capsule:rgb(234 242 255 / .47); --control-fill:rgb(252 254 255 / .6);
+ --text:#192236; --text-secondary:#48576e; --line:rgb(77 97 132 / .17); --line-strong:#9caac1;
+ --accent:#2854be; --accent-hover:#1a409e; --accent-wash:rgb(110 149 228 / .14);
+ --success:#166d4a; --warning:#895500; --danger:#b12a41;
+ --radius-sm:14px; --radius:24px; --radius-lg:30px; --radius-pill:999px;
+ --blur:32px; --shadow:0 2px 5px rgb(34 47 76 / .025),0 14px 36px -22px rgb(34 47 76 / .22);
+ --glass-shadow:inset 0 1px 0 var(--glass-highlight),inset 1px 0 0 rgb(255 255 255 / .3),inset 0 -1px 0 var(--glass-edge-shade),0 2px 4px rgb(23 35 65 / .04),0 16px 42px -12px rgb(36 48 81 / .19);
+ --motion-fast:180ms; --motion:420ms; --motion-normal:320ms; --ease-out:cubic-bezier(.22,1,.36,1); --ease-spring:cubic-bezier(.22,1.18,.38,1);
  --sidebar-width:15rem; --sidebar-motion:var(--motion) var(--ease-out);
  --layer-notifications:40; --layer-cursor:60;
- /* Compatibility aliases for existing functional components. */
+ /* Existing functional components consume these compatibility aliases. */
  --canvas:var(--bg); --ink:var(--text); --muted:var(--text-secondary);
- --sidebar:var(--accent-wash); --sidebar-hover:#e6edfb; --sidebar-active:#dce7ff;
+ --sidebar:var(--accent-wash); --sidebar-hover:rgb(255 255 255 / .22); --sidebar-active:var(--glass-capsule);
  --accent-dark:var(--accent-hover); --button-ink:#fff; --bronze:var(--accent); --focus:var(--accent);
  --ornament-green:var(--accent); --ornament-gold:#7162c1; --ornament-leaf:transparent;
- --banner:var(--accent-wash); --hover:#eef3ff; --notice-bg:#e8effe; --notice-ink:#29467f; --error-bg:#fceaf0;
+ --banner:var(--accent-wash); --hover:rgb(123 148 199 / .09); --notice-bg:#e8effe; --notice-ink:#29467f; --error-bg:#fceaf0;
  --art-paper:var(--surface); --art-cover:#c4d5f5; --paper-grain:transparent; --panel-shadow:var(--shadow);
  --panel-tint:#d3e2fb; --panel-warm:#e8dff7; --panel-cool:#d7edf4;
 }
 :root[data-theme="dark"] {
- color-scheme:dark; --bg:#0d1422; --bg-accent-1:#182943; --bg-accent-2:#27233e;
- --surface:#172131; --surface-elevated:#202c3f;
- --glass:rgb(25 37 57 / .77); --glass-strong:rgb(26 38 57 / .94);
- --glass-border:rgb(176 202 255 / .16); --glass-highlight:rgb(206 223 255 / .13);
- --text:#eff4ff; --text-secondary:#b1bfd6; --line:#33425b; --line-strong:#61718c;
- --accent:#94b7ff; --accent-hover:#bbd2ff; --accent-wash:#243a61;
- --success:#8bdbb6; --warning:#f2c779; --danger:#ffb0be; --shadow:0 8px 30px rgb(0 0 0 / .13);
- --glass-shadow:inset 0 1px 0 var(--glass-highlight),inset 0 -1px 0 rgb(0 0 0 / .22),0 16px 40px rgb(0 0 0 / .18);
- --sidebar-hover:#24324a; --sidebar-active:#293f64; --button-ink:#10203e;
- --ornament-gold:#b6a3fa; --hover:#202e45; --notice-bg:#203252; --notice-ink:#c7d9ff; --error-bg:#442637;
+ color-scheme:dark; --bg:#090c12; --bg-accent-1:#37465e; --bg-accent-2:#48425b; --bg-accent-3:#2b454f;
+ --surface:rgb(22 26 35 / .9); --surface-elevated:#202530;
+ --glass:rgb(12 17 27 / .28); --glass-strong:rgb(19 24 35 / .72);
+ --glass-nav:rgb(10 15 24 / .3); --glass-toolbar:rgb(16 21 32 / .44);
+ --glass-hero:rgb(16 22 34 / .4); --glass-inspector:rgb(15 21 33 / .56);
+ --glass-border:rgb(215 225 255 / .19); --glass-highlight:rgb(229 237 255 / .34);
+ --glass-sheen:rgb(208 224 255 / .1); --glass-reflection:rgb(155 145 215 / .1);
+ --glass-edge-shade:rgb(0 0 0 / .4); --glass-pointer:rgb(205 219 255 / .13);
+ --glass-capsule:rgb(157 182 239 / .14); --control-fill:rgb(182 202 240 / .075);
+ --text:#f0f2fa; --text-secondary:#b4bed0; --line:rgb(193 206 235 / .13); --line-strong:#5b6579;
+ --accent:#aac4ff; --accent-hover:#d1dfff; --accent-wash:rgb(136 164 227 / .13);
+ --success:#8bdbb6; --warning:#f2c779; --danger:#ffb0be;
+ --shadow:0 2px 5px rgb(0 0 0 / .06),0 14px 36px -22px rgb(0 0 0 / .5);
+ --glass-shadow:inset 0 1px 0 var(--glass-highlight),inset 1px 0 0 rgb(211 225 255 / .08),inset 0 -1px 0 var(--glass-edge-shade),0 2px 4px rgb(0 0 0 / .12),0 18px 48px -12px rgb(0 0 0 / .48);
+ --sidebar-hover:rgb(201 218 255 / .055); --sidebar-active:var(--glass-capsule); --button-ink:#13213f;
+ --ornament-gold:#b6a3fa; --hover:rgb(171 190 229 / .06); --notice-bg:#242e43; --notice-ink:#d0deff; --error-bg:#442637;
  --art-cover:#374b6d; --panel-tint:#253a5a; --panel-warm:#352d4d; --panel-cool:#223e4d;
 }
+body { background:var(--bg); color:var(--text); line-height:1.55; }
+:where(h1,h2,h3,h4,h5,h6) { font-family:var(--font-display); font-weight:600; }
+:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }

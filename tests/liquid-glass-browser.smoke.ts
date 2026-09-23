@@ -86,6 +86,34 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         await expect(page.locator(".homework-preview")).toContainText("Homework for 2026-09-18");
         assert.ok((await page.locator("body").evaluate(el=>getComputedStyle(el).fontFamily)).includes("Noto Sans"));
         assert.equal(await page.locator(".app-sidebar").evaluate(el=>getComputedStyle(el).left),"16px");
+        // Verify actual material roles, not only class names or snapshots.
+        for (const theme of ["light", "dark"]) {
+          await page.evaluate(value => { document.documentElement.dataset.theme = value; }, theme);
+          for (const selector of [".app-sidebar", ".global-search", ".selected-lesson"]) {
+            const material = await page.locator(selector).evaluate(el => {
+              const s = getComputedStyle(el);
+              return {fill:s.backgroundColor, image:s.backgroundImage, blur:s.backdropFilter || s.getPropertyValue("-webkit-backdrop-filter"), rim:getComputedStyle(el,"::before").backgroundImage};
+            });
+            assert.match(material.fill, /rgba\(/, selector + " transmits the background");
+            const alpha = Number(material.fill.split(",").at(-1)?.replace(")", "").trim());
+            assert.ok(alpha > 0 && alpha < .6, selector + " not an opaque dashboard panel");
+            assert.match(material.image, /gradient/);
+            assert.match(material.blur, /blur\((28|32|36|40)px\)/);
+            assert.match(material.rim, /gradient/);
+          }
+          assert.equal(await page.locator(".dashboard-timetable").evaluate(el => getComputedStyle(el).backdropFilter), "none");
+        }
+        await page.waitForLoadState("networkidle");
+        const lightingRequests:string[]=[];
+        const watchLight=(r:{url():string})=>lightingRequests.push(r.url());
+        page.on("request",watchLight);
+        await page.locator(".global-search").hover({position:{x:30,y:15}});
+        await expect(page.locator(".global-search")).toHaveAttribute("data-glass-lit","true");
+        const firstLight=await page.locator(".global-search").evaluate(el=>(el as HTMLElement).style.getPropertyValue("--pointer-x"));
+        await page.locator(".global-search").hover({position:{x:180,y:30}});
+        await expect.poll(()=>page.locator(".global-search").evaluate(el=>(el as HTMLElement).style.getPropertyValue("--pointer-x"))).not.toBe(firstLight);
+        assert.deepEqual(lightingRequests,[]);
+        page.off("request",watchLight);
         await page.locator(".lesson-select").first().focus();await page.keyboard.press("Enter");
         await expect(page.locator(".selected-lesson-actions a").last()).toHaveAttribute("href","/books/"+id+"/read?variant="+id+"#ai-study");
 
@@ -131,6 +159,11 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         await page.keyboard.press("Escape");await expect(page.locator(".mobile-menu")).toBeFocused();
         await page.emulateMedia({reducedMotion:"reduce"});await page.goto(origin+"/");
         assert.equal(await page.locator(".selected-lesson-content").evaluate(el=>getComputedStyle(el).animationName),"none");
+        assert.equal(await page.locator(".ambient-blob").first().evaluate(el=>getComputedStyle(el).animationName),"none");
+        await page.setViewportSize({width:1440,height:1000});
+        await page.locator(".global-search").hover();
+        assert.equal(await page.locator(".global-search").getAttribute("data-glass-lit"),null);
+        assert.equal(await page.locator(".global-search").evaluate(el=>(el as HTMLElement).style.getPropertyValue("--pointer-x")),"");
         await page.emulateMedia({reducedMotion:"no-preference"});
 
         await page.setViewportSize({width:1440,height:1000});reading.page=1;reading.bookmarks=[];
@@ -156,11 +189,19 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         await expect(page.locator(".ai-study-panel")).toContainText("1–2");
         await page.locator(".inspector-heading button").click();await page.locator(".reader-workspace-heading button").click();
         await expect(inputs.last()).toHaveValue("2");
-        await page.screenshot({path:join(dir,name+"-reader-desktop.png"),fullPage:true,animations:"disabled"});
+        for(const theme of ["light","dark"]) {
+          await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);
+          assert.match(await page.locator(".reader-inspector").evaluate(el=>getComputedStyle(el).backgroundColor),/rgba\(/);
+          assert.match(await page.locator(".reader-inspector").evaluate(el=>getComputedStyle(el).backdropFilter||getComputedStyle(el).getPropertyValue("-webkit-backdrop-filter")),/blur\(36px\)/);
+          await page.screenshot({path:join(dir,name+"-reader-desktop-"+theme+".png"),fullPage:true,animations:"disabled"});
+        }
         await page.setViewportSize({width:390,height:844});await expect(page.locator(".reader-inspector")).toHaveJSProperty("open",true);
         await page.keyboard.press("Escape");await expect(page.locator(".reader-workspace-heading button")).toBeFocused();
         await page.locator(".reader-workspace-heading button").click();await expect(inputs.last()).toHaveValue("2");
-        await page.screenshot({path:join(dir,name+"-reader-sheet.png"),fullPage:true,animations:"disabled"});
+        for(const theme of ["light","dark"]) {
+          await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);
+          await page.screenshot({path:join(dir,name+"-reader-sheet-"+theme+".png"),fullPage:true,animations:"disabled"});
+        }
         await page.keyboard.press("Escape");assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),name+" reader mobile");
         await page.getByRole("button",{name:"Page 3",exact:true}).last().click();await expect.poll(()=>reading.page).toBe(3);
         await page.reload();await expect(page.locator(".reader-controls")).toContainText("3 /",{timeout:30000});await expect(page.getByRole("button",{name:"Remove bookmark",exact:true})).toBeVisible();
