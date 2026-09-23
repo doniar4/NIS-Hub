@@ -1,4 +1,5 @@
 import test from "node:test";
+import {selectTheme} from "./browser/select-theme";
 import assert from "node:assert/strict";
 import {readFileSync,readdirSync,mkdirSync} from "node:fs";
 import {join,basename} from "node:path";
@@ -52,7 +53,7 @@ test("v055 Chromium/WebKit: live UI states, no credential persistence, no pollin
  for(const [mode,error]of [["changed","sms_changed"],["expired","session_expired"],["disabled","feature_disabled"]]as const){await page.goto(origin+"/diary?mode="+mode+(mode!=="disabled"?"&connected=1":""));await expect(page.getByRole("alert")).toHaveText(smsCopy("en").errors[error]);assert.equal(await page.locator(".sms-subject").count(),0);}
  for(const locale of ["ru","kk","en"]as const)for(const width of [1280,390,320])for(const theme of ["light","dark"]){
  await page.setViewportSize({width,height:900});await page.goto(origin+"/diary?connected=1&locale="+locale);await expect(page.locator(".sms-subject")).toHaveCount(3);
- await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);
+ await selectTheme(page,theme);
  await expect(page.locator(".mobile-drawer")).not.toHaveAttribute("open","");
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),engineName+" "+locale+" "+width+" "+theme);
  if(locale==="ru"&&(width===320||width===1280)){await page.waitForTimeout(250);await page.screenshot({path:join(dir,engineName+"-"+width+"-"+theme+".png"),fullPage:true});}

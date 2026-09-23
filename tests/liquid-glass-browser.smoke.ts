@@ -6,6 +6,7 @@ import {createServer} from "node:http";
 import {once} from "node:events";
 import {build} from "esbuild";
 import {chromium,webkit,expect} from "@playwright/test";
+import {selectTheme} from "./browser/select-theme";
 import {themeBootstrap} from "../src/lib/theme";
 import {parseGrades} from "../src/lib/sms/parser";
 import {subjects,classes} from "./browser/fixtures";
@@ -68,6 +69,7 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
       const browser=await engine.launch({headless:true});
       try {
         const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors:string[]=[];
+        page.setDefaultTimeout(15000);
         page.on("pageerror",error=>errors.push(new URL(page.url()).pathname+": "+error.message));
         await page.goto(origin+"/");
         await expect(page.locator(".lesson-select[aria-pressed=true]")).toContainText("Mathematics");
@@ -88,7 +90,7 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         assert.equal(await page.locator(".app-sidebar").evaluate(el=>getComputedStyle(el).left),"16px");
         // Verify actual material roles, not only class names or snapshots.
         for (const theme of ["light", "dark"]) {
-          await page.evaluate(value => { document.documentElement.dataset.theme = value; }, theme);
+          await selectTheme(page,theme);
           for (const selector of [".app-sidebar", ".global-search", ".selected-lesson"]) {
             const material = await page.locator(selector).evaluate(el => {
               const s = getComputedStyle(el);
@@ -136,14 +138,14 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
 
         for(const locale of ["ru","kk","en"]as const)for(const width of [1440,1024,768,390,320])for(const theme of ["light","dark"]){
           await page.setViewportSize({width,height:1000});await page.goto(origin+"/?locale="+locale);
-          await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);
+          await selectTheme(page,theme);
           await expect(page.locator(".homework-preview")).toContainText("Homework for");
           assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),name+" home "+locale+" "+width+" "+theme);
           if(locale==="ru"&&(width===1440||width===390))await page.screenshot({path:join(dir,name+"-home-"+width+"-"+theme+".png"),fullPage:true,animations:"disabled"});
         }
         for(const route of ["/library","/schedule","/profile","/diary","/support","/admin"]){
           for(const width of [1440,390,320])for(const locale of ["ru","kk","en"])for(const theme of ["light","dark"]){
-            await page.setViewportSize({width,height:1000});await page.goto(origin+route+"?locale="+locale);await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);await page.waitForTimeout(100);
+            await page.setViewportSize({width,height:1000});await page.goto(origin+route+"?locale="+locale);await selectTheme(page,theme);await page.waitForTimeout(100);
             assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),name+" "+route+" "+width);
             if(width!==320&&locale==="ru")await page.screenshot({path:join(dir,name+"-"+route.slice(1)+"-"+width+"-"+theme+".png"),fullPage:true,animations:"disabled"});
           }
@@ -190,19 +192,24 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         await page.locator(".inspector-heading button").click();await page.locator(".reader-workspace-heading button").click();
         await expect(inputs.last()).toHaveValue("2");
         for(const theme of ["light","dark"]) {
-          await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);
+          await selectTheme(page,theme);
           assert.match(await page.locator(".reader-inspector").evaluate(el=>getComputedStyle(el).backgroundColor),/rgba\(/);
           assert.match(await page.locator(".reader-inspector").evaluate(el=>getComputedStyle(el).backdropFilter||getComputedStyle(el).getPropertyValue("-webkit-backdrop-filter")),/blur\(36px\)/);
           await page.screenshot({path:join(dir,name+"-reader-desktop-"+theme+".png"),fullPage:true,animations:"disabled"});
         }
-        await page.setViewportSize({width:390,height:844});await expect(page.locator(".reader-inspector")).toHaveJSProperty("open",true);
+        await page.setViewportSize({width:390,height:844});await expect(page.locator(".reader-inspector:modal")).toBeVisible();
         await page.keyboard.press("Escape");await expect(page.locator(".reader-workspace-heading button")).toBeFocused();
-        await page.locator(".reader-workspace-heading button").click();await expect(inputs.last()).toHaveValue("2");
+        await expect(page.locator(".reader-inspector")).not.toHaveAttribute("open","");
         for(const theme of ["light","dark"]) {
-          await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);
+          await selectTheme(page,theme);
+          await page.locator(".reader-workspace-heading button").click();
+          await expect(page.locator(".reader-inspector:modal")).toBeVisible();
+          await expect(inputs.last()).toHaveValue("2");
           await page.screenshot({path:join(dir,name+"-reader-sheet-"+theme+".png"),fullPage:true,animations:"disabled"});
+          await page.keyboard.press("Escape");
+          await expect(page.locator(".reader-inspector")).not.toHaveAttribute("open","");
         }
-        await page.keyboard.press("Escape");assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),name+" reader mobile");
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),name+" reader mobile");
         await page.getByRole("button",{name:"Page 3",exact:true}).last().click();await expect.poll(()=>reading.page).toBe(3);
         await page.reload();await expect(page.locator(".reader-controls")).toContainText("3 /",{timeout:30000});await expect(page.getByRole("button",{name:"Remove bookmark",exact:true})).toBeVisible();
         assert.deepEqual(errors,[]);
