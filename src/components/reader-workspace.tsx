@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState,useSyncExternalStore,type ReactNode} from "react";
 import {useI18n} from "./locale-provider";
+import {LiquidMaterial} from "./design/liquid-material";
 import {designCopy} from "@/lib/design-copy";
 
 const subscribeDesktop=(listener:()=>void)=>{const media=window.matchMedia("(min-width: 1280px)");media.addEventListener("change",listener);return ()=>media.removeEventListener("change",listener);};
@@ -36,7 +37,8 @@ export function ReaderWorkspace({children,inspector,information}:{children:React
     <div className="reader-main">{children}</div>
     <dialog ref={dialog} id="ai-study" className="reader-inspector" aria-label="AI Study" onCancel={event=>{event.preventDefault();close();}}
       onClick={event=>{if(event.target!==event.currentTarget)return;const rect=event.currentTarget.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)close();}}>
-      <header className="inspector-heading"><h2>AI Study <span className="status-chip">beta</span></h2><button className="icon-button" aria-label={c.close} onClick={close}>×</button></header>
+      <LiquidMaterial/>
+      <header className="inspector-heading"><h2>AI Study</h2><button className="icon-button" aria-label={c.close} onClick={close}>×</button></header>
       {inspector}
     </dialog>
   </section>;

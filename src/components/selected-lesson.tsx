@@ -11,7 +11,8 @@ import { eduPageCopy } from "@/lib/edupage/copy";
 import { formatSchoolDate } from "@/lib/school-calendar";
 import { useI18n } from "./locale-provider";
 import { GlassSurface } from "./design/glass-surface";
-import { SubjectMotif } from "./subject-motif";
+import { LiquidMaterial } from "./design/liquid-material";
+import { SubjectVisual } from "./subject-visual";
 
 export function SelectedLesson({lesson, subjects, date, grade = null, materials = {}}: {
   lesson?: WeeklyLesson; subjects: SubjectRow[]; date: string; grade?: number | null; materials?: MaterialMap;
@@ -20,11 +21,12 @@ export function SelectedLesson({lesson, subjects, date, grade = null, materials 
   const subject = subjects.find(item => item.id === lesson?.subject_id);
   const href = lesson ? materials[materialKey(lesson.subject_id, grade)] ?? librarySubjectHref(lesson.subject_id, grade) : "";
   return <GlassSurface className="selected-lesson" aria-label={c.selected}>
+    <LiquidMaterial/>
+    <SubjectVisual subject={subject} hero/>
     <div className="selected-lesson-content" key={(lesson?.id ?? "empty") + date}>
       <p className="eyebrow">{c.selected}</p>
       <time dateTime={date}>{formatSchoolDate(date, locale)}</time>
       <div className="selected-lesson-title" aria-live="polite" aria-atomic="true">
-        {lesson && <SubjectMotif subject={subject}/>}
         <h2>{lesson ? subjectName(subject, locale) : c.select}</h2>
       </div>
       {lesson && <>

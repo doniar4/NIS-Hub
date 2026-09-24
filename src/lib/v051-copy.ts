@@ -31,7 +31,7 @@ const copy = {
     extract: "Извлечь текст для AI",
     extractHint:
       "Один раз для каждого PDF. Скан без текстового слоя не поддерживается.",
-    ai: "AI Study · beta",
+    ai: "AI Study",
     aiDisabled: "AI Study не включён оператором.",
     aiConsent:
       "В Gemini отправляется только выбранный текст учебника. Не выбирайте конфиденциальные данные. Ответ может содержать ошибки — сверяйтесь с источником.",
@@ -91,7 +91,7 @@ const copy = {
     extract: "AI үшін мәтінді шығару",
     extractHint:
       "Әр PDF үшін бір рет. Мәтін қабаты жоқ скан қолдау таппайды.",
-    ai: "AI Study · beta",
+    ai: "AI Study",
     aiDisabled:
       "Оператор AI Study қызметін қосқан жоқ.",
     aiConsent:
@@ -152,7 +152,7 @@ const copy = {
     extract: "Extract text for AI",
     extractHint:
       "Once per PDF. Scans without a text layer are unsupported.",
-    ai: "AI Study · beta",
+    ai: "AI Study",
     aiDisabled:
       "AI Study is not enabled by the operator.",
     aiConsent:

@@ -9,6 +9,7 @@ import { subjectName } from "@/lib/i18n";
 import { useI18n } from "./locale-provider";
 import { SubjectMotif } from "./subject-motif";
 import { ActionMenu } from "./action-menu";
+import { assessmentCounts } from "@/lib/sms/presentation";
 import { DiaryMotion } from "./diary-motion";
 
 function RefreshIcon() {
@@ -113,9 +114,7 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
         const subject=matchingSubject(s.subject);
         const detail=s.sourceId?details[s.sourceId]:undefined;
         const assessments=detail?.assessments??s.assessments;
-        const sor=assessments.filter(item=>item.type==="sor").length;
-        const soch=assessments.filter(item=>item.type==="soch").length;
-        const categories=[...new Map((s.evaluations??[]).map(item=>[item.type??item.id,{label:item.type?p.types[item.type]:item.shortLabel||item.label,title:item.label}])).values()];
+        const counts=assessmentCounts(s,detail?.assessments);
         return <article className={`sms-subject${snapshot.subjects.length%2===1&&index===snapshot.subjects.length-1?" sms-subject-wide":""}`} key={s.sourceId??s.subject} data-diary-card>
           <header className="sms-subject-heading">
             <div data-diary-motif><SubjectMotif subject={subject}/></div>
@@ -123,15 +122,16 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
               <div className="sms-result-line"><strong>{s.percent===undefined?"—":formatNumber(s.percent)+"%"}</strong><span>{s.percent===undefined?p.noScore:s.percentSource==="derived"?p.derived:p.official}</span></div>
             </div>
           </header>
-          <div className="sms-subject-meta" aria-label={p.assessment}>
-            {s.currentMark!==undefined&&<span>{p.currentMark}: <strong>{formatNumber(s.currentMark)}</strong></span>}
-            {s.notAttested&&<span><strong>{p.notAttested}</strong></span>}
-            {!!s.evaluations?.length&&<span>{p.categories}: <strong>{s.evaluations.length}</strong></span>}
-            {categories.map(category=><span key={category.title} title={category.title}><strong>{category.label}</strong></span>)}
-            {!!detail?.assessments&&<span>{p.assessment}: <strong>{assessments.length}</strong></span>}
-            {sor>0&&<span>{p.types.sor}: <strong>{sor}</strong></span>}
-            {soch>0&&<span>{p.types.soch}: <strong>{soch}</strong></span>}
+          <div className="sms-mark" data-unattested={!!s.notAttested}>
+            <span>{p.currentMark}</span>
+            <strong>{s.notAttested?p.notAttested:s.currentMark===undefined?"—":formatNumber(s.currentMark)}</strong>
+            {s.currentMark===undefined&&!s.notAttested&&<small>{p.noScore}</small>}
           </div>
+          <dl className="sms-work-counts" aria-label={p.assessment}>
+            <div><dt>{p.works}</dt><dd>{counts?.works??"—"}</dd></div>
+            <div><dt>{p.types.sor}</dt><dd>{counts?.sor??"—"}</dd></div>
+            <div><dt>{p.types.soch}</dt><dd>{counts?.soch??"—"}</dd></div>
+          </dl>
           <details className="sms-subject-details" onToggle={event=>{if(event.currentTarget.open&&s.sourceId)void loadDetails(s.sourceId);}}>
             <summary><span>{p.assessment}{detail?.assessments?` · ${assessments.length}`:""}</span><ChevronIcon/></summary>
             {detail?.loading&&<p className="sms-detail-state" role="status">{p.detailsLoading}</p>}

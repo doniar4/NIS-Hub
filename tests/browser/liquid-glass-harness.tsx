@@ -45,7 +45,7 @@ function Harness() {
   const empty=<p className="py-6">{t.noProgress}</p>;
   const material={[materialKey(subjects[0].id,classes[0].grade)]:"/books/"+id+"/read?variant="+id};
   return <LocaleProvider locale={locale}><AppFrame admin={path==="/admin"} preferences={<PreferenceControls localeAction={async value=>{setLocale(parseLocale(value));document.documentElement.lang=value;return {ok:true};}}/>}
-    avatar={<NotificationCenter/>} account={<form><button className="button button-secondary">{t.logout}</button></form>} profileAccount={<span>Synthetic Student</span>}>
+    avatar={<NotificationCenter/>} account={<form><button className="button button-secondary">{t.logout}</button></form>} profileAccount={<><Link className="header-avatar" href="/profile" aria-label={t.profile}>SS</Link><span>Synthetic Student</span></>}>
     {path==="/" ? <><header className="dashboard-heading"><div><p className="eyebrow">{c.welcome}</p><h1>{c.hello}, Synthetic Student</h1></div><span className="status-chip">{classes[0].name}</span></header>
       <HomeStudyDashboard lessons={lessons} subjects={subjects} classId={classes[0].id} today="2026-09-18" time="09:00" nonSchoolDays={nonSchoolDays} grade={classes[0].grade} materials={material}
         reading={empty} activity={<section className="surface-card"><h2 className="section-title">{c.activity}</h2>{empty}</section>}/></>:

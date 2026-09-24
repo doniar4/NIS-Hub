@@ -41,6 +41,7 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
     if(path==="/bundle.js"){res.setHeader("Content-Type","application/javascript");res.end(bundle.outputFiles[0].contents);return;}
     if(path==="/style.css"){res.setHeader("Content-Type","text/css");res.end(css);return;}
     if(path.endsWith(".woff2")){try{res.end(readFileSync(join(".next/static/media",basename(path))));}catch{res.statusCode=404;res.end();}return;}
+    if(/^[/]images[/]subjects[/][a-z]+[.]svg$/.test(path)){res.setHeader("Content-Type","image/svg+xml");res.end(readFileSync("public"+path));return;}
     if(path==="/favicon.ico"){res.statusCode=204;res.end();return;}
     if(path==="/pdfjs-dist/legacy/build/pdf.worker.min.mjs"){res.setHeader("Content-Type","application/javascript");res.end(readFileSync("node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs"));return;}
     if(/^\/pdfjs\/(cmaps|standard_fonts|wasm|iccs)\/[a-zA-Z0-9_.-]+$/.test(path)){res.end(readFileSync("public"+path));return;}
@@ -92,7 +93,7 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         await page.goto(origin+"/library?subject="+subjects[0].id+"&grade=7&study=1");
         await expect(page.locator(".library-card").first()).toHaveAttribute("href",/#ai-study$/);
         await page.waitForLoadState("networkidle");
-        const requests:string[]=[];const track=(r:{url():string})=>requests.push(r.url());page.on("request",track);
+        const requests:string[]=[];const track=(r:{url():string;resourceType():string})=>{if(r.resourceType()!=="image")requests.push(r.url());};page.on("request",track);
         await page.locator(".library-filters input").fill("NO MATCH");
         await expect(page.getByRole("heading",{name:"No materials found"})).toBeVisible();
         await page.locator(".library-filters select").first().selectOption("8");
@@ -108,21 +109,23 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
 
         for(const locale of ["ru","kk","en"]as const)for(const width of [1440,1024,768,390,320])for(const theme of ["light","dark"]){
           await page.setViewportSize({width,height:1000});await page.goto(origin+"/?locale="+locale);
-          await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);
+          await expect(page.locator(".theme-switch")).toBeEnabled();await page.locator('.theme-switch label').filter({has:page.locator('input[value="'+theme+'"]')}).click();await expect(page.locator("html")).toHaveAttribute("data-theme",theme);
           await expect(page.locator(".homework-preview")).toContainText("Homework for");
           assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),name+" home "+locale+" "+width+" "+theme);
           if(locale==="ru"&&(width===1440||width===390))await page.screenshot({path:join(dir,name+"-home-"+width+"-"+theme+".png"),fullPage:true,animations:"disabled"});
         }
         for(const route of ["/library","/schedule","/profile","/diary","/support","/admin"]){
           for(const width of [1440,390,320])for(const locale of ["ru","kk","en"])for(const theme of ["light","dark"]){
-            await page.setViewportSize({width,height:1000});await page.goto(origin+route+"?locale="+locale);await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);await page.waitForTimeout(100);
+            await page.setViewportSize({width,height:1000});await page.goto(origin+route+"?locale="+locale);await expect(page.locator(".theme-switch")).toBeEnabled();await page.locator('.theme-switch label').filter({has:page.locator('input[value="'+theme+'"]')}).click();await expect(page.locator("html")).toHaveAttribute("data-theme",theme);await page.waitForTimeout(100);
             assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),name+" "+route+" "+width);
             if(width!==320&&locale==="ru")await page.screenshot({path:join(dir,name+"-"+route.slice(1)+"-"+width+"-"+theme+".png"),fullPage:true,animations:"disabled"});
           }
         }
         await page.setViewportSize({width:1440,height:1000});await page.goto(origin+"/");
         await page.locator(".sidebar-collapse").click();await expect(page.locator(".sidebar-collapse")).toHaveAttribute("aria-expanded","false");
+        await expect(page.locator(".sidebar-account .header-avatar")).toBeVisible();
         await page.reload();await expect(page.locator(".sidebar-collapse")).toHaveAttribute("aria-expanded","false");
+        await expect(page.locator(".sidebar-account .header-avatar")).toBeVisible();
         await page.locator(".sidebar-collapse").click();
         await page.evaluate(()=>{document.body.style.zoom="2";});
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),name+" 200% zoom");
@@ -157,7 +160,7 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         await page.locator(".inspector-heading button").click();await page.locator(".reader-workspace-heading button").click();
         await expect(inputs.last()).toHaveValue("2");
         await page.screenshot({path:join(dir,name+"-reader-desktop.png"),fullPage:true,animations:"disabled"});
-        await page.setViewportSize({width:390,height:844});await expect(page.locator(".reader-inspector")).toHaveJSProperty("open",true);
+        await page.setViewportSize({width:390,height:844});await expect(page.locator(".reader-inspector:modal")).toBeVisible();
         await page.keyboard.press("Escape");await expect(page.locator(".reader-workspace-heading button")).toBeFocused();
         await page.locator(".reader-workspace-heading button").click();await expect(inputs.last()).toHaveValue("2");
         await page.screenshot({path:join(dir,name+"-reader-sheet.png"),fullPage:true,animations:"disabled"});

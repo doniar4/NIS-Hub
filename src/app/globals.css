@@ -6,6 +6,7 @@
 @import "../styles/motion.css";
 @import "../styles/pages.css";
 @import "../styles/workspaces.css";
+@import "../styles/v1.css";
 
 /* Retained component styles live below the new semantic design system. */
 @layer legacy {
@@ -176,7 +177,7 @@ textarea.field { min-height: auto; line-height: 1.6; }
 html[data-sidebar="collapsed"] { --sidebar-width: 5rem; }
 html[data-sidebar="collapsed"] .app-sidebar .sidebar-label, html[data-sidebar="collapsed"] .brand-name { display: none !important; }
 html[data-sidebar="collapsed"] .app-sidebar .sidebar-edition { display: none !important; margin: 0 !important; padding: 0 !important; }
-html[data-sidebar="collapsed"] .app-sidebar .sidebar-bottom { display: none !important; }
+html[data-sidebar="collapsed"] .sidebar-account > :not(.header-avatar), html[data-sidebar="collapsed"] .sidebar-bottom .sidebar-legal { display: none; }
 html[data-sidebar="collapsed"] .sidebar-link { justify-content: center; padding: .72rem 0; width: 100%; }
 html[data-sidebar="collapsed"] .sidebar-link .sidebar-label { display: none !important; }
 .mobile-menu { display: none; }
