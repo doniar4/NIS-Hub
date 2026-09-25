@@ -6,7 +6,8 @@
 @import "../styles/motion.css";
 @import "../styles/pages.css";
 @import "../styles/workspaces.css";
-@import "../styles/v1.css";
+@import "../styles/public.css";
+@import "../styles/welcome.css";
 
 /* Retained component styles live below the new semantic design system. */
 @layer legacy {

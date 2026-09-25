@@ -5,7 +5,12 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { credentialsSchema, safeNext } from "@/lib/validation";
 import { clearSmsSession } from "@/lib/sms/session";
+import { markWelcomeComplete } from "@/lib/welcome-server";
 import type { ActionState } from "@/lib/action-state";
+export async function completeWelcome() {
+    await markWelcomeComplete();
+    redirect("/signup");
+}
 export async function authenticate(mode: "login" | "signup", _state: ActionState, form: FormData): Promise<ActionState> {
     const { t } = await getI18n();
     if (mode !== "login" && mode !== "signup")
@@ -29,6 +34,7 @@ export async function authenticate(mode: "login" | "signup", _state: ActionState
                 return { error: t.confirmEmail };
             return { error: mode === "login" ? t.loginError : t.signupError };
         }
+        await markWelcomeComplete();
         if (mode === "signup" && !result.data.session)
             return { success: t.checkEmail };
     }
@@ -52,5 +58,5 @@ export async function logout(_state: ActionState, _form: FormData): Promise<Acti
             return { error: t.logoutError };
     }
     revalidatePath("/", "layout");
-    redirect("/login");
+    redirect("/");
 }

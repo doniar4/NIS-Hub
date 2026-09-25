@@ -125,6 +125,71 @@ const translations = {
     "Тақырып",
     "Theme"
   ],
+  "welcomeTitle": [
+    "Привет.",
+    "Сәлем.",
+    "Hello."
+  ],
+  "welcomeSubtitle": [
+    "Твой путь в NIS Hub начинается здесь.",
+    "NIS Hub-тағы жолың осы жерден басталады.",
+    "A brighter learning journey starts here."
+  ],
+  "launchHub": [
+    "Открыть NIS Hub",
+    "NIS Hub ашу",
+    "Launch NIS Hub"
+  ],
+  "pauseMotion": [
+    "Приостановить анимации",
+    "Анимацияларды кідірту",
+    "Pause animations"
+  ],
+  "welcomePrivacy": [
+    "Политика конфиденциальности",
+    "Құпиялық саясаты",
+    "Privacy Policy"
+  ],
+  "welcomeTerms": [
+    "Условия использования",
+    "Пайдалану шарттары",
+    "Terms of Use"
+  ],
+  "resumeMotion": [
+    "Продолжить анимации",
+    "Анимацияларды жалғастыру",
+    "Resume animations"
+  ],
+  "authHeroPrefix": [
+    "Одно пространство для ",
+    "Бір кеңістік: ",
+    "One space for "
+  ],
+  "authHeroLearning": [
+    "учёбы",
+    "оқу",
+    "learning"
+  ],
+  "authHeroPlanning": [
+    "планирования",
+    "жоспарлау",
+    "planning"
+  ],
+  "authHeroAnd": [
+    " и ",
+    " және ",
+    ", and "
+  ],
+  "authHeroGrowth": [
+    "роста",
+    "өсу",
+    "growth"
+  ],
+  "authHeroSuffix": [
+    ".",
+    ".",
+    "."
+  ],
   "light": [
     "Светлая",
     "Ашық",
@@ -754,6 +819,11 @@ const translations = {
     "Нужна роль администратора",
     "Әкімші рөлі қажет",
     "Administrator role required"
+  ],
+  "beta": [
+    "Бета-версия",
+    "Бета-нұсқа",
+    "Beta"
   ],
   "forbiddenHint": [
     "Этот аккаунт не может управлять учебными материалами и расписанием.",

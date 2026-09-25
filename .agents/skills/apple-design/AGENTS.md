@@ -4,7 +4,7 @@ Operating manual for AI agents working in this repository, or using it from anot
 
 ## What this repository is
 
-Apple Design Skill: a design-review skill (`SKILL.md`) backed by 122 pages of Apple's Human
+Apple Design Skill: a design-review skill (`SKILL.md`) backed by 123 pages of Apple's Human
 Interface Guidelines pulled from developer.apple.com into `references/hig/`, one curated guide,
 a generated lookup table, and the script that regenerates all of it.
 
@@ -15,8 +15,9 @@ a generated lookup table, and the script that regenerates all of it.
 2. Open `references/hig-lookup.md` to route a topic to a file. It is grouped by Apple's sections
    and carries Apple's one-line summary of every page.
 3. Load the always-load set (`accessibility.md`, `layout.md`, `typography.md`, `color.md`, plus
-   `designing-for-ios.md` or `designing-for-macos.md`) and 3 to 6 more files for what is on
-   screen. Never load the whole directory.
+   `designing-for-ios.md` or `designing-for-macos.md`, plus `references/cross-platform.md` unless
+   the app is SwiftUI, UIKit, or AppKit) and 3 to 6 more files for what is on screen. Never load
+   the whole directory.
 4. Quote the guideline and cite it as `file.md › Heading`. Use the user's framework vocabulary
    (Flutter, React Native, Tauri, Electron, SwiftUI, UIKit, AppKit).
 5. Write the report in the `SKILL.md` format: Summary, Critical, Improvements, Craft notes,
@@ -31,8 +32,9 @@ a generated lookup table, and the script that regenerates all of it.
 | `README.md` | Installation and overview for people | Yes |
 | `.cursorrules` | Entry point for Cursor | Yes |
 | `references/hig-lookup.md` | Generated routing table with an omitted-pages list | No, re-run the script |
-| `references/hig/*.md` | 122 generated pages in Apple's wording | No, re-run the script |
+| `references/hig/*.md` | 123 generated pages in Apple's wording | No, re-run the script |
 | `references/hig/liquid-glass.md` | Curated Liquid Glass guide; the script never touches it | Yes |
+| `references/cross-platform.md` | Apple's vocabulary and conventions for Flutter, React Native, Tauri, and Electron | Yes |
 | `scripts/pull-hig.mjs` | Pull script, Node 18 or newer, no dependencies | Yes |
 
 ## Refreshing the references
@@ -47,7 +49,7 @@ Options: `--out <dir>`, `--lookup <file>`, `--cache <dir>`, `--concurrency <n>`,
 
 What the script does:
 
-- Crawls Apple's six HIG sections and their sub-collections (157 pages as of September 2026).
+- Crawls Apple's six HIG sections and their sub-collections (158 pages as of September 2026).
 - Keeps every page that applies to iOS, iPadOS, or macOS, omits Apple-only hardware and services
   listed in `OMITTED_PAGES`, and records every omission with a reason in `hig-lookup.md`.
 - Renders Apple's JSON to Markdown faithfully: headings, paragraphs, lists, tables, notes, and
@@ -64,8 +66,10 @@ What the script does:
   that would prune more than a tenth of the files stops and asks for `--force-prune`.
 
 After running it: review `git diff --stat`, spot-check a changed file, run the checks below,
-refresh `liquid-glass.md` if `materials.md` or `color.md` changed, and update the counts in
-`README.md` if the file count changed.
+refresh `liquid-glass.md` if a page it links to changed, and update the page counts in
+`README.md`, `SKILL.md`, and this file if the file count changed. A new "Designing for" page has
+no platform metadata: if its `Platforms covered` line doesn't name a platform, add its slug to
+`DESIGNING_FOR_COVERAGE` in the script.
 
 ## Checks before finishing any change
 
@@ -83,7 +87,7 @@ the `file.md` placeholder in the report template and `hig-lookup.md`, which live
 
 - Keep `SKILL.md` under about 400 lines. It loads in full every time the skill triggers.
 - Apple's text in `references/hig/` is quoted, not paraphrased. Cross-platform translation lives
-  in `SKILL.md` and `liquid-glass.md`, not in the pulled files.
+  in `references/cross-platform.md`, `SKILL.md`, and `liquid-glass.md`, not in the pulled files.
 - Don't add pages to `references/hig/` by hand. Change `OMITTED_PAGES` or the platform rule in
   the script instead.
 - A hand-written file in `references/hig/` must be registered in `CURATED_FILES` and must not

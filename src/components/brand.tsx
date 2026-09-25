@@ -1,5 +1,9 @@
 export function Sprout({className=""}:{className?:string}){
- return <svg aria-hidden="true" viewBox="0 0 40 40" fill="none" className={className}><path d="M19 36c2-12-1-17-9-23M19 27C21 17 28 9 35 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M19 23C8 22 6 12 3 10c10 1 17 6 16 13Z" fill="currentColor"/><path d="M21 18C22 7 31 7 37 2c-2 9-6 16-16 16Z" fill="currentColor" opacity=".85"/><path d="m23 16 10-9m-16 14-7-7" stroke="var(--surface)" strokeWidth=".65" opacity=".8"/></svg>;
+ return <svg aria-hidden="true" viewBox="0 0 40 40" fill="none" className={className}><path d="M19 36c2-12-1-17-9-23M19 27C21 17 28 9 35 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M19 23C8 22 6 12 3 10c10 1 17 6 16 13Z" fill="currentColor"/><path d="M21 18C22 7 31 7 37 2c-2 9-6 16-16 16Z" fill="currentColor" opacity=".85"/><path d="m23 16 10-9m-16 14-7-7" stroke="var(--sprout-vein,var(--surface))" strokeWidth=".65" opacity=".8"/></svg>;
+}
+
+export function BrandMark() {
+ return <span className="brand-mark"><Sprout/><span>NIS Hub</span></span>;
 }
 
 export function BotanicalLines({className=""}:{className?:string}){
