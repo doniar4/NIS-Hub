@@ -1,0 +1,32 @@
+.flame-button {
+  display:inline-grid;
+  place-items:center;
+  width:100%;
+  overflow:hidden;
+  border-radius:14px;
+  background:#e7f0ff;
+  color:var(--flame-text);
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / .84),0 2px 5px rgb(49 101 204 / .08);
+  font:600 1rem/1.2 var(--font-display)!important;
+  letter-spacing:-.015em;
+  transition:background-color 140ms ease,border-color 140ms ease,box-shadow 140ms ease,color 140ms ease;
+}
+.flame-button:hover:not(:disabled) {
+  border-color:#3673e8!important;
+  background:#3673e8;
+  color:#fff;
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / .2),0 5px 12px rgb(54 115 232 / .2);
+}
+.flame-button:focus-visible {
+  outline:3px solid color-mix(in srgb,#3673e8 35%,transparent);
+  outline-offset:3px;
+}
+.flame-button:active:not(:disabled) { background:#2e67d3; box-shadow:inset 0 1px 3px rgb(17 65 151 / .25); }
+:root[data-theme="dark"] .flame-button {
+  border-color:#3e6fae!important;
+  background:#193e72;
+  color:#eaf3ff;
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / .12),0 2px 5px rgb(0 0 0 / .18);
+}
+:root[data-theme="dark"] .flame-button:hover:not(:disabled) { border-color:#6fa4ff!important; background:#4a85ee; }
+@media (prefers-reduced-motion:reduce) { .flame-button { transition:none; } }

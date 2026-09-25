@@ -10,7 +10,7 @@ export async function AuthForm({ mode, next, configured }: {
 }) {
     const { t } = await getI18n();
     const signup = mode === "signup";
-    return <ActionForm action={authenticate.bind(null, mode)} disabled={!configured} label={signup ? t.signup : t.login} className="auth-form">
+    return <ActionForm action={authenticate.bind(null, mode)} disabled={!configured} label={signup ? t.signup : t.login} className="auth-form" submitVariant="flame">
     <input name="next" type="hidden" value={next}/>
     <Field label={t.email} name="email" type="email" autoComplete="email" required maxLength={254}/>
     <Field label={t.password} name="password" type="password" autoComplete={signup ? "new-password" : "current-password"} required minLength={8} maxLength={128}/>

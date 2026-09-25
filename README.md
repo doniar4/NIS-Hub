@@ -1,60 +1,52 @@
-# NIS Hub — v0.5
+# NIS Hub - v0.6.2
 
-For the current release, start with [v0.5 deployment setup](docs/v0.5-setup.md), [Telegram setup](docs/support-telegram-setup.md) and [implementation report](docs/v0.5-report.md). Apply the four additive v0.5 migrations before deploying this branch. Finalized Phase 4 data/private access are preserved.
+NIS Hub is a student learning workspace built with Next.js 16 and Supabase. It provides a private library and PDF reader, schedules, SMS Diary sessions, support tickets, profile management, community features, and administrator-controlled timetable tools.
 
-Phase 4 setup and migration order: [docs/phase-4-setup.md](docs/phase-4-setup.md). Phase 4 replaces per-book approval runtime gates and date-by-date schedule management; earlier phase docs describe historical behavior.
+## Current capabilities
 
-Student learning hub built on the existing Next.js 16 application. Supabase Auth, PostgreSQL RLS and private Storage back accounts, profiles, published school-collection books, PDF reading, bookmarks and reading progress.
+- Supabase Auth, PostgreSQL RLS and private Storage for accounts, profiles, avatars, books and covers.
+- RU, KZ and EN interface with Light, Dark and System appearance.
+- Library, PDF Reader, bookmarks, reading progress and optional Gemini AI Study.
+- Timetable, calendar exceptions, version history, CSV/TSV import and optional administrator-reviewed EduPage sync.
+- SMS Diary sessions, support tickets with optional Telegram notifications, community, homework, direct messages and admin tools.
+
+EduPage sync uses a public timetable source only. It has no EduPage password, session sharing or browser-side source fetch. It is disabled unless `EDUPAGE_TIMETABLE_ENABLED=true` is set in the deployment environment.
 
 ## Local development
 
 ```bash
 npm ci
+cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000. Configure public Supabase settings in `.env.local` using `.env.example`; never commit credentials or use a service-role key in the application. See [Supabase setup](docs/supabase-setup.md).
-
-## Phase 3
-
-- Persistent Light/Dark/System theme and RU/KZ/EN interface (Kazakh language code `kk`).
-- Unique Top 4 selectors; existing server and database validation retained.
-- Private canonical `<uid>/avatar.webp` overwrite, bounded image normalization and 60-second replacement cooldown.
-- Instant local library filtering after a bounded paginated initial load: 200 metadata records per page, maximum 5000 with an explicit truncation notice. No filter-triggered navigation or queries.
-- Current-stack Privacy/Terms drafts in all three languages.
-- Research-led schedule boundary and admin-only, permission-confirmed JSON import. **No EduPage scraping or automatic synchronization.**
-
-Existing books, auth, reader and admin foundations are retained. No analytics, advertising or payments are added. Book/user metadata are not auto-translated.
+Open `http://localhost:3000`. Populate `.env.local` with values from [.env.example](.env.example). Do not commit credentials, service-role keys, session secrets or production URLs.
 
 ## Verification
 
 ```bash
-npm test
 npm run typecheck
 npm run lint
+npm test
 npm run build
 ```
 
-To include the existing local Reader PDF runtime regression:
+GitHub Actions runs the same checks for pull requests and pushes to `main`.
+
+To include the local Reader PDF runtime regression:
 
 ```bash
 NIS_READER_TEST_PDF=/absolute/path/to/nis-hub-reader-test.pdf npm test
 ```
 
-That PDF is not committed; without this environment variable the PDF fixture suite explicitly skips.
+For browser verification, install Playwright browsers, build/start the app on a separate local port, then run the relevant browser smoke test. Browser harnesses use synthetic data or local services and do not prove live Supabase, email, Telegram, SMS or EduPage behaviour.
 
-For Chromium/WebKit verification, install Playwright browsers once, build/start the app on a separate local port, then run:
+## Production release
 
-```bash
-npx playwright install chromium webkit
-npm run build
-npm run start -- --hostname 127.0.0.1 --port 3101
-# In a second terminal:
-npm run test:browser
-```
+Follow the [production release checklist](docs/production-release-checklist.md) before a public deployment. In particular, compare the production Supabase migration history with `supabase/migrations/` and apply only the missing migrations in filename order. Vercel deploys the application; it does not apply Supabase migrations.
 
-Browser checks require OpenSSL for a disposable localhost TLS certificate: production language cookies remain Secure. The harness bundles real client components in memory with synthetic data, separately from the Next app; public-page checks use the real application. It does not bypass real auth or mutate cloud data. `NIS_BROWSER_BASE_URL` can select the local test server; `NIS_BROWSER_ARTIFACTS` selects the screenshot directory. Use the same `PLAYWRIGHT_BROWSERS_PATH` for browser installation and execution if overriding it.
+The project requires a real-session verification of authentication, private Storage, Admin, Support, SMS Diary, locales, themes and mobile/Safari behaviour before public launch. Confirm that all distributed learning materials have the required rights and finalize the privacy policy for the actual user age group before release.
 
-## Release gates
+## Historical documentation
 
-Review [Phase 3 report](docs/phase-3-report.md), [schedule research and JSON format](docs/schedule-source-research.md), migrations and real-session verification. Fill operator/contact/hosting/retention details and obtain legal/content-rights review before public launch. The v0.5 PR targets `main`; it is not automatically merged.
+Earlier phase and v0.5 documents remain in `docs/` as historical implementation records. They may describe superseded boundaries, including the period before EduPage sync was introduced. Use this README and the production checklist for the current release workflow.

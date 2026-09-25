@@ -136,11 +136,10 @@
   color:var(--button-text);
   font:500 clamp(1.1rem,1.8vw,1.45rem)/1.2 var(--font-display);
   box-shadow:0 12px 24px color-mix(in srgb,var(--accent) 22%,transparent);
-  transition:transform var(--motion-fast),background var(--motion-fast),box-shadow var(--motion-fast);
+  transition:background var(--motion-fast),box-shadow var(--motion-fast);
 }
 .welcome-cta span { font-size:1.65em; font-weight:300; line-height:0; }
-.welcome-cta:hover { background:var(--accent-solid-hover); transform:translateY(-1px); box-shadow:0 15px 28px color-mix(in srgb,var(--accent) 28%,transparent); }
-.welcome-cta:active { transform:translateY(1px); }
+.welcome-cta:hover { background:var(--accent-solid-hover); box-shadow:0 15px 28px color-mix(in srgb,var(--accent) 28%,transparent); }
 
 .auth-experience { background:var(--bg); }
 .auth-experience::before { left:34%; top:8%; width:80vw; }
@@ -220,5 +219,4 @@
 }
 @media(prefers-reduced-motion:reduce) {
   .welcome-copy,.brand-devices,.welcome-action,.auth-form-inner,.auth-visual-pane > h2 { animation:none; }
-  .welcome-cta:hover { transform:none; }
 }

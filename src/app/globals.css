@@ -8,6 +8,7 @@
 @import "../styles/workspaces.css";
 @import "../styles/public.css";
 @import "../styles/welcome.css";
+@import "../styles/flame-button.css";
 
 /* Retained component styles live below the new semantic design system. */
 @layer legacy {
