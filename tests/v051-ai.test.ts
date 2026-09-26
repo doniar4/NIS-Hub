@@ -14,7 +14,17 @@ test("AI input/source validation rejects fabricated pages/quotes and incomplete 
  assert.deepEqual(validateStudyResponse(response,[{page:1,text}],"summary"),response);
  assert.throws(()=>validateStudyResponse(response,[{page:2,text}],"summary"),/citation/);
  assert.throws(()=>validateStudyResponse(response,[{page:1,text:"Unrelated"}],"summary"),/citation/);
- assert.throws(()=>validateStudyResponse(response,[{page:1,text}],"sor"),/Incomplete/);
+ const sorResult=validateStudyResponse(response,[{page:1,text}],"sor");
+
+assert.equal(sorResult.insufficient,false);
+assert.ok(sorResult.sections.some(section=>section.kind==="overview"));
+
+for(const kind of ["concepts","definitions","facts","confusions","mistakes","questions","checklist"] as const){
+  const section=sorResult.sections.find(item=>item.kind===kind);
+  assert.ok(section);
+  assert.equal(section.insufficient,true);
+  assert.deepEqual(section.points,[]);
+}
  const serialized=JSON.stringify(response),context=[id(2),id(30),hash(text),"model"];
  const signature=cacheSignature("test-only-secret",context,serialized);
  assert.equal(validCacheSignature("test-only-secret",context,serialized,signature),true);

@@ -5,7 +5,7 @@ const copy = {
     aiConfiguration:
       "AI недоступен: администратору нужно проверить модель и ключ Gemini.",
     aiTimeout:
-      "Gemini не успел ответить вовремя. Это может быть временной задержкой сервиса — повторите запрос через несколько секунд.",
+      "Gemini не ответил вовремя. Попробуйте меньший диапазон страниц.",
     aiBusy:
       "Такой запрос уже выполняется. Подождите немного и повторите.",
     aiProviderQuota:
@@ -64,7 +64,7 @@ const copy = {
     aiConfiguration:
       "AI қолжетімсіз: әкімші Gemini моделі мен кілтін тексеруі керек.",
     aiTimeout:
-      "Gemini уақытында жауап бермеді. Бұл сервистің уақытша кідірісі болуы мүмкін — бірнеше секундтан кейін қайталаңыз.",
+      "Gemini уақытында жауап бермеді. Азырақ бет таңдаңыз.",
     aiBusy:
       "Бұл сұрау орындалып жатыр. Біраз күтіп, қайталаңыз.",
     aiProviderQuota:
@@ -125,7 +125,7 @@ const copy = {
     aiConfiguration:
       "AI is unavailable: an admin needs to check the Gemini model and key.",
     aiTimeout:
-      "Gemini did not respond in time. This can be a temporary provider delay — retry in a few seconds.",
+      "Gemini did not respond in time. Try a smaller page range.",
     aiBusy:
       "An identical request is already running. Wait briefly and retry.",
     aiProviderQuota:

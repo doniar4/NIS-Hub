@@ -13,21 +13,12 @@ export type StudyInput=z.infer<typeof studyInput>;
 export type StudyResponse=z.infer<typeof studyResponse>;
 export type SourcePage={page:number;text:string};
 export type StudyResult={generationId?:string;error?:"disabled"|"quota"|"unavailable"|"busy"|"provider_quota"|"configuration"|"timeout"|"failed";response?:StudyResponse;cached?:boolean;source?:{start:number;end:number;variantId:string;hash:string}};
-const normalize=(text:string)=>text
- .normalize("NFKC")
- .replace(/[\u00ad\u200b-\u200d\u2060\ufeff]/gu,"")
- .replace(/[“”„‟«»]/gu,'"')
- .replace(/[‘’‚‛]/gu,"'")
- .replace(/[‐‑‒–—―]/gu,"-")
- .replace(/\s+/gu," ")
- .trim();
+const normalize=(text:string)=>text.replace(/\s+/gu," ").trim();
 export function validateStudyResponse(value:unknown,pages:SourcePage[],mode:StudyInput["mode"]):StudyResponse{
  const parsed=studyResponse.parse(value),kinds=parsed.sections.map(s=>s.kind);
  if(new Set(kinds).size!==kinds.length)throw new Error("Duplicate sections");
  if(!parsed.insufficient&&!parsed.sections.some(s=>s.points.length))throw new Error("Empty result");
- if((mode==="sor"||mode==="soch")&&!parsed.insufficient){
-  for(const kind of STUDY_SECTIONS.slice(1))if(!kinds.includes(kind))parsed.sections.push({kind,insufficient:true,points:[]});
- }
+ if((mode==="sor"||mode==="soch")&&!parsed.insufficient&&STUDY_SECTIONS.slice(1).some(k=>!kinds.includes(k)))throw new Error("Incomplete study guide");
  for(const section of parsed.sections){
   if(!section.insufficient&&!section.points.length)throw new Error("Missing source");
   for(const point of section.points)for(const evidence of point.evidence){
@@ -51,6 +42,5 @@ export function studyInstructions(mode:StudyInput["mode"],locale:StudyInput["loc
  For sor/soch: include concepts, definitions, facts (including formulas if present), confusions, mistakes, questions, checklist.
  Confusions and mistakes must be demonstrable from this source, not claims about real students. Missing categories: insufficient=true and no points.
  This is practice from a source, NOT a real SOR/SOCH paper or a claim about a teacher's exam.
- Keep the answer proportional to the selected source: for one page, prefer 3 to 6 concise points total unless the mode requires more categories.
- Return the specified JSON only, concise points, at most 5 points per section and at most 18 points overall.`;
+ Return the specified JSON only, concise points, at most 6 points per section and at most 30 points overall.`;
 }

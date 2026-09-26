@@ -122,7 +122,7 @@ export function geminiProvider(
               generationConfig: {
                 temperature: 0.2,
                 candidateCount: 1,
-                maxOutputTokens: 4000,
+                maxOutputTokens: 6000,
                 responseMimeType: "application/json",
                 responseJsonSchema: schema
               }

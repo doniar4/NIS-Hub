@@ -6,5 +6,5 @@ export function aiStudyConfig(){
  dailyLimit:bounded(process.env.AI_STUDY_DAILY_LIMIT,10,10),
  maxPages:bounded(process.env.AI_STUDY_MAX_PAGES,10,10),
  maxChars:bounded(process.env.AI_STUDY_MAX_SOURCE_CHARS,30000,30000),
- timeoutMs:bounded(process.env.AI_STUDY_TIMEOUT_MS,45000,90000)};
+ timeoutMs:bounded(process.env.AI_STUDY_TIMEOUT_MS,25000,60000)};
 }
