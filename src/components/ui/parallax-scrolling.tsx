@@ -4,8 +4,9 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "@studio-freight/lenis";
-import { Pause, Play } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { useI18n } from "@/components/locale-provider";
+import ShaderBackground from "./shader-background";
 
 type ParallaxProps = {
   title: string;
@@ -18,12 +19,25 @@ type ParallaxProps = {
 /** Layered-scroll pattern adapted from the supplied Osmo / 21st.dev example. */
 export function ParallaxComponent({ title, subtitle, header, visual, children }: ParallaxProps) {
   const root = useRef<HTMLDivElement>(null);
-  const [paused, setPaused] = useState(false);
-  const { t } = useI18n();
+  const [showScrollCue, setShowScrollCue] = useState(false);
+  const { locale } = useI18n();
+
+  useEffect(() => {
+    const hero = root.current?.querySelector(".parallax__header");
+    if (!hero) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const observer = new IntersectionObserver(([entry]) => {
+      clearTimeout(timer);
+      setShowScrollCue(false);
+      if (entry.intersectionRatio >= 0.9) timer = setTimeout(() => setShowScrollCue(true), 5000);
+    }, { threshold: [0, 0.9] });
+    observer.observe(hero);
+    return () => { clearTimeout(timer); observer.disconnect(); };
+  }, []);
 
   useEffect(() => {
     const element = root.current;
-    if (!element || paused) return;
+    if (!element) return;
     gsap.registerPlugin(ScrollTrigger);
     const media = gsap.matchMedia();
 
@@ -41,12 +55,32 @@ export function ParallaxComponent({ title, subtitle, header, visual, children }:
       const timeline = gsap.timeline({
         scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true },
       });
-      [70, 55, 40, 10].forEach((yPercent, index) => {
+      [85, 65, 35, -12].forEach((yPercent, index) => {
         timeline.to(hero.querySelectorAll(`[data-parallax-layer="${index + 1}"]`), {
           yPercent, ease: "none",
         }, 0);
       });
       timeline.to(hero.querySelector(".welcome-copy"), { opacity: 0, ease: "none" }, 0.15);
+      timeline.to(hero.querySelector(".welcome-hardware-tablet"), { xPercent: -16, yPercent: 42, rotation: -5, ease: "none" }, 0);
+      timeline.to(hero.querySelector(".welcome-hardware-laptop"), { yPercent: 14, ease: "none" }, 0);
+      timeline.to(hero.querySelector(".welcome-hardware-phone"), { xPercent: 20, yPercent: -30, rotation: 6, ease: "none" }, 0);
+
+      // Pointer depth uses the individual translate property, separate from scroll transforms.
+      const hardware = [...hero.querySelectorAll<HTMLElement>(".welcome-hardware")];
+      const pointerMedia = matchMedia("(hover: hover) and (pointer: fine)");
+      const move = (event: PointerEvent) => {
+        if (!pointerMedia.matches) return;
+        const rect = hero.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width - 0.5;
+        const y = (event.clientY - rect.top) / rect.height - 0.5;
+        hardware.forEach((device, index) => {
+          const depth = [24, 10, 36][index];
+          device.style.translate = `${x * depth}px ${y * depth}px`;
+        });
+      };
+      const resetPointer = () => hardware.forEach(device => { device.style.translate = ""; });
+      hero.addEventListener("pointermove", move);
+      hero.addEventListener("pointerleave", resetPointer);
 
       // The form stays real, selectable content throughout the reveal.
       gsap.from(content.querySelector(".welcome-auth-panel"), {
@@ -78,6 +112,9 @@ export function ParallaxComponent({ title, subtitle, header, visual, children }:
       };
       content.addEventListener("pointerdown", cancelScrollOnInteraction);
       return () => {
+        hero.removeEventListener("pointermove", move);
+        hero.removeEventListener("pointerleave", resetPointer);
+        resetPointer();
         element.removeEventListener("click", jumpToAuth);
         content.removeEventListener("focusin", revealOnFocus);
         content.removeEventListener("pointerdown", cancelScrollOnInteraction);
@@ -89,9 +126,9 @@ export function ParallaxComponent({ title, subtitle, header, visual, children }:
 
     // Revert only this component's animation context, including its triggers.
     return () => media.revert();
-  }, [paused]);
+  }, []);
 
-  return <div className="public-experience welcome-screen parallax" ref={root} data-motion-paused={paused}>
+  return <div className="public-experience welcome-screen parallax" ref={root}>
     {header}
     <main id="main">
       <section className="parallax__header" aria-labelledby="welcome-title" data-parallax-layers>
@@ -100,6 +137,10 @@ export function ParallaxComponent({ title, subtitle, header, visual, children }:
           <div className="welcome-ribbon welcome-ribbon-right" data-parallax-layer="2" />
           <div className="welcome-floor" />
         </div>
+        {showScrollCue && <a className="welcome-scroll-cue" href="#welcome-auth">
+          {{ ru: "Листай вниз — начнём", kk: "Төмен жылжыт — бастайық", en: "Scroll down to begin" }[locale]}
+          <span><ArrowDown size={17} aria-hidden="true" /></span>
+        </a>}
         <div className="welcome-main">
           <div className="welcome-copy max-w-6xl" data-parallax-layer="3">
             <h1 id="welcome-title">{title}</h1>
@@ -107,12 +148,9 @@ export function ParallaxComponent({ title, subtitle, header, visual, children }:
           </div>
           <div className="welcome-visual" data-parallax-layer="4">{visual}</div>
         </div>
-        <button className="welcome-motion-control" type="button" onClick={() => setPaused(!paused)}
-          aria-label={paused ? t.resumeMotion : t.pauseMotion} title={paused ? t.resumeMotion : t.pauseMotion} aria-pressed={paused}>
-          {paused ? <Play size={17} strokeWidth={1.5} aria-hidden="true" /> : <Pause size={17} strokeWidth={1.5} aria-hidden="true" />}
-        </button>
       </section>
       <section id="welcome-auth" className="parallax__content" aria-labelledby="welcome-auth-title">
+        <div className="welcome-auth-background" aria-hidden="true"><ShaderBackground /></div>
         {children}
       </section>
     </main>

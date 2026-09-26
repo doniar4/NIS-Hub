@@ -140,11 +140,6 @@ const translations = {
     "NIS Hub ашу",
     "Launch NIS Hub"
   ],
-  "pauseMotion": [
-    "Приостановить анимации",
-    "Анимацияларды кідірту",
-    "Pause animations"
-  ],
   "welcomePrivacy": [
     "Политика конфиденциальности",
     "Құпиялық саясаты",
@@ -154,11 +149,6 @@ const translations = {
     "Условия использования",
     "Пайдалану шарттары",
     "Terms of Use"
-  ],
-  "resumeMotion": [
-    "Продолжить анимации",
-    "Анимацияларды жалғастыру",
-    "Resume animations"
   ],
   "authHeroPrefix": [
     "Одно пространство для ",
