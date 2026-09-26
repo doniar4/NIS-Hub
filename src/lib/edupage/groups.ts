@@ -6,23 +6,37 @@ export type SourceGroup = { id: string; classId: string; name: string; division:
 export function classAudience(groups: SourceGroup[], selected: string[]) {
   const own = selected.map(id => groups.find(g => g.id === id));
   if (!own.length || own.some(g => !g)) throw new EduPageError("source_changed");
-  if (own.some(g => g!.entire)) return { subgroup_key: "", subgroup_label: null, audience: "{(,)}", cells: null };
+  const specific = own.filter((g): g is SourceGroup => !!g && !g.entire);
+  if (!specific.length && own.some(g => g!.entire))
+    return { subgroup_key: "", subgroup_label: null, audience: "{(,)}", cells: null };
   const divisions = [...new Set(groups.filter(g => !g.entire).map(g => g.division))].sort();
   const parts = divisions.map(d => groups.filter(g => !g.entire && g.division === d).sort((a,b) => a.name.localeCompare(b.name)));
   if (parts.some(p => !p.length || new Set(p.map(g => g.name)).size !== p.length)) throw new EduPageError("unsupported");
   const count = parts.reduce((n,p) => n * p.length, 1);
   if (count > 256 || divisions.length > 8) throw new EduPageError("unsupported");
-  const wanted = new Set(selected), cells: number[] = [];
+  const selectedByDivision = new Map<string, Set<string>>();
+  for (const group of own) {
+    if (!group || group.entire) continue;
+    const set = selectedByDivision.get(group.division) ?? new Set<string>();
+    set.add(group.id);
+    selectedByDivision.set(group.division, set);
+  }
+  const cells: number[] = [];
   for (let cell = 0; cell < count; cell++) {
-    let n = cell, included = false;
-    for (const part of parts) { if (wanted.has(part[n % part.length].id)) included = true; n = Math.floor(n / part.length); }
+    let n = cell, included = true;
+    for (const part of parts) {
+      const choice = part[n % part.length];
+      n = Math.floor(n / part.length);
+      const allowed = selectedByDivision.get(choice.division);
+      if (allowed && !allowed.has(choice.id)) included = false;
+    }
     if (included) cells.push(cell);
   }
   if (!cells.length) throw new EduPageError("source_changed");
   // Export IDs only resolve this document. Persistent identity uses explicit
   // division codes and group names, never the provider's temporary object IDs.
-  const key = own.map(g => g!.division + ":" + g!.name).sort().join(" | ");
-  const label = own.map(g => g!.name).sort().join(" / ");
+  const key = specific.map(g => g.division + ":" + g.name).sort().join(" | ");
+  const label = specific.map(g => g.name).sort().join(" / ");
   if (key.length > 240 || label.length > 200) throw new EduPageError("unsupported");
   return { subgroup_key: key, subgroup_label: label, audience: "{" + cells.map(n => "[" + n + "," + (n+1) + ")").join(",") + "}", cells };
 }

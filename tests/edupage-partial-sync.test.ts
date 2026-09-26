@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import type {ClassRow,SubjectRow} from "../src/lib/database.types";
 import type {EduPageSnapshot} from "../src/lib/edupage/types";
 import {mapEduPage} from "../src/lib/edupage/mapping";
+import {classAudience,audiencesOverlap,type SourceGroup} from "../src/lib/edupage/groups";
 
 const classA="11111111-1111-4111-8111-111111111111";
 const classB="22222222-2222-4222-8222-222222222222";
@@ -27,4 +28,28 @@ test("EduPage partial sync keeps safe classes when another class has an unknown 
   assert.equal(result.rows[0].class_id,classA);
   assert.equal(result.blockedClasses.length,1);
   assert.equal(result.blockedClasses[0].name,"8B");
+});
+
+
+test("EduPage subgroup audience uses OR within a division and AND across divisions",()=>{
+  const groups:SourceGroup[]=[
+    {id:"boys",classId:"c",name:"Boys",division:"gender",entire:false},
+    {id:"girls",classId:"c",name:"Girls",division:"gender",entire:false},
+    {id:"g1",classId:"c",name:"Group 1",division:"study",entire:false},
+    {id:"g2",classId:"c",name:"Group 2",division:"study",entire:false},
+    {id:"all",classId:"c",name:"Entire class",division:"",entire:true},
+  ];
+
+  const boys=classAudience(groups,["boys"]);
+  const group1=classAudience(groups,["g1"]);
+  const boysGroup1=classAudience(groups,["boys","g1"]);
+  const girlsGroup1=classAudience(groups,["girls","g1"]);
+  const specificPlusEntire=classAudience(groups,["all","boys","g1"]);
+
+  assert.equal(audiencesOverlap(boys.audience,group1.audience),true);
+  assert.equal(audiencesOverlap(boysGroup1.audience,girlsGroup1.audience),false);
+  assert.equal(audiencesOverlap(boysGroup1.audience,boys.audience),true);
+  assert.equal(audiencesOverlap(boysGroup1.audience,group1.audience),true);
+  assert.equal(specificPlusEntire.audience,boysGroup1.audience);
+  assert.equal(specificPlusEntire.subgroup_key,boysGroup1.subgroup_key);
 });
