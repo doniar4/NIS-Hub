@@ -26,6 +26,11 @@ export type SupportMessage = {id:string;ticket_id:string;author_id:string|null;a
 export type SupportStatusEvent = {id:string;ticket_id:string;actor_id:string|null;previous_status:TicketStatus;status:TicketStatus;created_at:string};
 export type ClassHomework={id:string;class_id:string;subject_id:string;due_date:string;body:string;created_by:string;created_at:string;updated_at:string;deleted_at:string|null;moderation_status:"visible"|"hidden"};
 export type CommunityReport={id:string;reporter_id:string;target_kind:"profile"|"message"|"homework";target_id:string;reason:"spam"|"harassment"|"privacy"|"other";detail:string;status:"open"|"resolved";created_at:string;resolved_at:string|null;resolved_by:string|null};
+export type TaskPriority="low"|"medium"|"high"|"urgent";
+export type TaskStatus="active"|"completed"|"archived";
+export type PersonalTask={id:string;owner_id:string;subject_id:string|null;title:string;notes:string;priority:TaskPriority;status:TaskStatus;due_at:string|null;remind_at:string|null;reminder_read_at:string|null;completed_at:string|null;created_at:string;updated_at:string};
+export type TaskReminder={id:string;task_id:string;title:string;priority:TaskPriority;due_at:string;remind_at:string;read_at:string|null};
+export type AppNotification={id:string;kind:"message"|"task";href:string;title:string;body_preview:string;created_at:string;read_at:string|null;thread_id?:string;task_id?:string;priority?:TaskPriority;due_at?:string};
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 type Table<Row, Required extends keyof Row> = { Row: Row; Insert: Pick<Row, Required> & Partial<Row>; Update: Partial<Row>; Relationships: [] };
 // Application types for schema.sql and migrations through v0.5. Historical
@@ -36,6 +41,7 @@ export type Database = { public: {
     edupage_sync_state: Table<EduPageState, "id">;
     sms_sessions: Table<{user_id:string;id:string;ciphertext:string;expires_at:string;created_at:string},"user_id"|"ciphertext"|"expires_at">;
     class_homework:Table<ClassHomework,"class_id"|"subject_id"|"due_date"|"body"|"created_by">;
+    personal_tasks:Table<PersonalTask,"owner_id"|"title">;
     community_reports:Table<CommunityReport,"reporter_id"|"target_kind"|"target_id"|"reason">;
     direct_messages: Table<DirectMessage,"thread_id"|"sender_id"|"body"|"client_id">;
     web_notifications: Table<{id:string;recipient_id:string;actor_id:string;thread_id:string;message_id:string;created_at:string;read_at:string|null},"recipient_id"|"actor_id"|"thread_id"|"message_id">;
@@ -87,6 +93,12 @@ export type Database = { public: {
     read_dm:{Args:{p_thread:string;p_message:string};Returns:undefined};
     notification_feed:{Args:Record<string,never>;Returns:WebNotification[]};
     dismiss_notification:{Args:{p_id:string};Returns:undefined};
+    save_personal_task:{Args:{p_id:string|null;p_title:string;p_notes:string;p_priority:TaskPriority;p_subject:string|null;p_due:string|null;p_remind:string|null};Returns:string};
+    set_personal_task_status:{Args:{p_id:string;p_status:TaskStatus};Returns:undefined};
+    snooze_personal_task:{Args:{p_id:string;p_minutes:number};Returns:undefined};
+    task_notification_feed:{Args:Record<string,never>;Returns:TaskReminder[]};
+    task_notification_unread:{Args:Record<string,never>;Returns:number};
+    dismiss_task_notification:{Args:{p_id:string};Returns:undefined};
     create_support_ticket: {Args:{p_category:string;p_title:string;p_description:string};Returns:string};
     reply_support_ticket: {Args:{p_ticket:string;p_body:string};Returns:string};
     set_support_status: {Args:{p_ticket:string;p_status:string};Returns:undefined};

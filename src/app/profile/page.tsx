@@ -16,17 +16,15 @@ import { ReadingList } from "@/components/reading-list";
 import { requireViewer } from "@/lib/auth";
 import { database, getCatalogOptions } from "@/lib/queries";
 import { saveProfile } from "@/app/actions/profile";
+import { getPersonalTasks } from "@/lib/task-queries";
+import { TaskCenter } from "@/components/task-center";
 export default async function ProfilePage() {
   const { t, locale } = await getI18n();
   const c = communityCopy(locale);
   const { user, profile } = await requireViewer("/profile");
   const { classes, subjects } = await getCatalogOptions();
   const supabase = await database();
-  const { data: top, error } = await supabase
-    .from("profile_top_subjects")
-    .select("subject_id,position")
-    .eq("profile_id", user.id)
-    .order("position");
+  const [{data:top,error},tasks] = await Promise.all([supabase.from("profile_top_subjects").select("subject_id,position").eq("profile_id", user.id).order("position"),getPersonalTasks()]);
   if (error) throw new Error("Не удалось загрузить избранные предметы.");
   const avatar =
     profile.avatar_path === `${user.id}/avatar.webp`
@@ -44,6 +42,7 @@ export default async function ProfilePage() {
         <div><PageIntro title={profile.display_name || t.profile}>{t.profileHint}</PageIntro><p>{classes.find(row=>row.id===profile.class_id)?.name}</p></div>
       </div>
       <CommunityNav locale={locale}/>
+      <TaskCenter initialTasks={tasks} subjects={subjects}/>
       <div className="profile-settings">
         <ActionForm
           action={saveProfile}

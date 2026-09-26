@@ -29,6 +29,7 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         a.path.endsWith("ai-study")?call+'export const generateStudy=(args)=>rpc("study",args);':
         a.path.endsWith("study-answers")?'export const reviewStudyAnswers=async()=>({error:"failed"});':
         a.path.endsWith("edupage")?'export const syncEduPage=async()=>({error:"unavailable"});':
+        a.path.endsWith("tasks")?'export const savePersonalTask=async input=>({data:{...input,id:input.id||"00000000-0000-4000-8000-000000000099",owner_id:"00000000-0000-4000-8000-000000000030",subject_id:input.subject,status:"active",due_at:input.due,remind_at:input.remind,reminder_read_at:null,completed_at:null,created_at:new Date().toISOString(),updated_at:new Date().toISOString()}});export const setPersonalTaskStatus=async(id,status)=>({error:"unavailable"});export const snoozePersonalTask=async()=>({error:"unavailable"});':
         'export const safetyAction=async()=>({success:true});';
       return {contents:content,loader:"js"};
     });
@@ -71,6 +72,11 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors:string[]=[];
         page.on("pageerror",error=>errors.push(new URL(page.url()).pathname+": "+error.message));
         await page.goto(origin+"/");
+        await expect(page.locator(".task-center-compact")).toContainText("Prepare for the physics quiz");
+        await page.locator(".task-center-compact .task-add-button").click();
+        await expect(page.locator(".personal-task-form")).toBeVisible();
+        await expect(page.locator(".task-priority-picker input")).toHaveCount(4);
+        await page.keyboard.press("Escape");
         await expect(page.locator(".lesson-select[aria-pressed=true]")).toContainText("Mathematics");
         await page.locator(".lesson-select").filter({hasText:"248"}).click();
         await expect(page.locator(".selected-lesson h2")).toHaveText("Physics");
@@ -123,9 +129,9 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         }
         await page.setViewportSize({width:1440,height:1000});await page.goto(origin+"/");
         await page.locator(".sidebar-collapse").click();await expect(page.locator(".sidebar-collapse")).toHaveAttribute("aria-expanded","false");
-        await expect(page.locator(".sidebar-account .header-avatar")).toBeVisible();
+        await expect(page.locator("#desktop-navigation .sidebar-account .header-avatar")).toBeVisible();
         await page.reload();await expect(page.locator(".sidebar-collapse")).toHaveAttribute("aria-expanded","false");
-        await expect(page.locator(".sidebar-account .header-avatar")).toBeVisible();
+        await expect(page.locator("#desktop-navigation .sidebar-account .header-avatar")).toBeVisible();
         await page.locator(".sidebar-collapse").click();
         await page.evaluate(()=>{document.body.style.zoom="2";});
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),name+" 200% zoom");

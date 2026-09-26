@@ -20,12 +20,13 @@ import {AdminDashboard} from "../../src/components/admin-dashboard";
 import {BookEditor} from "../../src/components/book-editor";
 import {EduPageSync} from "../../src/components/edupage-sync";
 import {NotificationCenter} from "../../src/components/notification-center";
+import {TaskCenter} from "../../src/components/task-center";
 import {PageIntro} from "../../src/components/ui";
 import {parseLocale,dictionaries} from "../../src/lib/i18n";
 import {initialLibraryFilters} from "../../src/lib/library";
 import {designCopy} from "../../src/lib/design-copy";
 import {materialKey} from "../../src/lib/schedule-materials";
-import type {WeeklyLesson,SupportTicket} from "../../src/lib/database.types";
+import type {PersonalTask,WeeklyLesson,SupportTicket} from "../../src/lib/database.types";
 import {books,classes,subjects} from "./fixtures";
 const id="00000000-0000-4000-8000-000000000030";
 const lessons:WeeklyLesson[]=Array.from({length:5},(_,day)=>[0,1,2].map(n=>({
@@ -35,6 +36,11 @@ const lessons:WeeklyLesson[]=Array.from({length:5},(_,day)=>[0,1,2].map(n=>({
   effective_from:null,effective_to:null,created_at:"",updated_at:""
 }))).flat();
 const nonSchoolDays=[{start_date:"2026-09-21",end_date:"2026-09-21",type:"holiday" as const,label:"School holiday"}];
+const tasks:PersonalTask[]=[
+ {id:"00000000-0000-4000-8000-000000000071",owner_id:id,subject_id:subjects[1].id,title:"Prepare for the physics quiz",notes:"Review momentum and solve exercises 12–16.",priority:"urgent",status:"active",due_at:"2026-09-18T12:30:00Z",remind_at:"2026-09-18T11:30:00Z",reminder_read_at:null,completed_at:null,created_at:"2026-09-17T09:00:00Z",updated_at:"2026-09-17T09:00:00Z"},
+ {id:"00000000-0000-4000-8000-000000000072",owner_id:id,subject_id:subjects[0].id,title:"Finish algebra exercises",notes:"",priority:"high",status:"active",due_at:"2026-09-19T14:00:00Z",remind_at:null,reminder_read_at:null,completed_at:null,created_at:"2026-09-17T10:00:00Z",updated_at:"2026-09-17T10:00:00Z"},
+ {id:"00000000-0000-4000-8000-000000000073",owner_id:id,subject_id:null,title:"Pack books for Monday",notes:"",priority:"low",status:"completed",due_at:null,remind_at:null,reminder_read_at:null,completed_at:"2026-09-17T11:00:00Z",created_at:"2026-09-16T10:00:00Z",updated_at:"2026-09-17T11:00:00Z"},
+];
 const success=async()=>({success:"Saved (fixture)"});
 const ticket:SupportTicket={id,owner_id:id,category:"library",title:"Long support ticket title — unable to open a textbook on a small screen",description:"Synthetic support content. No personal data.",status:"open",created_at:"2026-09-18T09:00:00Z",updated_at:"2026-09-18T09:00:00Z",last_user_message_at:"2026-09-18T09:00:00Z",last_admin_message_at:null,needs_admin_reply:true};
 function Harness() {
@@ -47,14 +53,14 @@ function Harness() {
   return <LocaleProvider locale={locale}><AppFrame admin={path==="/admin"} preferences={<PreferenceControls localeAction={async value=>{setLocale(parseLocale(value));document.documentElement.lang=value;return {ok:true};}}/>}
     avatar={<NotificationCenter/>} account={<form><button className="button button-secondary">{t.logout}</button></form>} profileAccount={<><Link className="header-avatar" href="/profile" aria-label={t.profile}>SS</Link><span>Synthetic Student</span></>}>
     {path==="/" ? <><header className="dashboard-heading"><div><p className="eyebrow">{c.welcome}</p><h1>{c.hello}, Synthetic Student</h1></div><span className="status-chip">{classes[0].name}</span></header>
-      <HomeStudyDashboard lessons={lessons} subjects={subjects} classId={classes[0].id} today="2026-09-18" time="09:00" nonSchoolDays={nonSchoolDays} grade={classes[0].grade} materials={material}
+      <HomeStudyDashboard lessons={lessons} subjects={subjects} tasks={tasks} classId={classes[0].id} today="2026-09-18" time="09:00" nonSchoolDays={nonSchoolDays} grade={classes[0].grade} materials={material}
         reading={empty} activity={<section className="surface-card"><h2 className="section-title">{c.activity}</h2>{empty}</section>}/></>:
     path==="/schedule"?<><PageIntro title={t.schedule}/><StudentSchedule userId={id} lessons={lessons} classes={classes} subjects={subjects} initialClassId={classes[0].id} date="2026-09-18" materials={material} nonSchoolDays={nonSchoolDays}/></>:
     path==="/library"?<><PageIntro title={t.library}/><LibraryBrowser books={books} classes={classes} subjects={subjects} initial={initialLibraryFilters(Object.fromEntries(params))} truncated={false} studyIntent={params.get("study")==="1"}/></>:
     path.startsWith("/books/")?<><PageIntro title="Reader · real local test PDF"/><ReaderWorkspace information={<p>Local PDF fixture, private transport simulated.</p>} inspector={<AiStudyPanel variantId={id} totalPages={4} initialPage={1} defaultOpen config={{enabled:true,maxPages:10,maxChars:30000,dailyLimit:10}}/>}>
       <PdfReader bookId={id} variantId={id} initialPage={initial.page} initialBookmarks={initial.bookmarks}/></ReaderWorkspace></>:
     path==="/diary"?<><PageIntro title="SMS Diary"/><SmsDiary enabled sessionPresent subjects={subjects}/></>:
-    path==="/profile"?<><div className="profile-heading surface-card"><ProfilePortrait url={null} name="Synthetic Student"/><PageIntro title="Synthetic Student">{t.profileHint}</PageIntro></div>
+    path==="/profile"?<><div className="profile-heading surface-card"><ProfilePortrait url={null} name="Synthetic Student"/><PageIntro title="Synthetic Student">{t.profileHint}</PageIntro></div><TaskCenter initialTasks={tasks} subjects={subjects}/>
       <div className="profile-settings"><form className="surface-card space-y-5"><label><span className="field-label">{t.displayName}</span><input className="field" defaultValue="Synthetic Student"/></label><label><span className="field-label">{t.class}</span><select className="field">{classes.map(row=><option key={row.id}>{row.name}</option>)}</select></label><TopSubjects subjects={subjects} initial={[subjects[0].id]}/></form><AvatarForm url={null} action={success}/></div></>:
     path==="/support"?<div className="support-workspace support-detail"><aside className="surface-card support-list"><h2>{t.title}</h2><Link className="text-link" href="/support">{ticket.title}</Link></aside><section className="support-active"><TicketConversation ticket={ticket} messages={[]} events={[]} locale={locale} admin={false} replyAction={success} statusAction={success}/></section></div>:
     <><AdminDashboard locale={locale} open={1} unread={1} recent={[]}/><EduPageSync initial={{enabled:true,ready:true,lastChecked:null,lastSynced:null,activeVersion:null,error:null,aliases:{classes:{},subjects:{}}}} classes={classes} subjects={subjects}/>

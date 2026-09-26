@@ -31,6 +31,7 @@ Current migrations, in order:
 21. `202609200001_v055_sms_sessions.sql`
 22. `202609210001_v058_edupage_sync.sql`
 23. `202609250001_v063_edupage_catalog.sql`
+24. `202609260001_v064_personal_tasks.sql`
 
 Regenerate or compare database types against the deployed schema after migration work.
 

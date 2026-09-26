@@ -2,8 +2,10 @@
 import { actionContext } from "@/lib/auth";
 import { uuid } from "@/lib/validation";
 import type {
+  AppNotification,
   DirectMessage,
   DmThread,
+  TaskReminder,
   WebNotification,
 } from "@/lib/database.types";
 type Failure = {
@@ -107,30 +109,39 @@ export async function markConversationRead(
   }
 }
 export async function loadNotifications(): Promise<
-  { data: WebNotification[]; unread: number } | Failure
+  { data: AppNotification[]; unread: number } | Failure
 > {
   try {
     const { supabase } = await actionContext();
-    const [feed, count] = await Promise.all([
+    const [feed, count, taskFeed, taskCount] = await Promise.all([
       supabase.rpc("notification_feed_v053"),
       supabase.rpc("notification_unread_v053"),
+      supabase.rpc("task_notification_feed"),
+      supabase.rpc("task_notification_unread"),
     ]);
+    const taskMigrationMissing=["42883","PGRST202"].includes(taskFeed.error?.code??"")||["42883","PGRST202"].includes(taskCount.error?.code??"");
+    const messages:AppNotification[]=(feed.data??[]).map((item:WebNotification)=>({id:item.id,kind:"message",href:`/messages?thread=${item.thread_id}`,title:item.actor_name,body_preview:item.body_preview,created_at:item.created_at,read_at:item.read_at,thread_id:item.thread_id}));
+    const tasks:AppNotification[]=taskMigrationMissing?[]:((taskFeed.data??[]) as TaskReminder[]).map(item=>({id:item.id,kind:"task",href:"/profile#tasks",title:item.title,body_preview:"",created_at:item.remind_at,read_at:item.read_at,task_id:item.task_id,priority:item.priority,due_at:item.due_at}));
     return feed.error
       ? failure(feed.error)
       : count.error
         ? failure(count.error)
-        : { data: feed.data, unread: count.data ?? 0 };
+        : !taskMigrationMissing&&taskFeed.error
+          ? failure(taskFeed.error)
+          : !taskMigrationMissing&&taskCount.error
+            ? failure(taskCount.error)
+            : { data: [...messages,...tasks].sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)).slice(0,30), unread: (count.data ?? 0)+(taskMigrationMissing?0:(taskCount.data??0)) };
   } catch {
     return { error: "failed" };
   }
 }
 export async function dismissNotification(
-  id: string,
+  id: string,kind:"message"|"task"="message",
 ): Promise<{ ok: true } | Failure> {
   if (!uuid.safeParse(id).success) return { error: "failed" };
   try {
     const { supabase } = await actionContext();
-    const { error } = await supabase.rpc("dismiss_notification", { p_id: id });
+    const { error } = kind==="task"?await supabase.rpc("dismiss_task_notification",{p_id:id}):await supabase.rpc("dismiss_notification", { p_id: id });
     return error ? failure(error) : { ok: true };
   } catch {
     return { error: "failed" };

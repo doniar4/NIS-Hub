@@ -8,17 +8,20 @@ import {
   Cross2Icon,
   CheckIcon,
 } from "@radix-ui/react-icons";
+import {CalendarCheck2,Clock3} from "lucide-react";
 import { loadNotifications, dismissNotification } from "@/lib/community-client";
-import type { WebNotification } from "@/lib/database.types";
+import {snoozePersonalTask} from "@/app/actions/tasks";
+import type { AppNotification } from "@/lib/database.types";
 import { communityCopy } from "@/lib/community-copy";
+import {tasksCopy} from "@/lib/tasks-copy";
 import { useI18n } from "./locale-provider";
 export function NotificationCenter() {
   const { locale } = useI18n(),
-    p = communityCopy(locale);
+    p = communityCopy(locale),tasks=tasksCopy(locale);
   const [open, setOpen] = useState(false),
-    [items, setItems] = useState<WebNotification[]>([]),
+    [items, setItems] = useState<AppNotification[]>([]),
     [unread, setUnread] = useState(0),
-    [toasts, setToasts] = useState<WebNotification[]>([]),
+    [toasts, setToasts] = useState<AppNotification[]>([]),
     [error, setError] = useState("");
   const root = useRef<HTMLDivElement>(null),
     button = useRef<HTMLButtonElement>(null),
@@ -34,23 +37,32 @@ export function NotificationCenter() {
     setError("");
     const previous = seen.current;
     seen.current = new Set(result.data.map((n) => n.id));
-    if (previous) {
-      const fresh = result.data.filter(
-        (n) => !previous.has(n.id) && !n.read_at,
-      );
+    let notified=new Set<string>();
+    try{notified=new Set<string>(JSON.parse(localStorage.getItem("nis-task-notified")??"[]"));}catch{}
+    const fresh = result.data.filter((n) => !n.read_at&&(previous?!previous.has(n.id):n.kind==="task"&&!notified.has(`${n.id}:${n.created_at}`)));
+    if (previous||fresh.length) {
       const readIds = new Set(result.data.filter(n => n.read_at).map(n => n.id));
       setToasts((old) =>
           Array.from(
             new Map([...old.filter(n => !readIds.has(n.id) && result.data.some(current=>current.id===n.id)).map(n=>result.data.find(current=>current.id===n.id)??n), ...fresh].map((n) => [n.id, n])).values(),
           ).slice(-3),
         );
+      if("Notification" in window&&Notification.permission==="granted"&&localStorage.getItem("nis-task-browser-notifications")!=="disabled"&&document.hidden){
+        for(const notice of fresh.filter(n=>n.kind==="task"))if(!notified.has(`${notice.id}:${notice.created_at}`)){
+          const systemNotice=new Notification(tasks.reminderLabel,{body:notice.title,icon:"/icon.svg",tag:`task-${notice.id}`});
+          systemNotice.onclick=()=>{window.focus();window.location.assign(notice.href);systemNotice.close();};
+          notified.add(`${notice.id}:${notice.created_at}`);
+        }
+        localStorage.setItem("nis-task-notified",JSON.stringify([...notified].slice(-100)));
+      }
     }
-  }, [p]);
+  }, [p,tasks]);
   useEffect(() => {
     let alive = true,
       busy = false;
     const poll = async () => {
-      if (busy || document.hidden || !alive) return;
+      const backgroundReminders="Notification" in window&&Notification.permission==="granted"&&localStorage.getItem("nis-task-browser-notifications")!=="disabled";
+      if (busy || !alive || (document.hidden&&!backgroundReminders)) return;
       busy = true;
       try {
         await refresh();
@@ -88,14 +100,19 @@ export function NotificationCenter() {
       document.removeEventListener("keydown", escape);
     };
   }, [open]);
-  const dismiss = async (id: string) => {
-    const result = await dismissNotification(id);
+  const dismiss = async (id: string,kind:"message"|"task") => {
+    const result = await dismissNotification(id,kind);
     if ("error" in result) {
       setError(p[result.error]);
       return;
     }
     setToasts((old) => old.filter((n) => n.id !== id));
     await refresh();
+  };
+  const snooze=async(id:string)=>{
+    const result=await snoozePersonalTask(id,10);
+    if("error" in result){setError(tasks.failed);return;}
+    setToasts(old=>old.filter(item=>item.id!==id));await refresh();
   };
   return (
     <div className="notification-center" ref={root}>
@@ -140,18 +157,18 @@ export function NotificationCenter() {
                   className={`notification-card ${n.read_at ? "notification-read" : ""}`}
                 >
                   <span className="notification-icon">
-                    <ChatBubbleIcon aria-hidden="true" />
+                    {n.kind==="task"?<CalendarCheck2 aria-hidden="true"/>:<ChatBubbleIcon aria-hidden="true" />}
                   </span>
                   <Link
-                    href={`/messages?thread=${n.thread_id}`}
+                    href={n.href}
                     onClick={() => {
                       setOpen(false);
-                      void dismiss(n.id);
+                      void dismiss(n.id,n.kind);
                     }}
                     className="notification-copy"
                   >
-                    <strong>{n.actor_name}</strong>
-                    <span className="preview-lines">{messagePreview(n.body_preview ?? "")}</span>
+                    <strong>{n.kind==="task"?tasks.reminderLabel:n.title}</strong>
+                    <span className="preview-lines">{n.kind==="task"?n.title:messagePreview(n.body_preview ?? "")}</span>
                     <time dateTime={n.created_at}>
                       {new Intl.DateTimeFormat(locale, {
                         day: "numeric",
@@ -162,13 +179,7 @@ export function NotificationCenter() {
                     </time>
                   </Link>
                   {!n.read_at && (
-                    <button
-                      className="notification-dismiss"
-                      aria-label={`${p.markRead}: ${n.actor_name}`}
-                      onClick={() => void dismiss(n.id)}
-                    >
-                      <CheckIcon aria-hidden="true" />
-                    </button>
+                    <div className="notification-actions">{n.kind==="task"&&<button className="notification-dismiss" aria-label={`${tasks.snooze}: ${n.title}`} title={tasks.snooze} onClick={()=>void snooze(n.id)}><Clock3 aria-hidden="true"/></button>}<button className="notification-dismiss" aria-label={`${p.markRead}: ${n.title}`} onClick={() => void dismiss(n.id,n.kind)}><CheckIcon aria-hidden="true" /></button></div>
                   )}
                 </li>
               ))}
@@ -185,18 +196,17 @@ export function NotificationCenter() {
           {toasts.map((n) => (
             <li key={n.id} className="notification-card">
               <span className="notification-icon">
-                <ChatBubbleIcon aria-hidden="true" />
+                {n.kind==="task"?<CalendarCheck2 aria-hidden="true"/>:<ChatBubbleIcon aria-hidden="true" />}
               </span>
               <Link
                 className="notification-copy"
-                href={`/messages?thread=${n.thread_id}`}
-                onClick={() => void dismiss(n.id)}
+                href={n.href}
+                onClick={() => void dismiss(n.id,n.kind)}
               >
-                <strong>{p.newMessage}</strong>
-                <span>
-                  {p.from}: {n.actor_name}
-                </span><span className="preview-lines">{messagePreview(n.body_preview ?? "")}</span>
+                <strong>{n.kind==="task"?tasks.reminderLabel:p.newMessage}</strong>
+                <span>{n.kind==="task"?n.title:`${p.from}: ${n.title}`}</span>{n.kind==="message"&&<span className="preview-lines">{messagePreview(n.body_preview ?? "")}</span>}
               </Link>
+              {n.kind==="task"&&<button className="notification-dismiss" aria-label={`${tasks.snooze}: ${n.title}`} title={tasks.snooze} onClick={()=>void snooze(n.id)}><Clock3 aria-hidden="true"/></button>}
               <button
                 className="notification-dismiss"
                 aria-label={p.close}

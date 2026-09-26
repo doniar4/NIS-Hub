@@ -19,5 +19,5 @@ export const sendMessage = (thread: string, body: string, client: string) =>
 export const markConversationRead = (thread: string, message: string) =>
   safe(actions.markConversationRead(thread, message));
 export const loadNotifications = () => safe(actions.loadNotifications());
-export const dismissNotification = (id: string) =>
-  safe(actions.dismissNotification(id));
+export const dismissNotification = (id: string,kind:"message"|"task"="message") =>
+  safe(actions.dismissNotification(id,kind));

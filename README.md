@@ -1,4 +1,4 @@
-# NIS Hub - v0.6.2
+# NIS Hub - v0.6.4
 
 NIS Hub is a student learning workspace built with Next.js 16 and Supabase. It provides a private library and PDF reader, schedules, SMS Diary sessions, support tickets, profile management, community features, and administrator-controlled timetable tools.
 
@@ -8,7 +8,7 @@ NIS Hub is a student learning workspace built with Next.js 16 and Supabase. It p
 - RU, KZ and EN interface with Light, Dark and System appearance.
 - Library, PDF Reader, bookmarks, reading progress and optional Gemini AI Study.
 - Timetable, calendar exceptions, version history, CSV/TSV import and optional administrator-reviewed EduPage sync.
-- SMS Diary sessions, support tickets with optional Telegram notifications, community, homework, direct messages and admin tools.
+- Personal tasks with priorities, deadlines and reminders; SMS Diary sessions, support tickets with optional Telegram notifications, community, homework, direct messages and admin tools.
 
 EduPage sync uses a public timetable source only. It has no EduPage password, session sharing or browser-side source fetch. It is disabled unless `EDUPAGE_TIMETABLE_ENABLED=true` is set in the deployment environment.
 

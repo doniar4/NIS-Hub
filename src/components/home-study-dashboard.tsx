@@ -1,6 +1,6 @@
 "use client";
 import {useState, type ReactNode} from "react";
-import type {SubjectRow,WeeklyLesson} from "@/lib/database.types";
+import type {PersonalTask,SubjectRow,WeeklyLesson} from "@/lib/database.types";
 import {type CalendarDay,dayReasons} from "@/lib/school-calendar";
 import {schoolWeek,weeklyDay} from "@/lib/weekly-schedule";
 import {defaultLesson} from "@/lib/study-dashboard";
@@ -10,9 +10,10 @@ import {HomeTimetable} from "./home-timetable";
 import {SelectedLesson} from "./selected-lesson";
 import {HomeworkPreview} from "./homework-preview";
 import {SectionLink} from "./ui";
+import {TaskCenter} from "./task-center";
 
-export function HomeStudyDashboard({lessons,subjects,classId,today,nonSchoolDays,grade,materials,time,reading,activity}:{
-  lessons:WeeklyLesson[]; subjects:SubjectRow[]; classId:string; today:string; nonSchoolDays:CalendarDay[];
+export function HomeStudyDashboard({lessons,subjects,tasks=[],classId,today,nonSchoolDays,grade,materials,time,reading,activity}:{
+  lessons:WeeklyLesson[]; subjects:SubjectRow[]; tasks?:PersonalTask[]; classId:string; today:string; nonSchoolDays:CalendarDay[];
   grade:number|null; materials:MaterialMap; time:string; reading:ReactNode; activity:ReactNode;
 }) {
   const {locale,t}=useI18n();
@@ -29,6 +30,7 @@ export function HomeStudyDashboard({lessons,subjects,classId,today,nonSchoolDays
       </section>
     </div>
     <div className="dashboard-secondary">
+      <TaskCenter initialTasks={tasks} subjects={subjects} variant="compact"/>
       <HomeworkPreview date={date} subjects={subjects} hasClass={!!classId}/>
       {activity}
       <section className="surface-card"><h2 className="section-title">{t.continueReading}</h2>{reading}<SectionLink href="/library">{t.openLibrary}</SectionLink></section>
