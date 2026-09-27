@@ -38,7 +38,9 @@ function isolatedBoundaries() {
                         ? 'export const reviewStudyAnswers=async()=>({error:"failed"});'
                         : args.path.endsWith("edupage")
                           ? 'export const syncEduPage=async()=>({error:"unavailable"});'
-                          : "export const safetyAction=async()=>({success:true});";
+                          : args.path.endsWith("tasks")
+                            ? 'export const safetyAction=async()=>({success:true});export const savePersonalTask=async()=>({success:true});export const setPersonalTaskStatus=async()=>({success:true});export const snoozePersonalTask=async()=>({success:true});'
+                            : "export const safetyAction=async()=>({success:true});";
         return { contents, loader: "js" };
       });
     },
@@ -46,7 +48,7 @@ function isolatedBoundaries() {
 }
 
 async function setTheme(page: import("@playwright/test").Page, theme: "light" | "dark") {
-  await page.locator(".theme-switch label").filter({ has: page.locator(`input[value="${theme}"]`) }).click();
+  await page.locator(`.theme-switch label:has(> input[value="${theme}"])`).first().click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
 }
 
@@ -165,13 +167,21 @@ test("reference redesign: welcome, signup and dashboard themes remain responsive
     await page.goto(`${publicOrigin}/signup`);
     await page.setViewportSize({ width: 1440, height: 900 });
     await setTheme(page, "light");
-    await expect(page.locator(".auth-experience")).toBeVisible();
+    await expect(page.locator(".welcome-screen")).toBeVisible();
+    await expect(page.locator(".auth-experience")).toHaveCount(0);
+    await expect(page.getByRole("tab").nth(0)).toHaveAttribute("aria-selected", "true");
     await page.screenshot({ path: join(artifacts, "signup-light.png"), fullPage: true, animations: "disabled" });
     await setTheme(page, "dark");
     await page.screenshot({ path: join(artifacts, "signup-dark.png"), fullPage: true, animations: "disabled" });
     await page.setViewportSize({ width: 390, height: 844 });
     await expectNoHorizontalOverflow(page);
     await page.screenshot({ path: join(artifacts, "signup-mobile-dark.png"), fullPage: true, animations: "disabled" });
+
+    await page.goto(`${publicOrigin}/login?next=%2Fschedule`);
+    await expect(page.locator(".welcome-screen")).toBeVisible();
+    await expect(page.getByRole("tab").nth(1)).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator('[role="tabpanel"]:not([hidden]) input[name="next"]')).toHaveValue("/schedule");
+    await expect(page.locator(".auth-experience")).toHaveCount(0);
 
     await page.goto(`${publicOrigin}/`);
     await expect(page.locator(".welcome-screen")).toBeVisible();

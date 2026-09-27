@@ -69,3 +69,28 @@ export async function fetchDiarySubject(http:SmsHttp,selection:SmsDiarySelection
   }
   return assessments;
 }
+
+export async function fetchRecentWorks(http:SmsHttp,selection:SmsDiarySelection={}):Promise<SmsAssessment[]> {
+  const loaded=await context(http,undefined,selection);
+  if(!loaded.referer) throw new SmsError("sms_changed");
+  const ref = loaded.referer;
+  const assessments:SmsAssessment[]=[];
+  const subjectsWithEvals = loaded.snapshot.subjects.filter(s => s.journalId && s.evaluations && s.evaluations.length > 0);
+  const requests = subjectsWithEvals.flatMap(subject => {
+    const jId = subject.journalId!;
+    return (subject.evaluations ?? []).map(async (e) => {
+      try {
+        const body = await json(http, "/Jce/Diary/GetResultByEvalution", {journalId:jId, evalId:e.id}, ref);
+        return parseJceAssessmentRows(body, subject.subject, e.type);
+      } catch {
+        return [];
+      }
+    });
+  });
+  const parsedLists = await Promise.all(requests);
+  for (const list of parsedLists) {
+    assessments.push(...list);
+  }
+  assessments.sort((a, b) => (b.date || "0000").localeCompare(a.date || "0000"));
+  return assessments;
+}

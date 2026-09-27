@@ -6,7 +6,6 @@ import {
   MagnifyingGlassIcon,
   ChatBubbleIcon,
   ReaderIcon,
-  GridIcon,
 } from "@radix-ui/react-icons";
 import {
   useEffect,
@@ -20,7 +19,6 @@ import {
 import { useI18n } from "./locale-provider";
 import { v05Copy } from "@/lib/v05-copy";
 import { Sprout } from "./brand";
-import { ActionMenu } from "./action-menu";
 
 import { communityCopy } from "@/lib/community-copy";
 import { ParallaxBackground } from "./parallax-background";
@@ -91,6 +89,12 @@ export function AppFrame({
   const p = v05Copy(locale);
   const community = communityCopy(locale);
   const pathname = usePathname();
+  const [optimisticRoute, setOptimisticRoute] = useState<string | null>(null);
+  const [previousPath, setPreviousPath] = useState(pathname);
+  if (previousPath !== pathname) {
+    setPreviousPath(pathname);
+    setOptimisticRoute(null);
+  }
 
   const collapsed = useSyncExternalStore(subscribe, snapshot, () => false);
 
@@ -144,36 +148,54 @@ export function AppFrame({
     return <NavIcon index={0} />;
   };
 
-  const navigation = (mobile: boolean) => (
-    <nav aria-label={t.mainNav} className="sidebar-navigation" data-has-active={links.some(([href])=>href==="/" ? pathname===href : pathname.startsWith(href))} style={{"--active-route":Math.max(0,links.findIndex(([href])=>href==="/" ? pathname===href : pathname.startsWith(href)))} as CSSProperties}>
-      {links.map(([href, label]) => (
-        <Link
-          key={href}
-          prefetch={false}
-          href={href}
-          title={!mobile && collapsed ? label : undefined}
-          aria-label={label}
-          aria-current={
-            (href === "/" ? pathname === href : pathname.startsWith(href))
-              ? "page"
-              : undefined
-          }
-          className="sidebar-link"
-          onClick={() => {
-            delete document.documentElement.dataset.intro;
+  const activeRoute = optimisticRoute ?? pathname;
+  const isRouteActive = (href: string) => {
+    if (href === "/") return activeRoute === "/";
+    if (href === "/library") return activeRoute.startsWith("/library") || activeRoute.startsWith("/books");
+    if (href === "/profile") return activeRoute.startsWith("/profile") || activeRoute.startsWith("/people") || activeRoute.startsWith("/friends");
+    if (href === "/support") return activeRoute.startsWith("/support");
+    return activeRoute.startsWith(href);
+  };
+  const activeIndex = links.findIndex(([href]) => isRouteActive(href));
+  const hasActive = activeIndex !== -1;
 
-            if (mobile) {
-              close();
-              requestAnimationFrame(() => {
-                document.getElementById("main")?.focus();
-              });
-            }
-          }}
-        >
-          {renderNavIcon(href)}
-          <span className="sidebar-label">{label}</span>
-        </Link>
-      ))}
+  const navigation = (mobile: boolean) => (
+    <nav
+      aria-label={t.mainNav}
+      className="sidebar-navigation"
+      data-has-active={hasActive}
+      style={{
+        "--active-route": hasActive ? activeIndex : 0,
+      } as CSSProperties}
+    >
+      {links.map(([href, label]) => {
+        const isCurrent = isRouteActive(href);
+        return (
+          <Link
+            key={href}
+            prefetch={false}
+            href={href}
+            title={!mobile && collapsed ? label : undefined}
+            aria-label={label}
+            aria-current={isCurrent ? "page" : undefined}
+            className="sidebar-link"
+            onClick={() => {
+              setOptimisticRoute(href);
+              delete document.documentElement.dataset.intro;
+
+              if (mobile) {
+                close();
+                requestAnimationFrame(() => {
+                  document.getElementById("main")?.focus();
+                });
+              }
+            }}
+          >
+            {renderNavIcon(href)}
+            <span className="sidebar-label">{label}</span>
+          </Link>
+        );
+      })}
     </nav>
   );
 
@@ -235,9 +257,9 @@ export function AppFrame({
 
         {navigation(false)}
 
-        <div className="sidebar-bottom" inert={collapsed}>
+        <div className="sidebar-bottom">
           {profileAccount && <div className="sidebar-account">{profileAccount}{account}</div>}
-          <div className="sidebar-legal">
+          <div className="sidebar-legal" inert={collapsed ? true : undefined}>
             <Link href="/privacy">{t.privacy}</Link>
             <Link href="/terms">{t.terms}</Link>
           </div>
@@ -251,7 +273,7 @@ export function AppFrame({
           <button
             ref={menuButton}
             type="button"
-            className="icon-button mobile-menu app-launcher-mobile"
+            className="icon-button mobile-menu"
             aria-label={p.menu}
             aria-controls="mobile-navigation"
             aria-expanded={mobileOpen}
@@ -262,10 +284,6 @@ export function AppFrame({
           >
             ☰
           </button>
-
-          <div className="app-launcher"><ActionMenu label={p.menu} icon={<GridIcon aria-hidden="true"/>}>
-            {close => links.map(([href,label]) => <Link role="menuitem" className="menu-action" key={href} href={href} prefetch={false} onClick={close}>{renderNavIcon(href)}{label}</Link>)}
-          </ActionMenu></div>
           <form
             action="/library"
             method="get"
@@ -290,10 +308,12 @@ export function AppFrame({
             </button>
           </form>
 
-          <div className="topbar-preferences">{preferences}</div>
-          <div className="topbar-account">
-            {avatar}
-            {account}
+          <div className="topbar-actions">
+            <div className="topbar-preferences">{preferences}</div>
+            <div className="topbar-account">
+              {avatar}
+              {account}
+            </div>
           </div>
         </header>
 

@@ -7,6 +7,7 @@ import {FullLoadIntro} from "@/components/full-load-intro";
 import { themeBootstrap } from "@/lib/theme";
 import { getI18n } from "@/lib/i18n-server";
 import { LocaleProvider } from "@/components/locale-provider";
+import { SmoothScroll } from "@/components/smooth-scroll";
 
 export const metadata: Metadata = {
   title: { default: "NIS Hub", template: "%s · NIS Hub" },
@@ -16,5 +17,5 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { locale } = await getI18n();
-  return <html lang={locale} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeBootstrap + ";" + experienceBootstrap }} /></head><body><LocaleProvider locale={locale}><FullLoadIntro/>{children}</LocaleProvider></body></html>;
+  return <html lang={locale} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeBootstrap + ";" + experienceBootstrap }} /></head><body><LocaleProvider locale={locale}><FullLoadIntro/><SmoothScroll />{children}</LocaleProvider></body></html>;
 }

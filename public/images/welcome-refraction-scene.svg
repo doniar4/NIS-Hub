@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="wave" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#7894b6" stop-opacity=".18" />
+      <stop offset=".48" stop-color="#496a91" stop-opacity=".48" />
+      <stop offset="1" stop-color="#7894b6" stop-opacity=".2" />
+    </linearGradient>
+    <radialGradient id="atmosphere" cx="50%" cy="48%" r="70%">
+      <stop offset="0" stop-color="#fbfdff" />
+      <stop offset=".58" stop-color="#f2f6fb" />
+      <stop offset="1" stop-color="#e8eef6" />
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#atmosphere)" />
+  <g fill="none" stroke="url(#wave)" stroke-width="2">
+    <path d="M-80 372C120 402 184 318 352 336S574 431 742 388 1012 315 1162 339 1396 426 1680 378" />
+    <path d="M-80 402C118 430 194 352 358 366S570 456 746 418 1000 348 1164 368 1404 454 1680 408" />
+    <path d="M-80 432C120 458 204 384 365 396S576 482 754 448 1010 378 1177 397 1410 480 1680 438" />
+    <path d="M-80 462C134 486 219 416 376 427S588 508 769 479 1024 407 1193 426 1424 508 1680 468" />
+    <path d="M-80 492C145 515 234 449 390 459S604 534 788 510 1044 438 1212 456 1440 536 1680 498" />
+    <path d="M-80 522C166 544 246 480 408 490S620 560 807 541 1062 468 1232 486 1450 563 1680 528" />
+    <path d="M-80 552C180 574 268 514 428 522S638 588 830 572 1082 500 1252 518 1464 592 1680 558" />
+    <path d="M260 900C390 704 470 605 620 508S868 403 1040 362 1320 310 1640 344" />
+    <path d="M390 900C494 715 564 620 704 530S922 425 1092 386 1350 338 1640 370" />
+    <path d="M520 900C604 726 668 638 788 552S976 451 1140 414 1388 368 1640 400" />
+  </g>
+</svg>

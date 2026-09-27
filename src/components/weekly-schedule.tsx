@@ -1,6 +1,7 @@
 "use client";
 
 import {useId,useMemo,useState,type ReactNode} from "react";
+import { ChevronDownIcon } from "@radix-ui/react-icons";
 import type {ClassRow,SubjectRow,WeeklyLesson} from "@/lib/database.types";
 import {eduPageCopy} from "@/lib/edupage/copy";
 import {materialKey,type MaterialMap} from "@/lib/schedule-materials";
@@ -53,9 +54,27 @@ export function WeeklyScheduleBrowser({lessons,classes,subjects,initialClassId,d
   const selected=filtered.find(row=>row.id===selectedId)??filtered[0];
   return <section className="schedule-browser mt-8">
     <div className="schedule-controls surface-card">
-      <label className="block"><span className="field-label">{t.class}</span><select className="field" value={classId} onChange={e=>setClassId(e.target.value)}>
-        <option value="">{t.notSelected}</option>{sortClasses(classes).map(row=><option key={row.id} value={row.id}>{row.name}</option>)}
-      </select></label>
+      <div className="schedule-class-picker">
+        <label htmlFor="schedule-class-select" className="schedule-class-badge">
+          {t.class}
+        </label>
+        <div className="schedule-class-select-box">
+          <select
+            id="schedule-class-select"
+            className="schedule-class-select"
+            value={classId}
+            onChange={(e) => setClassId(e.target.value)}
+          >
+            <option value="">{t.notSelected}</option>
+            {sortClasses(classes).map((row) => (
+              <option key={row.id} value={row.id}>
+                {row.name}
+              </option>
+            ))}
+          </select>
+          <ChevronDownIcon className="schedule-class-chevron" aria-hidden="true" />
+        </div>
+      </div>
       <div className="schedule-day-deck"><div role="tablist" aria-label={p.weeklyTitle} className="day-deck-grid" onKeyDown={e=>{
         const next=e.key==="ArrowRight"?(weekday%5)+1:e.key==="ArrowLeft"?((weekday+3)%5)+1:e.key==="Home"?1:e.key==="End"?5:null;
         if(next){e.preventDefault();setWeekday(next);e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next-1]?.focus();}

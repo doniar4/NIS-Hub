@@ -9,11 +9,11 @@ import {chromium,webkit,expect} from "@playwright/test";
 import {themeBootstrap} from "../src/lib/theme";
 import {parseGrades} from "../src/lib/sms/parser";
 import {subjects,classes} from "./browser/fixtures";
+import {samplePdf} from "./browser/sample-pdf";
 
 const id="00000000-0000-4000-8000-000000000030";
 test("Liquid Glass: real components, isolated transport, Chromium/WebKit responsive and functional QA",{timeout:480000},async t=>{
-  assert.ok(process.env.NIS_READER_TEST_PDF,"Provide the existing local test PDF");
-  const pdf=readFileSync(process.env.NIS_READER_TEST_PDF!);
+  const pdf=process.env.NIS_READER_TEST_PDF?readFileSync(process.env.NIS_READER_TEST_PDF):samplePdf();
   const bundle=await build({entryPoints:["tests/browser/liquid-glass-harness.tsx"],bundle:true,write:false,format:"esm",platform:"browser",jsx:"automatic",define:{"process.env":JSON.stringify({NODE_ENV:"production"})},plugins:[{name:"isolated-boundaries",setup(api){
     api.onResolve({filter:/^next\/navigation$/},()=>({path:"navigation",namespace:"fixture"}));
     api.onResolve({filter:/^@\/lib\/(supabase\/client|community-client)$/},a=>({path:a.path,namespace:"fixture"}));
@@ -67,11 +67,17 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
   try {
     for(const [name,engine]of [["chromium",chromium],["webkit",webkit]]as const){
       if(process.env.NIS_BROWSER_ENGINE&&process.env.NIS_BROWSER_ENGINE!==name)continue;
-      const browser=await engine.launch({headless:true});
+      const browser=await engine.launch({headless:true,...(name==="chromium"?{args:["--enable-unsafe-swiftshader"]}:{})});
       try {
-        const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors:string[]=[];
+        const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors:string[]=[],natureRequests:string[]=[];
         page.on("pageerror",error=>errors.push(new URL(page.url()).pathname+": "+error.message));
+        page.on("request",request=>{if(new URL(request.url()).pathname==="/images/nature-lake.webp")natureRequests.push(request.url());});
         await page.goto(origin+"/");
+        assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).overscrollBehaviorY),"none");
+        assert.deepEqual(natureRequests,[]);
+        assert.equal(await page.locator(".nature-environment").evaluate(el=>getComputedStyle(el).backgroundImage),"none");
+        await page.locator(".theme-switch label").first().hover();
+        assert.equal(await page.locator(".theme-switch label").first().evaluate(el=>getComputedStyle(el).backgroundColor),"rgba(0, 0, 0, 0)");
         await expect(page.locator(".task-center-compact")).toContainText("Prepare for the physics quiz");
         await page.locator(".task-center-compact .task-add-button").click();
         await expect(page.locator(".personal-task-form")).toBeVisible();
@@ -116,6 +122,12 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         for(const locale of ["ru","kk","en"]as const)for(const width of [1440,1024,768,390,320])for(const theme of ["light","dark"]){
           await page.setViewportSize({width,height:1000});await page.goto(origin+"/?locale="+locale);
           await expect(page.locator(".theme-switch")).toBeEnabled();await page.locator('.theme-switch label').filter({has:page.locator('input[value="'+theme+'"]')}).click();await expect(page.locator("html")).toHaveAttribute("data-theme",theme);
+          if (theme === "dark") {
+            await expect(page.locator(".nature-environment canvas")).toBeHidden();
+            assert.equal(await page.locator(".selected-lesson").evaluate(el=>getComputedStyle(el).backdropFilter),"none");
+          } else if (name === "chromium") {
+            await expect(page.locator(".nature-environment canvas")).toHaveAttribute("data-ready","true");
+          }
           await expect(page.locator(".homework-preview")).toContainText("Homework for");
           assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),name+" home "+locale+" "+width+" "+theme);
           if(locale==="ru"&&(width===1440||width===390))await page.screenshot({path:join(dir,name+"-home-"+width+"-"+theme+".png"),fullPage:true,animations:"disabled"});

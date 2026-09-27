@@ -16,8 +16,37 @@ export async function SiteShell({children}:{children:ReactNode}){
  if(viewer.user&&viewer.profile?.avatar_path===viewer.user.id+"/avatar.webp"){
   const db=await database();const result=await db.storage.from("avatars").createSignedUrl(viewer.profile.avatar_path,AVATAR_URL_TTL_SECONDS);url=result.data?.signedUrl??null;
  }
- return <AppFrame admin={viewer.profile?.role==="admin"} preferences={<PreferenceControls localeAction={changeLocale}/>}
- profileAccount={viewer.user?<><HeaderAvatar key={url} url={url} name={viewer.profile?.display_name??""}/><span>{viewer.profile?.display_name||t.profile}</span></>:null}
- account={viewer.user?<ActionForm action={logout} label={t.logout} className="text-sm"/>:<Link className="button button-small" href="/login">{t.login}</Link>}
- avatar={viewer.user?<><NotificationCenter key={viewer.user.id}/><HeaderAvatar key={url} url={url} name={viewer.profile?.display_name??""}/></>:null}>{children}</AppFrame>;
+  return (
+    <AppFrame
+      admin={viewer.profile?.role === "admin"}
+      preferences={<PreferenceControls localeAction={changeLocale} localeFirst />}
+      profileAccount={
+        viewer.user ? (
+          <>
+            <HeaderAvatar key={url} url={url} name={viewer.profile?.display_name ?? ""} />
+            <span>{viewer.profile?.display_name || t.profile}</span>
+          </>
+        ) : null
+      }
+      account={
+        viewer.user ? (
+          <ActionForm action={logout} label={t.logout} className="text-sm" />
+        ) : (
+          <Link className="button button-small" href="/login">
+            {t.login}
+          </Link>
+        )
+      }
+      avatar={
+        viewer.user ? (
+          <>
+            <NotificationCenter key={viewer.user.id} />
+            <HeaderAvatar key={url} url={url} name={viewer.profile?.display_name ?? ""} />
+          </>
+        ) : null
+      }
+    >
+      {children}
+    </AppFrame>
+  );
 }

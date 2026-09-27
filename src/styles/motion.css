@@ -5,11 +5,10 @@
  .app-sidebar { animation:glass-pop 360ms var(--ease-out) both; }
  .mobile-drawer[open],.action-popover,.notification-popover { animation:glass-pop 220ms var(--ease-out) both; }
  .button:active:not(:disabled),.icon-button:active:not(:disabled) { transform:scale(.98); }
- .library-card:hover,.dashboard-card:hover { transform:translateY(-2px); }
 }
 @media(prefers-reduced-motion:reduce) {
  *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
- .button:active,.icon-button:active,.library-card:hover,.dashboard-card:hover,.sms-subject:hover { transform:none!important; }
+ .button:active,.icon-button:active { transform:none!important; }
 }
 
 @keyframes study-pulse { 50% { opacity:.55; } }

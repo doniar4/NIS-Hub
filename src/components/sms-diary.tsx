@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { EyeOpenIcon, EyeNoneIcon } from "@radix-ui/react-icons";
 import { connectSms, disconnectSms, loadSmsSubject, refreshSms } from "@/app/actions/sms";
 import { smsCopy } from "@/lib/sms/copy";
 import type { SmsAssessment, SmsErrorCode, SmsResult } from "@/lib/sms/types";
@@ -29,27 +30,86 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
   const [result,setResult]=useState<SmsResult>({connected:sessionPresent,...(!enabled?{error:"feature_disabled" as const}:{})});
   const [pending,setPending]=useState(sessionPresent&&enabled);
   const [details,setDetails]=useState<Record<string,{loading?:boolean;assessments?:SmsAssessment[];error?:SmsErrorCode}>>({});
+  const [iin, setIin] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const initialized=useRef(false);
   const requestId=useRef(0);
   const localeTag=locale==="kk"?"kk-KZ":locale==="ru"?"ru-KZ":"en-GB";
   useEffect(()=>{
+    try {
+      const cachedSnap = localStorage.getItem("sms_diary_snapshot");
+      const cachedDet = localStorage.getItem("sms_diary_details");
+      if (cachedSnap) {
+        setResult(prev => prev.snapshot ? prev : ({ ...prev, snapshot: JSON.parse(cachedSnap) }));
+      }
+      if (cachedDet) {
+        setDetails(prev => Object.keys(prev).length ? prev : JSON.parse(cachedDet));
+      }
+    } catch {}
+
     if(initialized.current || !sessionPresent || !enabled) return;
     initialized.current=true;
     const id=++requestId.current;
     refreshSms().then(value=>{if(requestId.current===id)setResult(value);},()=>{if(requestId.current===id)setResult({connected:true,error:"sms_unavailable"});})
       .finally(()=>{if(requestId.current===id)setPending(false);});
   },[sessionPresent,enabled]);
+
+  useEffect(() => {
+    if (result.snapshot) {
+      try {
+        localStorage.setItem("sms_diary_snapshot", JSON.stringify(result.snapshot));
+      } catch {}
+    } else if (result.connected === false) {
+      try {
+        localStorage.removeItem("sms_diary_snapshot");
+        localStorage.removeItem("sms_diary_details");
+      } catch {}
+    }
+  }, [result]);
+
+  useEffect(() => {
+    if (Object.keys(details).length > 0) {
+      try {
+        localStorage.setItem("sms_diary_details", JSON.stringify(details));
+      } catch {}
+    }
+  }, [details]);
   async function run(action:()=>Promise<SmsResult>) {
     const id=++requestId.current; setPending(true);
     try {const value=await action();if(requestId.current===id){setResult(value);setDetails({});}}
     catch {if(requestId.current===id)setResult({connected:result.connected,error:"sms_unavailable"});}
     finally {if(requestId.current===id)setPending(false);}
   }
-  function connect(event:FormEvent<HTMLFormElement>) {
+  async function connect(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form=new FormData(event.currentTarget);
-    event.currentTarget.reset();
-    void run(async()=>{try{return await connectSms(form);}finally{form.delete("iin");form.delete("password");}});
+    const form=new FormData();
+    form.append("iin", iin.trim());
+    form.append("password", password);
+    const id=++requestId.current; setPending(true);
+    try {
+      const value=await connectSms(form);
+      if(requestId.current===id) {
+        setResult(value);
+        setDetails({});
+        if(value.connected) {
+          setIin("");
+          setPassword("");
+        } else {
+          // On login failure, keep IIN so user does not need to retype 12 numbers, clear password
+          setPassword("");
+        }
+      }
+    } catch {
+      if(requestId.current===id) {
+        setResult({connected:result.connected,error:"sms_unavailable"});
+        setPassword("");
+      }
+    } finally {
+      form.delete("iin");
+      form.delete("password");
+      if(requestId.current===id) setPending(false);
+    }
   }
   const snapshot=result.snapshot;
   function matchingSubject(name:string) {
@@ -66,6 +126,25 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
     setDetails(value=>({...value,[subjectId]:loaded.assessments?{assessments:loaded.assessments}:{error:loaded.error||"sms_unavailable"}}));
   }
 
+  const [openSubjects, setOpenSubjects] = useState<Record<string, boolean>>({});
+
+  const hasAnyOpen = Object.values(openSubjects).some(Boolean);
+
+  function toggleAllDetails() {
+    const nextOpen = !hasAnyOpen;
+    if (nextOpen && snapshot?.subjects) {
+      const nextMap: Record<string, boolean> = {};
+      snapshot.subjects.forEach((s) => {
+        const key = s.sourceId ?? s.subject;
+        nextMap[key] = true;
+        if (s.sourceId) void loadDetails(s.sourceId);
+      });
+      setOpenSubjects(nextMap);
+    } else {
+      setOpenSubjects({});
+    }
+  }
+
   return <DiaryMotion><section className="sms-diary" aria-label={p.title} aria-busy={pending}>
     {!result.connected ? <div className="sms-connect-shell" data-diary-arrive>
       <div className="surface-card sms-connect">
@@ -74,10 +153,66 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
         <p className="sms-connect-lead">{p.consent}</p>
         <form onSubmit={connect} aria-describedby="sms-privacy">
           <label htmlFor="sms-iin">{p.iin}</label>
-          <input id="sms-iin" name="iin" className="field" inputMode="numeric" autoComplete="username" pattern="[0-9]{12}" minLength={12} maxLength={12} required disabled={!enabled||pending}/>
+          <input
+            id="sms-iin"
+            name="iin"
+            className="field"
+            inputMode="numeric"
+            autoComplete="username"
+            pattern="[0-9]{12}"
+            minLength={12}
+            maxLength={12}
+            required
+            value={iin}
+            onChange={(e) => setIin(e.target.value)}
+            disabled={!enabled || pending}
+          />
           <label htmlFor="sms-password">{p.password}</label>
-          <input id="sms-password" name="password" className="field" type="password" autoComplete="current-password" maxLength={256} required disabled={!enabled||pending}/>
-          <button className="button sms-connect-button" type="submit" disabled={!enabled||pending}>{pending?p.pending:p.connect}</button>
+          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <input
+              id="sms-password"
+              name="password"
+              className="field"
+              style={{ paddingRight: "2.75rem", width: "100%" }}
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              maxLength={256}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={!enabled || pending}
+            />
+            <button
+              type="button"
+              className="password-reveal-btn"
+              style={{
+                position: "absolute",
+                right: "0.5rem",
+                width: "32px",
+                height: "32px",
+                display: "grid",
+                placeItems: "center",
+                borderRadius: "8px",
+                color: "var(--text-secondary)",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+              }}
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <EyeNoneIcon width={18} height={18} aria-hidden="true" />
+              ) : (
+                <EyeOpenIcon width={18} height={18} aria-hidden="true" />
+              )}
+            </button>
+          </div>
+          <button className="button sms-connect-button" type="submit" disabled={!enabled || pending}>
+            {pending ? p.pending : p.connect}
+          </button>
         </form>
       </div>
       <aside className="sms-privacy-panel" id="sms-privacy">
@@ -92,6 +227,21 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
         {snapshot&&<p className="sms-updated">{p.updated}: <time dateTime={snapshot.fetchedAt}>{new Intl.DateTimeFormat(localeTag,{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Oral"}).format(new Date(snapshot.fetchedAt))}</time></p>}
       </div>
       <div className="sms-actions">
+        {snapshot && snapshot.subjects.length > 0 && (
+          <button
+            type="button"
+            className="button button-secondary sms-toggle-all"
+            onClick={toggleAllDetails}
+            disabled={pending}
+          >
+            <span style={{ display: "inline-block", transform: hasAnyOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s ease" }}>
+              <ChevronIcon />
+            </span>
+            {hasAnyOpen
+              ? (locale === "kk" ? "Барлығын жинау" : locale === "en" ? "Collapse all" : "Свернуть все")
+              : (locale === "kk" ? "Барлығын ашу" : locale === "en" ? "Expand all" : "Развернуть все")}
+          </button>
+        )}
         <button className="button button-secondary sms-refresh" onClick={()=>void run(()=>refreshSms(selection))} disabled={!enabled||pending} aria-busy={pending}><RefreshIcon/>{p.refresh}</button>
         <ActionMenu label={p.actions}>{close=><button type="button" role="menuitem" disabled={pending} onClick={()=>{close();void run(disconnectSms);}}>{p.disconnect}</button>}</ActionMenu>
       </div>
@@ -123,16 +273,29 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
             </div>
           </header>
           <div className="sms-mark" data-unattested={!!s.notAttested}>
-            <span>{p.currentMark}</span>
-            <strong>{s.notAttested?p.notAttested:s.currentMark===undefined?"—":formatNumber(s.currentMark)}</strong>
-            {s.currentMark===undefined&&!s.notAttested&&<small>{p.noScore}</small>}
+            <span className="sms-mark-label">{p.currentMark}</span>
+            <div className="sms-mark-status">
+              <strong>{s.notAttested?p.notAttested:s.currentMark===undefined?"—":formatNumber(s.currentMark)}</strong>
+              {s.currentMark===undefined&&!s.notAttested&&<small>{p.noScore}</small>}
+            </div>
           </div>
           <dl className="sms-work-counts" aria-label={p.assessment}>
-            <div><dt>{p.works}</dt><dd>{counts?.works??"—"}</dd></div>
-            <div><dt>{p.types.sor}</dt><dd>{counts?.sor??"—"}</dd></div>
-            <div><dt>{p.types.soch}</dt><dd>{counts?.soch??"—"}</dd></div>
+            <div className="sms-count-chip"><dt>{p.works}</dt><dd>{counts?.works??"—"}</dd></div>
+            <div className="sms-count-chip"><dt>{p.types.sor}</dt><dd>{counts?.sor??"—"}</dd></div>
+            <div className="sms-count-chip"><dt>{p.types.soch}</dt><dd>{counts?.soch??"—"}</dd></div>
           </dl>
-          <details className="sms-subject-details" onToggle={event=>{if(event.currentTarget.open&&s.sourceId)void loadDetails(s.sourceId);}}>
+          <details
+            className="sms-subject-details"
+            open={!!openSubjects[s.sourceId ?? s.subject]}
+            onToggle={(event) => {
+              const currentOpen = event.currentTarget.open;
+              const sKey = s.sourceId ?? s.subject;
+              if (currentOpen !== !!openSubjects[sKey]) {
+                setOpenSubjects((prev) => ({ ...prev, [sKey]: currentOpen }));
+                if (currentOpen && s.sourceId) void loadDetails(s.sourceId);
+              }
+            }}
+          >
             <summary><span>{p.assessment}{detail?.assessments?` · ${assessments.length}`:""}</span><ChevronIcon/></summary>
             {detail?.loading&&<p className="sms-detail-state" role="status">{p.detailsLoading}</p>}
             {detail?.error&&<p className="sms-detail-state notice-error" role="alert">{p.errors[detail.error]}</p>}

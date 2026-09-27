@@ -1,4 +1,3 @@
-import { AboutProject } from "@/components/about-project";
 import { CommunityNav } from "@/components/community-nav";
 import { v053Copy } from "@/lib/v053-copy";
 import { ProfilePortrait } from "@/components/profile-portrait";
@@ -97,7 +96,6 @@ export default async function ProfilePage() {
           <ReadingList bookmarks />
         </section>
       </div>
-      <AboutProject locale={locale}/>
     </SiteShell>
   );
 }

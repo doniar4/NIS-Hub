@@ -3,10 +3,10 @@ import { actionContext } from "@/lib/auth";
 import { smsConfig } from "@/lib/sms/config";
 import { SmsHttp } from "@/lib/sms/http";
 import { loginSms, validCredentials } from "@/lib/sms/login";
-import { fetchDiary, fetchDiarySubject } from "@/lib/sms/grades";
+import { fetchDiary, fetchDiarySubject, fetchRecentWorks } from "@/lib/sms/grades";
 import { clearSmsSession, readSmsSession, saveSmsSession, hasSmsSession } from "@/lib/sms/session";
 import { safeSmsError } from "@/lib/sms/errors";
-import type { SmsDiarySelection, SmsResult, SmsSubjectDetailResult } from "@/lib/sms/types";
+import type { SmsAssessment, SmsDiarySelection, SmsErrorCode, SmsResult, SmsSubjectDetailResult } from "@/lib/sms/types";
 // Concurrency and a minimum interval per warm process; no retries or polling.
 // This map contains NIS user IDs + expiry only, never credentials or SMS responses.
 const active = new Map<string,number>();
@@ -73,6 +73,25 @@ export async function loadSmsSubject(selection:SmsDiarySelection,subjectId:strin
     return {error:code};
   }finally{active.set(user.id,Date.now()+2000);}
 }
+export async function loadRecentSmsWorks(selection:SmsDiarySelection={}):Promise<{works?:SmsAssessment[];error?:SmsErrorCode}> {
+  let context:Awaited<ReturnType<typeof actionContext>>;
+  try{context=await actionContext();}catch{return {error:"session_expired"};}
+  const {supabase,user}=context,now=Date.now();
+  for(const [id,until] of active)if(until<now)active.delete(id);
+  if(active.has(user.id)||active.size>=1000)return {error:"busy"};
+  active.set(user.id,now+120000);
+  try{
+    const session=await readSmsSession(supabase,user.id),http=new SmsHttp(smsConfig(),session.cookies);
+    const works=await fetchRecentWorks(http,selection);
+    await saveSmsSession(supabase,user.id,http.cookies,session.expires);
+    return {works};
+  }catch(error){
+    const code=safeSmsError(error);
+    if(code==="session_expired")try{await clearSmsSession(supabase);}catch{}
+    return {error:code};
+  }finally{active.set(user.id,Date.now()+2000);}
+}
+
 export async function disconnectSms(): Promise<SmsResult> {
   try { const {supabase}=await actionContext();await clearSmsSession(supabase);return {connected:false}; }
   catch { return {connected:false,error:"sms_unavailable"}; }

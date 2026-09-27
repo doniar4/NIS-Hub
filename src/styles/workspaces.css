@@ -2,8 +2,30 @@
 .reader-workspace { display:grid; grid-template-columns:minmax(0,1fr); gap:1rem; align-items:start; }
 .reader-workspace-heading { grid-column:1/-1; display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; min-width:0; }
 .book-information { min-width:0; flex:1; }
-.book-information > summary { display:inline-flex; align-items:center; min-height:44px; padding:.55rem .85rem; border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--surface); cursor:pointer; font-size:.85rem; }
-.book-information[open] > summary { margin-bottom:.75rem; }
+.book-information > summary { display:inline-flex; align-items:center; justify-content:center; gap:.65rem; min-height:44px; padding:.65rem 1.35rem; border-radius:var(--radius-pill); background:color-mix(in srgb, white 24%, transparent); border:1px solid rgba(255, 255, 255, 0.65); color:var(--text); font:600 .875rem/1.4 var(--font-body); box-shadow:inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 4px 16px -2px rgb(20 40 80 / .08); backdrop-filter:blur(14px) saturate(180%); -webkit-backdrop-filter:blur(14px) saturate(180%); cursor:pointer; user-select:none; list-style:none; transition:transform 400ms cubic-bezier(0.4, 1.5, 0.3, 1), background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast); }
+.book-information > summary::-webkit-details-marker,.book-information > summary::marker { display:none; }
+.book-information > summary:hover { background:color-mix(in srgb, white 42%, transparent); border-color:rgba(255, 255, 255, 0.85); box-shadow:inset 0 1px 2px 0 rgba(255, 255, 255, 1), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.65), 0 4px 18px -2px color-mix(in srgb, var(--accent) 20%, transparent); transform:none; }
+.book-information > summary:active { transform:scale(.96); transition-duration:80ms; box-shadow:inset 0 2px 4px rgb(0 0 0 / .14), 0 2px 8px color-mix(in srgb, var(--accent) 15%, transparent); }
+.book-information[open] > summary { margin-bottom:.75rem; background:linear-gradient(135deg, color-mix(in srgb, white 76%, var(--accent) 24%), color-mix(in srgb, white 56%, var(--accent) 16%)); border-color:rgba(255, 255, 255, 0.85); box-shadow:inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.04), inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 4px 16px -2px color-mix(in srgb, var(--accent) 22%, transparent); color:var(--accent); }
+:root[data-theme="dark"] .book-information > summary {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%), color-mix(in srgb, #0d1e36 45%, transparent);
+  border-color: var(--glass-border);
+  color: var(--text);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  box-shadow: var(--glass-bevel-btn), 0 4px 16px -2px rgba(0, 4, 12, 0.5);
+}
+:root[data-theme="dark"] .book-information > summary:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.06) 100%), color-mix(in srgb, #112644 55%, transparent);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 6px 20px -2px rgba(0, 4, 12, 0.6);
+}
+:root[data-theme="dark"] .book-information[open] > summary {
+  background: linear-gradient(135deg, rgba(56, 120, 240, 0.32) 0%, rgba(30, 80, 180, 0.2) 100%), color-mix(in srgb, #102646 55%, transparent);
+  border-color: rgba(121, 174, 255, 0.35);
+  box-shadow: inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.3), 0 4px 16px -2px rgba(56, 120, 240, 0.3);
+  color: #79aeff;
+}
 .book-details-panel { padding:1rem; }
 .book-details-panel h2 { font-size:1rem; }
 .book-details-panel dl { border:0; gap:.7rem; background:none; }

@@ -22,6 +22,7 @@ import {EduPageSync} from "../../src/components/edupage-sync";
 import {NotificationCenter} from "../../src/components/notification-center";
 import {TaskCenter} from "../../src/components/task-center";
 import {PageIntro} from "../../src/components/ui";
+import {OpticalEnvironment} from "../../src/components/design/optical-environment";
 import {parseLocale,dictionaries} from "../../src/lib/i18n";
 import {initialLibraryFilters} from "../../src/lib/library";
 import {designCopy} from "../../src/lib/design-copy";
@@ -50,7 +51,7 @@ function Harness() {
   const initial=(window as unknown as {fixtureReading:{page:number;bookmarks:number[]}}).fixtureReading;
   const empty=<p className="py-6">{t.noProgress}</p>;
   const material={[materialKey(subjects[0].id,classes[0].grade)]:"/books/"+id+"/read?variant="+id};
-  return <LocaleProvider locale={locale}><AppFrame admin={path==="/admin"} preferences={<PreferenceControls localeAction={async value=>{setLocale(parseLocale(value));document.documentElement.lang=value;return {ok:true};}}/>}
+  return <LocaleProvider locale={locale}><OpticalEnvironment/><AppFrame admin={path==="/admin"} preferences={<PreferenceControls localeAction={async value=>{setLocale(parseLocale(value));document.documentElement.lang=value;return {ok:true};}}/>}
     avatar={<NotificationCenter/>} account={<form><button className="button button-secondary">{t.logout}</button></form>} profileAccount={<><Link className="header-avatar" href="/profile" aria-label={t.profile}>SS</Link><span>Synthetic Student</span></>}>
     {path==="/" ? <><header className="dashboard-heading"><div><p className="eyebrow">{c.welcome}</p><h1>{c.hello}, Synthetic Student</h1></div><span className="status-chip">{classes[0].name}</span></header>
       <HomeStudyDashboard lessons={lessons} subjects={subjects} tasks={tasks} classId={classes[0].id} today="2026-09-18" time="09:00" nonSchoolDays={nonSchoolDays} grade={classes[0].grade} materials={material}

@@ -56,10 +56,7 @@ export default async function ReadPage({
       .eq("book_variant_id", edition.id)
       .order("page_number"),
   ]);
-
-  if (progress.error || bookmarks.error)
-    throw new Error("Не удалось загрузить настройки чтения.");
-
+  const bookmarkList = bookmarks.data ? bookmarks.data.map((b) => b.page_number) : [];
   const requested = pageSchema.safeParse(query.page);
   const ai = aiStudyConfig();
   const startPage = requested.success
@@ -96,15 +93,15 @@ export default async function ReadPage({
 
       <ReaderWorkspace information={
         <section
-          className="surface-card book-details-panel border border-[var(--line)] bg-[var(--surface)] p-6 rounded-lg"
+          className="surface-card book-details-panel p-6"
           aria-label={t.aboutMaterial}
         >
           <h2 className="section-title text-xl mb-4 text-[var(--accent)] font-semibold">
             {t.aboutMaterial}
           </h2>
-          <dl className="grid gap-px border border-[var(--line)] bg-[var(--line)] sm:grid-cols-2 lg:grid-cols-3 rounded overflow-hidden">
+          <dl className="grid gap-px border border-[var(--glass-border)] bg-[var(--glass-border)] sm:grid-cols-2 lg:grid-cols-3 rounded-[var(--radius-sm)] overflow-hidden">
             {infoRows.map(([term, value]) => (
-              <div className="bg-[var(--surface)] p-4" key={String(term)}>
+              <div className="bg-[color-mix(in_srgb,var(--surface)_55%,transparent)] dark:bg-[var(--surface)] backdrop-blur-md p-4" key={String(term)}>
                 <dt className="text-xs uppercase tracking-wider text-[var(--muted)]">
                   {term}
                 </dt>
@@ -132,7 +129,7 @@ export default async function ReadPage({
         }>
           <PdfReader key={edition.id} bookId={id} variantId={edition.id}
             initialPage={Math.min(startPage, edition.page_count ?? 100000)}
-            initialBookmarks={bookmarks.data.map(b=>b.page_number)}/>
+            initialBookmarks={bookmarkList}/>
       </ReaderWorkspace>
     </SiteShell>
   );

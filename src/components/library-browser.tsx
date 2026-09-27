@@ -269,7 +269,7 @@ export function LibraryBrowser({
               key={book.id}
               className="min-w-0"
             >
-              <Link prefetch={false} href={"/books/" + book.id + "/read" + (studyIntent ? "#ai-study" : "")} className="library-card border border-[var(--line)] bg-[var(--surface)] p-6 h-full" aria-label={t.openMaterial + ": " + book.title}>
+              <Link prefetch={false} href={"/books/" + book.id + "/read" + (studyIntent ? "#ai-study" : "")} className="library-card p-6 h-full flex flex-col" aria-label={t.openMaterial + ": " + book.title}>
               <SubjectVisual
                 subject={subjectsById.get(
                   book.subject_id,

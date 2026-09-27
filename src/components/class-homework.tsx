@@ -153,7 +153,7 @@ export function ClassHomeworkPanel({
           )}
           <form
             key={(edit?.id ?? "new") + date + revision}
-            className="space-y-4"
+            className="homework-form-surface p-5 rounded-2xl border border-[var(--glass-border)] bg-[color-mix(in_srgb,var(--surface)_40%,transparent)] backdrop-blur-md space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
               const f = new FormData(e.currentTarget);
@@ -172,10 +172,19 @@ export function ClassHomeworkPanel({
               });
             }}
           >
-            <label>
+            <div className="flex items-center justify-between pb-2 border-b border-[var(--glass-divider)]">
+              <span className="font-semibold text-sm text-[var(--accent)]">
+                {edit ? (locale === "kk" ? "Тапсырманы өңдеу" : locale === "en" ? "Edit assignment" : "Редактирование задания") : (locale === "kk" ? "Жаңа үй тапсырмасы" : locale === "en" ? "New assignment" : "Новое домашнее задание")}
+              </span>
+              <span className="text-xs text-[var(--muted)]">
+                {date}
+              </span>
+            </div>
+
+            <label className="block">
               <span className="field-label">{t.subject}</span>
               <select
-                className="field"
+                className="field w-full"
                 name="subject"
                 required
                 defaultValue={edit?.subject_id ?? ""}
@@ -188,29 +197,34 @@ export function ClassHomeworkPanel({
                 ))}
               </select>
             </label>
-            <label>
+
+            <label className="block">
               <span className="field-label">{p.body}</span>
               <textarea
-                className="field"
-                rows={4}
+                className="field w-full"
+                rows={3}
                 name="body"
                 required
                 maxLength={1000}
+                placeholder={locale === "kk" ? "Үй тапсырмасын, параграф немесе жаттығу нөмірлерін жазыңыз..." : locale === "en" ? "Describe homework, exercises, page numbers..." : "Опишите домашнее задание (номера упражнений, параграф, ссылки)..."}
                 defaultValue={edit?.body ?? ""}
               />
             </label>
-            <button className="button" disabled={pending}>
-              {p.save}
-            </button>
-            {edit && (
-              <button
-                className="button button-secondary"
-                type="button"
-                onClick={() => setEdit(null)}
-              >
-                {p.cancel}
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              {edit && (
+                <button
+                  className="button button-secondary"
+                  type="button"
+                  onClick={() => setEdit(null)}
+                >
+                  {p.cancel}
+                </button>
+              )}
+              <button className="button" disabled={pending}>
+                {pending ? (locale === "kk" ? "Сақталуда..." : locale === "en" ? "Saving..." : "Сохранение...") : p.save}
               </button>
-            )}
+            </div>
           </form>
         </>
       )}

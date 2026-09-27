@@ -5,7 +5,6 @@ import { useEffect, useRef } from "react";
 const vertexSource = `attribute vec4 aVertexPosition;
 void main() { gl_Position = aVertexPosition; }`;
 
-// The supplied plasma shader; inverse smoothsteps are expressed in defined GLSL order.
 const fragmentSource = `
 precision highp float;
 uniform vec2 iResolution;
@@ -28,6 +27,10 @@ float getPlasmaY(float x, float horizontalFade, float offset) {
 void main() {
   vec2 uv = gl_FragCoord.xy / iResolution.xy;
   vec2 space = (gl_FragCoord.xy - iResolution.xy / 2.0) / iResolution.x * 10.0;
+  
+  // Position the waves slightly lower to frame the auth area comfortably
+  space.y += 0.35;
+
   float horizontalFade = 1.0 - (cos(uv.x * 6.28) * 0.5 + 0.5);
   float verticalFade = 1.0 - (cos(uv.y * 6.28) * 0.5 + 0.5);
   space.y += random(space.x * 0.5 + iTime * warpSpeed) * (0.5 + horizontalFade);
@@ -38,23 +41,26 @@ void main() {
     float offsetTime = iTime * offsetSpeed;
     float offsetPosition = float(l) + space.x * 0.5;
     float rand = random(offsetPosition + offsetTime) * 0.5 + 0.5;
-    float halfWidth = mix(0.01, 0.2, rand * horizontalFade) / 2.0;
+    float halfWidth = mix(0.015, 0.22, rand * horizontalFade) / 2.0;
     float offset = random(offsetPosition + offsetTime * (1.0 + normalizedLineIndex)) * mix(0.6, 2.0, horizontalFade);
     float linePosition = getPlasmaY(space.x, horizontalFade, offset);
-    // Light appearance uses only the crisp stroke. The soft halo belongs to dark appearance.
-    float line = drawCrispLine(linePosition, halfWidth * 0.12, space.y);
-    line += drawSmoothLine(linePosition, halfWidth, space.y) * 0.38 * iTheme;
+    
+    // Both light and dark use crisp lines + wide soft halos so frosted glass blur diffuses it beautifully
+    float line = drawCrispLine(linePosition, halfWidth * 0.15, space.y);
+    line += drawSmoothLine(linePosition, halfWidth * 1.8, space.y) * mix(0.35, 0.45, iTheme);
     float circleX = mod(float(l) + iTime * lineSpeed, 25.0) - 12.0;
     vec2 circlePosition = vec2(circleX, getPlasmaY(circleX, horizontalFade, offset));
-    line += drawCircle(circlePosition, 0.01, space) * 2.5 * iTheme;
+    line += drawCircle(circlePosition, 0.015, space) * 2.2;
     lines += line * rand;
   }
-  vec3 lightBackground = mix(vec3(0.985, 0.988, 0.995), vec3(0.925, 0.935, 0.950), uv.x);
+  vec3 lightBackground = mix(vec3(0.975, 0.982, 0.995), vec3(0.925, 0.938, 0.958), uv.x);
   vec3 darkBackground = mix(vec3(0.008, 0.030, 0.070), vec3(0.015, 0.080, 0.155), uv.x);
   darkBackground *= 0.72 + verticalFade * 0.28;
   vec3 background = mix(lightBackground, darkBackground, iTheme);
-  vec3 stroke = mix(vec3(0.10, 0.12, 0.15), vec3(0.035, 0.33, 0.72), iTheme);
-  float strokeStrength = clamp(lines * mix(0.34, 0.54, iTheme), 0.0, mix(0.72, 0.94, iTheme));
+  
+  // Rich sapphire / academic blue in light theme, neon electric cyan-blue in dark theme
+  vec3 stroke = mix(vec3(0.12, 0.28, 0.52), vec3(0.035, 0.38, 0.85), iTheme);
+  float strokeStrength = clamp(lines * mix(0.48, 0.65, iTheme), 0.0, 1.0);
   gl_FragColor = vec4(mix(background, stroke, strokeStrength), 1.0);
 }`;
 

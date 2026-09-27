@@ -94,7 +94,6 @@ function TaskForm({task,subjects,onClose,onSaved,onArchived}:{task:PersonalTask|
    {error&&<p className="form-error" role="alert">{error}</p>}
    <footer className="task-form-actions">
     {task&&<button type="button" className="task-archive-button" disabled={pending} onClick={archive}><Archive size={17}/>{p.archive}</button>}
-    <span/>
     <button type="button" className="button button-secondary" disabled={pending} onClick={onClose}>{p.cancel}</button>
     <button className="button" disabled={pending}>{pending?p.saving:p.save}</button>
    </footer>
@@ -132,10 +131,9 @@ export function TaskCenter({initialTasks,subjects,variant="full"}:{initialTasks:
  return <section id="tasks" className={`surface-card task-center task-center-${variant}`}>
   <header className="task-center-header">
    <div className="task-center-heading"><span className="task-center-mark" aria-hidden="true"><ListTodo size={21}/></span><div><h2 className="section-title">{p.title}</h2><p>{variant==="compact"?p.quickHint:p.subtitle}</p></div></div>
-   <button type="button" className="button task-add-button" onClick={()=>setEditing(null)}><Plus size={17}/>{p.add}</button>
+   <button type="button" className="button task-add-button" onClick={()=>setEditing(null)} aria-label={p.add} title={p.add}><Plus size={18} aria-hidden="true"/><span className="task-add-label">{p.add}</span></button>
   </header>
   {variant==="full"&&<>
-   <div className="task-progress" aria-label={`${percent}% ${p.progress}`}><span><strong>{percent}%</strong> {p.progress}</span><span>{active.length} {p.remaining}</span><div><i style={{width:`${percent}%`}}/></div></div>
    <NotificationPreference/>
    <div className="task-filter" role="group" aria-label={p.title}>{(["today","upcoming","completed","all"] as Filter[]).map(item=><button type="button" key={item} aria-pressed={filter===item} onClick={()=>setFilter(item)}>{p[item]}<span>{item==="completed"?completed.length:item==="all"?tasks.length:item==="today"?active.filter(task=>task.due_at&&taskDay(task.due_at)!<=today).length:active.filter(task=>!task.due_at||taskDay(task.due_at)!>today).length}</span></button>)}</div>
   </>}

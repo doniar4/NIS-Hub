@@ -154,8 +154,8 @@ test("Phase 3 Chromium and WebKit browser verification", { timeout: 180_000 }, a
           await expect(page.locator("html")).not.toHaveAttribute("data-intro","true");
           assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
           await page.screenshot({ path: join(artifactDir, name + "-privacy-dark-mobile.png"), fullPage: true });
-          await page.goto(publicApp + "/library", { waitUntil: "networkidle" }); await expect(page).toHaveURL(/\/login\?next=/);
-          await page.goto(publicApp + "/admin", { waitUntil: "networkidle" }); await expect(page).toHaveURL(/\/login\?next=/);
+          await page.goto(publicApp + "/library", { waitUntil: "networkidle" }); await expect(page).toHaveURL(/\/\?auth=login&next=%2Flibrary/); await expect(page.locator(".welcome-screen")).toBeVisible();
+          await page.goto(publicApp + "/admin", { waitUntil: "networkidle" }); await expect(page).toHaveURL(/\/\?auth=login&next=%2Fadmin/); await expect(page.locator(".welcome-screen")).toBeVisible();
           const response = await page.request.get(publicApp + "/api/books/00000000-0000-4000-8000-000000000030/access");
           assert.equal(response.status(), 401); assert.ok(!(await response.text()).includes("signedURL"));
           assert.deepEqual(errors, []);

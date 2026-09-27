@@ -1,32 +1,55 @@
 .flame-button {
-  display:inline-grid;
-  place-items:center;
-  width:100%;
-  overflow:hidden;
-  border-radius:14px;
-  background:#e7f0ff;
-  color:var(--flame-text);
-  box-shadow:inset 0 1px 0 rgb(255 255 255 / .84),0 2px 5px rgb(49 101 204 / .08);
-  font:600 1rem/1.2 var(--font-display)!important;
-  letter-spacing:-.015em;
-  transition:background-color 140ms ease,border-color 140ms ease,box-shadow 140ms ease,color 140ms ease;
+  display: inline-grid;
+  place-items: center;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  min-height: 52px;
+  background: linear-gradient(180deg, rgba(36, 76, 120, 0.94) 0%, rgba(26, 58, 94, 0.98) 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 
+    0 4px 16px -2px rgba(24, 52, 85, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  font: 600 1rem/1.2 var(--font-display) !important;
+  letter-spacing: -0.015em;
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 160ms ease,
+              background 160ms ease;
+  cursor: pointer;
 }
 .flame-button:hover:not(:disabled) {
-  border-color:#3673e8!important;
-  background:#3673e8;
-  color:#fff;
-  box-shadow:inset 0 1px 0 rgb(255 255 255 / .2),0 5px 12px rgb(54 115 232 / .2);
+  background: linear-gradient(180deg, rgba(42, 88, 138, 0.96) 0%, rgba(30, 68, 110, 1) 100%) !important;
+  box-shadow: 
+    0 6px 20px -2px rgba(24, 52, 85, 0.4),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.7) !important;
+  transform: translateY(-1px);
+}
+.flame-button:active:not(:disabled) {
+  transform: scale(0.98) !important;
+  box-shadow: 
+    0 2px 6px rgba(24, 52, 85, 0.25),
+    inset 0 1px 2px rgba(0, 0, 0, 0.25) !important;
 }
 .flame-button:focus-visible {
-  outline:3px solid color-mix(in srgb,#3673e8 35%,transparent);
-  outline-offset:3px;
+  outline: 3px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  outline-offset: 3px;
 }
-.flame-button:active:not(:disabled) { background:#2e67d3; box-shadow:inset 0 1px 3px rgb(17 65 151 / .25); }
 :root[data-theme="dark"] .flame-button {
-  border-color:#3e6fae!important;
-  background:#193e72;
-  color:#eaf3ff;
-  box-shadow:inset 0 1px 0 rgb(255 255 255 / .12),0 2px 5px rgb(0 0 0 / .18);
+  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  border-color: rgba(147, 197, 253, 0.45) !important;
+  color: #ffffff !important;
+  box-shadow: 
+    0 4px 18px rgba(29, 78, 216, 0.45),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.55) !important;
 }
-:root[data-theme="dark"] .flame-button:hover:not(:disabled) { border-color:#6fa4ff!important; background:#4a85ee; }
+:root[data-theme="dark"] .flame-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%) !important;
+  box-shadow: 
+    0 6px 24px rgba(29, 78, 216, 0.65),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.7) !important;
+}
 @media (prefers-reduced-motion:reduce) { .flame-button { transition:none; } }

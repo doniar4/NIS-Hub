@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { chromium, expect } from "@playwright/test";
 
 // Run against a local server: node --import tsx --test tests/welcome-design-browser.smoke.ts
-test("welcome depth, delayed cue, shader and accessible auth modes", { timeout: 60_000 }, async () => {
+test("welcome depth, delayed cue, nature refraction and accessible auth modes", { timeout: 60_000 }, async () => {
   const browser = await chromium.launch({ args: ["--enable-unsafe-swiftshader"] });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -34,7 +34,9 @@ test("welcome depth, delayed cue, shader and accessible auth modes", { timeout: 
       }));
       assert.notEqual(colors.active, colors.track);
     }
-    const canvas = page.locator(".shader-background");
+    await page.evaluate(() => { document.documentElement.dataset.theme = "light"; });
+    const canvas = page.locator(".nature-environment canvas");
+    await expect(canvas).toHaveAttribute("data-ready", "true");
     assert.ok(await canvas.evaluate(el => el instanceof HTMLCanvasElement && el.width > 1 && el.height > 1 && !!el.getContext("webgl")));
     await page.setViewportSize({ width: 390, height: 844 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);

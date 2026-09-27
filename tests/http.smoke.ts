@@ -29,19 +29,37 @@ test("private file endpoint is closed without a session, validates IDs and disab
   assert.match(response.headers.get("cache-control") ?? "", /no-store/);
   assert.equal((await request(origin + "/api/books/invalid/access")).status, 404);
 });
-test("public pages render; auth availability matches configuration; missing page is a real 404", async () => {
-  for (const path of ["/", "/setup", "/privacy", "/terms", "/login", "/signup"]) {
+test("public pages render; auth routes redirect to Hello; missing page is a real 404", async () => {
+  for (const path of ["/", "/setup", "/privacy", "/terms"]) {
     const response = await request(origin + path);
     assert.equal(response.status, 200, path);
     const html = await response.text();
     assert.match(html, /NIS Hub/);
-    if (["/login", "/signup"].includes(path)) {
-      const authForm = html.match(/<form\b[\s\S]*?<\/form>/g)?.find(form => form.includes('name="email"'));
-      assert.ok(authForm, "Authentication form must exist independently of the theme control");
-      if (configured) assert.doesNotMatch(authForm, /<fieldset[^>]*disabled/);
-      else assert.match(authForm, /<fieldset[^>]*disabled/);
-    }
   }
+
+  for (const entry of [
+    { path: "/login?next=%2Fschedule", mode: "login", next: "/schedule" },
+    { path: "/login?next=https%3A%2F%2Fevil.example", mode: "login", next: "/profile" },
+    { path: "/signup", mode: "signup", next: null },
+  ]) {
+    const response = await request(origin + entry.path, { redirect: "manual" });
+    let target: URL;
+    if (response.status === 307) {
+      target = new URL(response.headers.get("location")!, origin);
+    } else {
+      assert.equal(response.status, 200, entry.path);
+      const html = await response.text();
+      const redirect = html.match(/<meta id="__next-page-redirect" http-equiv="refresh" content="1;url=([^"]+)"/);
+      assert.ok(redirect, "Streaming auth response must redirect to Hello");
+      target = new URL(redirect[1].replace(/&amp;/g, "&"), origin);
+    }
+
+    assert.equal(target.pathname, "/");
+    assert.equal(target.searchParams.get("auth"), entry.mode);
+    if (entry.next) assert.equal(target.searchParams.get("next"), entry.next);
+    assert.equal(target.hash, "#welcome-auth");
+  }
+
   assert.equal((await request(origin + "/nonexistent-page")).status, 404);
   const confirm = await request(origin + "/auth/confirm?token_hash=bad&type=email", { redirect: "manual" });
   assert.equal(new URL(confirm.headers.get("location")!, origin).pathname, "/login");

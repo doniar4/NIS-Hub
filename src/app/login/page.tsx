@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { AuthExperience } from "@/components/auth-experience";
 import { getViewer } from "@/lib/auth";
 import { safeNext } from "@/lib/validation";
 export default async function LoginPage({ searchParams }: {
@@ -10,5 +9,7 @@ export default async function LoginPage({ searchParams }: {
     const next = safeNext(params.next);
     if (viewer.user)
         redirect(next);
-    return <AuthExperience mode="login" next={next} configured={viewer.configured} confirmationFailed={params.confirmation === "failed"}/>;
+    const welcomeParams = new URLSearchParams({ auth: "login", next });
+    if (params.confirmation === "failed") welcomeParams.set("confirmation", "failed");
+    redirect(`/?${welcomeParams.toString()}#welcome-auth`);
 }

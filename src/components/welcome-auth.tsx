@@ -4,12 +4,14 @@ import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useI18n } from "./locale-provider";
 
-export function WelcomeAuth({ signupForm, loginForm, configured }: {
+export function WelcomeAuth({ signupForm, loginForm, configured, initialMode = "signup", confirmationFailed = false }: {
   signupForm: ReactNode;
   loginForm: ReactNode;
   configured: boolean;
+  initialMode?: "signup" | "login";
+  confirmationFailed?: boolean;
 }) {
-  const [mode, setMode] = useState<"signup" | "login">("signup");
+  const [mode, setMode] = useState<"signup" | "login">(initialMode);
   const id = useId();
   const { t } = useI18n();
   function handleKeys(event: KeyboardEvent<HTMLDivElement>) {
@@ -28,6 +30,7 @@ export function WelcomeAuth({ signupForm, loginForm, configured }: {
     </div>
     <h2 id="welcome-auth-title">{mode === "signup" ? t.signup : t.login}</h2>
     <p className="auth-subtitle">{mode === "signup" ? t.signupHint : t.loginHint}</p>
+    {confirmationFailed && <p className="form-error" role="alert">{t.confirmFailed}</p>}
     {!configured && <p className="notice" role="note">{t.authNotConfigured}</p>}
     {(["signup", "login"] as const).map(value => <div key={value} role="tabpanel" id={`${id}-${value}-panel`}
       aria-labelledby={`${id}-${value}-tab`} hidden={mode !== value} className="welcome-auth-fields">
