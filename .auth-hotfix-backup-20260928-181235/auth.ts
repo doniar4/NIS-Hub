@@ -24,29 +24,10 @@ export async function authenticate(mode: "login" | "signup", _state: ActionState
         const supabase = await createClient(true);
         if (!supabase)
             return { error: t.authNotConfigured };
-        let result;
-        if (mode === "signup") {
-            result = await supabase.auth.signUp(parsed.data);
-        } else {
-            // Clear only the local Supabase session before establishing
-            // a fresh password session. This helps with stale SSR cookie state.
-            try {
-                await supabase.auth.signOut({ scope: "local" });
-            } catch {
-                // Best effort only; password sign-in below is authoritative.
-            }
-            result = await supabase.auth.signInWithPassword(parsed.data);
-        }
-
+        const result = mode === "signup"
+            ? await supabase.auth.signUp(parsed.data)
+            : await supabase.auth.signInWithPassword(parsed.data);
         if (result.error) {
-            // Safe diagnostics only: never log email, password, tokens,
-            // cookies, headers, or the raw provider error object.
-            console.warn("[auth] Supabase auth failed", {
-                mode,
-                code: result.error.code ?? "unknown",
-                status: result.error.status ?? 0,
-            });
-
             if (result.error.status === 429)
                 return { error: t.tooManyAttempts };
             if (result.error.code === "email_not_confirmed")
