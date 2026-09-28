@@ -24,24 +24,14 @@ export async function authenticate(mode: "login" | "signup", _state: ActionState
         const supabase = await createClient(true);
         if (!supabase)
             return { error: t.authNotConfigured };
-        let result;
-        if (mode === "signup") {
-            result = await supabase.auth.signUp(parsed.data);
-        } else {
-            // Clear only the local Supabase session before establishing
-            // a fresh password session. This helps with stale SSR cookie state.
-            try {
-                await supabase.auth.signOut({ scope: "local" });
-            } catch {
-                // Best effort only; password sign-in below is authoritative.
-            }
-            result = await supabase.auth.signInWithPassword(parsed.data);
-        }
+        const result = mode === "signup"
+            ? await supabase.auth.signUp(parsed.data)
+            : await supabase.auth.signInWithPassword(parsed.data);
 
         if (result.error) {
             // Safe diagnostics only: never log email, password, tokens,
             // cookies, headers, or the raw provider error object.
-            console.warn("[auth] Supabase auth failed", {
+            console.warn("[auth] Supabase authentication failed", {
                 mode,
                 code: result.error.code ?? "unknown",
                 status: result.error.status ?? 0,
@@ -53,6 +43,29 @@ export async function authenticate(mode: "login" | "signup", _state: ActionState
                 return { error: t.confirmEmail };
             return { error: mode === "login" ? t.loginError : t.signupError };
         }
+
+        if (mode === "login") {
+            if (!result.data.session || !result.data.user) {
+                console.warn("[auth] Supabase login returned no session", { mode });
+                return { error: t.saveError };
+            }
+
+            const verification = await supabase.auth.getUser();
+            if (verification.error || !verification.data.user) {
+                console.warn("[auth] Supabase session verification failed", {
+                    mode,
+                    code: verification.error?.code ?? "missing_user",
+                    status: verification.error?.status ?? 0,
+                });
+                return { error: t.saveError };
+            }
+
+            if (verification.data.user.id !== result.data.user.id) {
+                console.warn("[auth] Supabase session user mismatch", { mode });
+                return { error: t.saveError };
+            }
+        }
+
         await markWelcomeComplete();
         if (mode === "signup" && !result.data.session)
             return { success: t.checkEmail };
