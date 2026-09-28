@@ -24,7 +24,7 @@ drop policy if exists "Users create their own student profile" on public.profile
 revoke insert, delete, update on public.profiles from anon, authenticated;
 grant select on public.profiles to authenticated;
 grant update(display_name, class_id, bio, avatar_path) on public.profiles to authenticated;
-drop policy "Admins read profiles" on public.profiles;
+drop policy if exists "Admins read profiles" on public.profiles;
 
 create or replace function public.is_admin()
 returns boolean language sql stable security definer set search_path = '' as $$
@@ -34,15 +34,17 @@ revoke all on function public.is_admin() from public, anon;
 grant execute on function public.is_admin() to authenticated;
 
 -- Deleting reference data must not silently clear profiles or cascade lessons.
-alter table public.profiles drop constraint profiles_class_id_fkey,
-  add constraint profiles_class_id_fkey foreign key(class_id) references public.classes(id) on delete restrict;
-alter table public.books drop constraint books_class_id_fkey,
-  add constraint books_class_id_fkey foreign key(class_id) references public.classes(id) on delete restrict;
-alter table public.schedule drop constraint schedule_class_id_fkey,
-  add constraint schedule_class_id_fkey foreign key(class_id) references public.classes(id) on delete restrict;
+alter table public.profiles drop constraint if exists profiles_class_id_fkey;
+alter table public.profiles add constraint profiles_class_id_fkey foreign key(class_id) references public.classes(id) on delete restrict;
+alter table public.books drop constraint if exists books_class_id_fkey;
+alter table public.books add constraint books_class_id_fkey foreign key(class_id) references public.classes(id) on delete restrict;
+alter table public.schedule drop constraint if exists schedule_class_id_fkey;
+alter table public.schedule add constraint schedule_class_id_fkey foreign key(class_id) references public.classes(id) on delete restrict;
 
-alter table public.books add column page_count integer check (page_count between 1 and 100000);
+alter table public.books add column if not exists page_count integer check (page_count between 1 and 100000);
+alter table public.books drop constraint if exists book_title_length;
 alter table public.books add constraint book_title_length check (length(btrim(title)) between 1 and 200);
+alter table public.books drop constraint if exists book_relative_pdf_path;
 alter table public.books add constraint book_relative_pdf_path check (
   file_path ~ '^[a-zA-Z0-9/_-]+\.pdf$' and file_path !~ '^/'
 );
@@ -50,10 +52,11 @@ alter table public.books add constraint book_relative_pdf_path check (
 -- Retain them as drafts so the publication constraint can be added safely.
 update public.books set publication_status = 'draft'
 where publication_status = 'published' and license_status <> 'approved';
+alter table public.books drop constraint if exists publication_requires_approval;
 alter table public.books add constraint publication_requires_approval
 check (publication_status <> 'published' or license_status = 'approved');
 
-create table public.book_rights (
+create table if not exists public.book_rights (
   book_id uuid primary key references public.books(id) on delete cascade,
   source text not null check (length(btrim(source)) between 1 and 500),
   permission_note text not null check (length(btrim(permission_note)) between 1 and 2000)
@@ -62,6 +65,7 @@ alter table public.book_rights enable row level security;
 revoke update on public.book_rights from authenticated;
 grant select, insert, delete on public.book_rights to authenticated;
 grant update(source, permission_note) on public.book_rights to authenticated;
+drop policy if exists "Only admins manage rights evidence" on public.book_rights;
 create policy "Only admins manage rights evidence" on public.book_rights
 for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
@@ -79,6 +83,7 @@ begin
 end;
 $$;
 revoke all on function private.check_publication() from public;
+drop trigger if exists book_publication_evidence on public.books;
 create constraint trigger book_publication_evidence after insert or update on public.books
 deferrable initially deferred for each row execute function private.check_publication();
 
@@ -92,6 +97,7 @@ begin
   return old;
 end;
 $$;
+drop trigger if exists protect_published_rights on public.book_rights;
 create trigger protect_published_rights before delete on public.book_rights
 for each row execute function private.protect_rights();
 revoke all on function private.protect_rights() from public;
@@ -105,17 +111,21 @@ do $$ begin
 end $$;
 update public.bookmarks set page_number = 1 where page_number is null;
 alter table public.bookmarks alter column page_number set not null;
+alter table public.bookmarks drop constraint if exists bookmark_page_limit;
 alter table public.bookmarks add constraint bookmark_page_limit check (page_number <= 100000);
-drop policy "Users manage their own bookmarks" on public.bookmarks;
+drop policy if exists "Users manage their own bookmarks" on public.bookmarks;
+drop policy if exists "Read own bookmarks" on public.bookmarks;
 create policy "Read own bookmarks" on public.bookmarks for select to authenticated using (profile_id = (select auth.uid()));
+drop policy if exists "Delete own bookmarks" on public.bookmarks;
 create policy "Delete own bookmarks" on public.bookmarks for delete to authenticated using (profile_id = (select auth.uid()));
+drop policy if exists "Save bookmark on readable book" on public.bookmarks;
 create policy "Save bookmark on readable book" on public.bookmarks for insert to authenticated
 with check (profile_id = (select auth.uid()) and exists (
   select 1 from public.books b where b.id = book_id and b.publication_status = 'published' and b.license_status = 'approved'
   and (b.page_count is null or page_number <= b.page_count)
 ));
 
-create table public.reading_progress (
+create table if not exists public.reading_progress (
   profile_id uuid references public.profiles(id) on delete cascade,
   book_id uuid references public.books(id) on delete cascade,
   page_number integer not null check (page_number between 1 and 100000),
@@ -124,14 +134,18 @@ create table public.reading_progress (
 );
 alter table public.reading_progress enable row level security;
 grant select, insert, update, delete on public.reading_progress to authenticated;
+drop policy if exists "Read own progress" on public.reading_progress;
 create policy "Read own progress" on public.reading_progress for select to authenticated using (profile_id = (select auth.uid()));
+drop policy if exists "Delete own progress" on public.reading_progress;
 create policy "Delete own progress" on public.reading_progress for delete to authenticated using (profile_id = (select auth.uid()));
+drop policy if exists "Insert own readable progress" on public.reading_progress;
 create policy "Insert own readable progress" on public.reading_progress for insert to authenticated with check (
   profile_id = (select auth.uid()) and exists (
     select 1 from public.books b where b.id = book_id and b.publication_status = 'published' and b.license_status = 'approved'
     and (b.page_count is null or page_number <= b.page_count)
   )
 );
+drop policy if exists "Update own readable progress" on public.reading_progress;
 create policy "Update own readable progress" on public.reading_progress for update to authenticated
 using (profile_id = (select auth.uid())) with check (
   profile_id = (select auth.uid()) and exists (
@@ -139,6 +153,7 @@ using (profile_id = (select auth.uid())) with check (
     and (b.page_count is null or page_number <= b.page_count)
   )
 );
+drop trigger if exists progress_updated_at on public.reading_progress;
 create trigger progress_updated_at before update on public.reading_progress for each row execute function public.set_updated_at();
 
 -- Atomic profile + Top 4 update, serialized per user, executed with caller's RLS.
@@ -196,11 +211,12 @@ revoke all on public.classes, public.subjects, public.profiles, public.books, pu
 -- Private signed URLs are issued with the user's session, after a server check.
 update storage.buckets set public=false, file_size_limit=52428800, allowed_mime_types=array['application/pdf'] where id='book-files';
 update storage.buckets set public=false, file_size_limit=2097152, allowed_mime_types=array['image/jpeg','image/png','image/webp'] where id='avatars';
+drop policy if exists "Approved book files readable by authenticated users" on storage.objects;
 create policy "Approved book files readable by authenticated users" on storage.objects
 for select to authenticated using (bucket_id='book-files' and exists (
   select 1 from public.books b where b.file_path=name and b.license_status='approved' and b.publication_status='published'
 ));
-drop policy "Users update their own avatar" on storage.objects;
+drop policy if exists "Users update their own avatar" on storage.objects;
 create policy "Users update their own avatar" on storage.objects for update to authenticated
 using (bucket_id='avatars' and (storage.foldername(name))[1]=(select auth.uid()::text))
 with check (bucket_id='avatars' and (storage.foldername(name))[1]=(select auth.uid()::text));
