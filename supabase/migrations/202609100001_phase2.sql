@@ -13,6 +13,7 @@ begin
 end;
 $$;
 revoke all on function private.create_profile() from public;
+drop trigger if exists auth_user_profile on auth.users;
 create trigger auth_user_profile after insert on auth.users
 for each row execute function private.create_profile();
 insert into public.profiles(id, role)
