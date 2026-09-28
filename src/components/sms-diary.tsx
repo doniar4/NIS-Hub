@@ -34,25 +34,23 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const initialized=useRef(false);
+  const termAutoselected=useRef(false);
   const requestId=useRef(0);
   const localeTag=locale==="kk"?"kk-KZ":locale==="ru"?"ru-KZ":"en-GB";
   useEffect(()=>{
-    try {
+    const hydrateCache=window.setTimeout(()=>{try {
       const cachedSnap = localStorage.getItem("sms_diary_snapshot");
       const cachedDet = localStorage.getItem("sms_diary_details");
-      if (cachedSnap) {
-        setResult(prev => prev.snapshot ? prev : ({ ...prev, snapshot: JSON.parse(cachedSnap) }));
-      }
-      if (cachedDet) {
-        setDetails(prev => Object.keys(prev).length ? prev : JSON.parse(cachedDet));
-      }
-    } catch {}
+      if (cachedSnap) setResult(prev => prev.snapshot ? prev : ({ ...prev, snapshot: JSON.parse(cachedSnap) }));
+      if (cachedDet) setDetails(prev => Object.keys(prev).length ? prev : JSON.parse(cachedDet));
+    } catch {}},0);
 
-    if(initialized.current || !sessionPresent || !enabled) return;
+    if(initialized.current || !sessionPresent || !enabled) return ()=>window.clearTimeout(hydrateCache);
     initialized.current=true;
     const id=++requestId.current;
     refreshSms().then(value=>{if(requestId.current===id)setResult(value);},()=>{if(requestId.current===id)setResult({connected:true,error:"sms_unavailable"});})
       .finally(()=>{if(requestId.current===id)setPending(false);});
+    return ()=>window.clearTimeout(hydrateCache);
   },[sessionPresent,enabled]);
 
   useEffect(() => {
@@ -112,6 +110,18 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
     }
   }
   const snapshot=result.snapshot;
+  useEffect(() => {
+    if (pending || termAutoselected.current || !snapshot?.filters || snapshot.filters.termId || snapshot.filters.terms.length === 0) return;
+    termAutoselected.current = true;
+    const month = new Date().getMonth() + 1;
+    const expected = month >= 9 && month <= 11 ? 1 : month === 12 || month <= 2 ? 2 : month <= 4 ? 3 : 4;
+    const numeral = ["", "i", "ii", "iii", "iv"][expected];
+    const preferred = snapshot.filters.terms.find((term) => {
+      const label = term.label.toLocaleLowerCase();
+      return new RegExp(`(^|\\s)${expected}([\\s.-]|$)`).test(label) || new RegExp(`(^|\\s)${numeral}([\\s.-]|$)`).test(label);
+    }) ?? snapshot.filters.terms[0];
+    void run(() => refreshSms({yearId:snapshot.filters!.yearId,termId:preferred.id}));
+  }, [pending, snapshot]);
   function matchingSubject(name:string) {
     const normalize=(value:string)=>value.normalize("NFKC").toLocaleLowerCase().trim();
     const matches=subjects.filter(s=>[s.name,s.name_ru,s.name_kz,s.name_en,s.short_name].some(v=>v&&normalize(v)===normalize(name)));

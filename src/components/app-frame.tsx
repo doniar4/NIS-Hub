@@ -21,7 +21,6 @@ import { v05Copy } from "@/lib/v05-copy";
 import { Sprout } from "./brand";
 
 import { communityCopy } from "@/lib/community-copy";
-import { ParallaxBackground } from "./parallax-background";
 
 let memoryCollapsed = false;
 
@@ -100,7 +99,9 @@ export function AppFrame({
 
   const dialog = useRef<HTMLDialogElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.sidebar = snapshot()
@@ -201,7 +202,6 @@ export function AppFrame({
 
   return (
     <div className="app-frame">
-      <ParallaxBackground />
       <a className="skip-link" href="#main">
         {t.skip}
       </a>
@@ -290,21 +290,47 @@ export function AppFrame({
             role="search"
             aria-label={p.search}
             className="global-search"
+            data-expanded={searchExpanded}
+            onFocusCapture={() => setSearchExpanded(true)}
+            onBlurCapture={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget) && !searchInput.current?.value) {
+                setSearchExpanded(false);
+              }
+            }}
           >
             <label className="sr-only" htmlFor="global-search">
               {p.search}
             </label>
 
             <input
+              ref={searchInput}
               id="global-search"
               type="search"
               name="q"
               maxLength={100}
               placeholder={p.search}
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && !event.currentTarget.value) {
+                  event.currentTarget.blur();
+                  setSearchExpanded(false);
+                }
+              }}
             />
 
-            <button type="submit" aria-label={p.searchGo}>
+            <button
+              type={searchExpanded ? "submit" : "button"}
+              aria-label={searchExpanded ? p.searchGo : p.search}
+              aria-expanded={searchExpanded}
+              aria-controls="global-search"
+              onClick={() => {
+                if (!searchExpanded) {
+                  setSearchExpanded(true);
+                  requestAnimationFrame(() => searchInput.current?.focus());
+                }
+              }}
+            >
               <MagnifyingGlassIcon aria-hidden="true" />
+              <span className="search-compact-label">{p.searchGo}</span>
             </button>
           </form>
 

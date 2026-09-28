@@ -57,12 +57,7 @@ function PdfPage({
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-
-        if (!entry?.isIntersecting) return;
-
-        setNearby(true);
-
-
+        setNearby(Boolean(entry?.isIntersecting));
       },
       {
         root,
@@ -150,8 +145,8 @@ function PdfPage({
     return () => {
       cancelled = true;
       task?.cancel();
-
-      if (canvas && !canvas.isConnected) {
+      if (canvas) {
+        canvasHost.current?.replaceChildren();
         canvas.width = 0;
         canvas.height = 0;
       }
@@ -419,38 +414,11 @@ export function PdfReader({
           import.meta.url,
         ).toString();
 
-        const file = await fetch(url, {
-          signal: abort.signal,
-          cache: "no-store",
-          referrerPolicy: "no-referrer",
-        });
-
-        if (!file.ok) {
-          throw new Error(
-            locale === "kk"
-              ? "PDF файлын алу мүмкін болмады. Қайта жүктеп көріңіз."
-              : locale === "en"
-              ? "Failed to fetch PDF. Please reload."
-              : "Не удалось получить PDF. Повторите загрузку.",
-          );
-        }
-
-        const bytes = await file.arrayBuffer();
-
-        if (bytes.byteLength > 52428800) {
-          throw new Error(
-            locale === "kk"
-              ? "PDF көлемі рұқсат етілген 50 МБ шегінен асады."
-              : locale === "en"
-              ? "PDF exceeds maximum allowed size of 50 MB."
-              : "PDF превышает допустимый размер 50 МБ.",
-          );
-        }
-
-        if (cancelled) return;
-
         task = pdfjs.getDocument({
-          data: bytes,
+          url,
+          disableAutoFetch: false,
+          disableStream: false,
+          rangeChunkSize: 262144,
           useSystemFonts: true,
           cMapUrl: "/pdfjs/cmaps/",
           standardFontDataUrl:

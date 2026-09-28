@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useI18n } from "./locale-provider";
 import { SectionLink } from "./ui";
@@ -27,6 +27,7 @@ interface FormattedWorkItem {
   percent?: number;
   date?: string;
   formattedDate?: string;
+  change?: "new" | "updated";
 }
 
 function normalize(value: string): string {
@@ -47,10 +48,13 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
   const [connected, setConnected] = useState(sessionPresent);
   const [works, setWorks] = useState<FormattedWorkItem[]>([]);
   const [hasLoadedCache, setHasLoadedCache] = useState(false);
+  const cachedWorks = useRef<SmsAssessment[]>([]);
 
   const localeTag = locale === "kk" ? "kk-KZ" : locale === "ru" ? "ru-KZ" : "en-GB";
 
-  function formatWorks(rawList: SmsAssessment[]): FormattedWorkItem[] {
+  function formatWorks(rawList: SmsAssessment[], previous: SmsAssessment[] = []): FormattedWorkItem[] {
+    const key = (item: SmsAssessment) => `${normalize(item.subject)}|${item.type ?? ""}|${item.date ?? ""}|${normalize(item.title ?? "")}`;
+    const before = new Map(previous.map((item) => [key(item), item]));
     return rawList
       .filter((a) => (a.type === "sor" || a.type === "soch") && a.score !== undefined)
       .slice(0, 4)
@@ -60,6 +64,7 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
           a.type === "sor"
             ? (locale === "kk" ? "БЖБ" : locale === "en" ? "SOR" : "СОР")
             : (locale === "kk" ? "ТЖБ" : locale === "en" ? "SOCH" : "СОЧ");
+        const old = before.get(key(a));
 
         return {
           id: `work-${a.subject}-${a.date ?? ""}-${idx}-${a.title ?? ""}`,
@@ -81,39 +86,42 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
                 new Date(a.date + "T12:00:00Z")
               )
             : undefined,
+          change: previous.length === 0 ? undefined : !old ? "new" : old.score !== a.score || old.max !== a.max || old.percent !== a.percent ? "updated" : undefined,
         };
       });
   }
 
   useEffect(() => {
-    // 1. Check cached recent works
-    try {
-      const cachedRaw = localStorage.getItem("sms_diary_recent_works");
-      if (cachedRaw) {
-        const parsed = JSON.parse(cachedRaw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setWorks(formatWorks(parsed));
-          setHasLoadedCache(true);
-        }
-      } else {
-        // Fallback check details cache if available
-        const detRaw = localStorage.getItem("sms_diary_details");
-        if (detRaw) {
-          const det = JSON.parse(detRaw);
-          const allAssessments: SmsAssessment[] = [];
-          for (const item of Object.values(det) as { assessments?: SmsAssessment[] }[]) {
-            if (item?.assessments) allAssessments.push(...item.assessments);
-          }
-          if (allAssessments.length > 0) {
-            allAssessments.sort((a, b) => (b.date || "0000").localeCompare(a.date || "0000"));
-            setWorks(formatWorks(allAssessments));
+    const hydrateCache = window.setTimeout(() => {
+      try {
+        const cachedRaw = localStorage.getItem("sms_diary_recent_works");
+        if (cachedRaw) {
+          const parsed = JSON.parse(cachedRaw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            cachedWorks.current = parsed;
+            setWorks(formatWorks(parsed));
             setHasLoadedCache(true);
           }
+        } else {
+          const detRaw = localStorage.getItem("sms_diary_details");
+          if (detRaw) {
+            const det = JSON.parse(detRaw);
+            const allAssessments: SmsAssessment[] = [];
+            for (const item of Object.values(det) as { assessments?: SmsAssessment[] }[]) {
+              if (item?.assessments) allAssessments.push(...item.assessments);
+            }
+            if (allAssessments.length > 0) {
+              allAssessments.sort((a, b) => (b.date || "0000").localeCompare(a.date || "0000"));
+              cachedWorks.current = allAssessments;
+              setWorks(formatWorks(allAssessments));
+              setHasLoadedCache(true);
+            }
+          }
         }
+      } catch {
+        // Ignore invalid local cache and continue with the SMS source.
       }
-    } catch {
-      // Ignore parse errors
-    }
+    }, 0);
 
     // 2. Fetch fresh works in background if session is present
     if (sessionPresent) {
@@ -125,7 +133,8 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
             try {
               localStorage.setItem("sms_diary_recent_works", JSON.stringify(res.works));
             } catch {}
-            setWorks(formatWorks(res.works));
+            setWorks(formatWorks(res.works, cachedWorks.current));
+            cachedWorks.current = res.works;
             setHasLoadedCache(true);
           } else if (res.error === "session_expired") {
             setConnected(false);
@@ -135,6 +144,7 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
         }
       });
     }
+    return () => window.clearTimeout(hydrateCache);
   }, [sessionPresent]);
 
   const copy = {
@@ -146,6 +156,8 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
       openDiary: "Все работы в дневнике",
       noWorks: "В текущей четверти пока нет выставленных СОР / СОЧ.",
       loading: "Загрузка работ из SMS…",
+      newWork: "Новое",
+      updatedWork: "Изменилось",
       types: {
         sor: "СОР",
         soch: "СОЧ",
@@ -159,6 +171,8 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
       openDiary: "Күнделіктегі барлық жұмыстар",
       noWorks: "Ағымдағы тоқсанда әзірге БЖБ / ТЖБ жоқ.",
       loading: "SMS жұмыстары жүктелуде…",
+      newWork: "Жаңа",
+      updatedWork: "Өзгерді",
       types: {
         sor: "БЖБ",
         soch: "ТЖБ",
@@ -172,6 +186,8 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
       openDiary: "All works in diary",
       noWorks: "No graded SOR / SOCH in the current term yet.",
       loading: "Loading works from SMS…",
+      newWork: "New",
+      updatedWork: "Updated",
       types: {
         sor: "SOR",
         soch: "SOCH",
@@ -258,6 +274,7 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
                         )}
                         <span title={work.title}>{work.title}</span>
                         {work.formattedDate && <span>· {work.formattedDate}</span>}
+                        {work.change && <span className="recent-sms-change" data-change={work.change}>{work.change === "new" ? copy.newWork : copy.updatedWork}</span>}
                       </div>
                     </div>
                   </div>

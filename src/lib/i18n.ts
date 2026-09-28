@@ -811,9 +811,9 @@ const translations = {
     "Administrator role required"
   ],
   "beta": [
-    "Версия 0.7",
-    "0.7 нұсқасы",
-    "Version 0.7"
+    "Версия 1.0",
+    "1.0 нұсқасы",
+    "Version 1.0"
   ],
   "forbiddenHint": [
     "Этот аккаунт не может управлять учебными материалами и расписанием.",

@@ -149,6 +149,8 @@ export function parseJceAssessmentRows(raw:string,subject:string,type:SmsAssessm
     if(score===undefined && type==="formative")return [];
     const usableMax=max!==undefined&&max>=0?max:undefined;if((usableMax===0&&score!==undefined)||(usableMax!==undefined&&score!==undefined&&score>usableMax))throw new SmsError("parse_failed");
     const percent=usableMax===undefined||score===undefined?undefined:Math.round(score/usableMax*1000)/10;
-    return [{subject,title,type,...(score!==undefined?{score}:{}),...(usableMax!==undefined?{max:usableMax}:{}),...(percent!==undefined?{percent,percentSource:"derived" as const}:{})}];
+    const rawDate=[row.Date,row.WorkDate,row.DateValue].find(value=>typeof value==="string"&&value.trim()) as string|undefined;
+    const parsedDate=rawDate?date(rawDate.includes("T")?rawDate.slice(0,10):rawDate):undefined;
+    return [{subject,title,type,...(parsedDate?{date:parsedDate}:{}),...(score!==undefined?{score}:{}),...(usableMax!==undefined?{max:usableMax}:{}),...(percent!==undefined?{percent,percentSource:"derived" as const}:{})}];
   });
 }

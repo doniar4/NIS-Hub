@@ -10,9 +10,7 @@ import { designCopy } from "@/lib/design-copy";
 import { eduPageCopy } from "@/lib/edupage/copy";
 import { formatSchoolDate } from "@/lib/school-calendar";
 import { useI18n } from "./locale-provider";
-import { GlassSurface } from "./design/glass-surface";
-import { LiquidMaterial } from "./design/liquid-material";
-import { SubjectVisual } from "./subject-visual";
+import { SubjectMotif } from "./subject-motif";
 
 export function SelectedLesson({lesson, subjects, date, grade = null, materials = {}}: {
   lesson?: WeeklyLesson; subjects: SubjectRow[]; date: string; grade?: number | null; materials?: MaterialMap;
@@ -20,13 +18,12 @@ export function SelectedLesson({lesson, subjects, date, grade = null, materials 
   const {locale, t} = useI18n(), c = designCopy(locale);
   const subject = subjects.find(item => item.id === lesson?.subject_id);
   const href = lesson ? materials[materialKey(lesson.subject_id, grade)] ?? librarySubjectHref(lesson.subject_id, grade) : "";
-  return <GlassSurface className="selected-lesson" aria-label={c.selected}>
-    <LiquidMaterial/>
-    <SubjectVisual subject={subject} hero/>
+  return <section className="surface-card selected-lesson" aria-label={c.selected}>
     <div className="selected-lesson-content" key={(lesson?.id ?? "empty") + date}>
       <p className="eyebrow">{c.selected}</p>
       <time dateTime={date}>{formatSchoolDate(date, locale)}</time>
       <div className="selected-lesson-title" aria-live="polite" aria-atomic="true">
+        {lesson && <SubjectMotif subject={subject}/>}
         <h2>{lesson ? subjectName(subject, locale) : c.select}</h2>
       </div>
       {lesson && <>
@@ -42,5 +39,5 @@ export function SelectedLesson({lesson, subjects, date, grade = null, materials 
         <p className="study-source-hint">{c.studyHint}</p>
       </>}
     </div>
-  </GlassSurface>;
+  </section>;
 }

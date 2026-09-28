@@ -29,9 +29,7 @@ import type {
   SubjectRow,
 } from "@/lib/database.types";
 
-import { SubjectVisual } from "./subject-visual";
-
-import { PanelGlyph } from "./academic-art";
+import { SubjectMotif } from "./subject-motif";
 
 export function LibraryBrowser({
   books,
@@ -270,13 +268,7 @@ export function LibraryBrowser({
               className="min-w-0"
             >
               <Link prefetch={false} href={"/books/" + book.id + "/read" + (studyIntent ? "#ai-study" : "")} className="library-card p-6 h-full flex flex-col" aria-label={t.openMaterial + ": " + book.title}>
-              <SubjectVisual
-                subject={subjectsById.get(
-                  book.subject_id,
-                )}
-              />
-
-              <PanelGlyph kind="library" />
+              <SubjectMotif subject={subjectsById.get(book.subject_id)} />
 
               <p className="field-label">
                 {subjectName(

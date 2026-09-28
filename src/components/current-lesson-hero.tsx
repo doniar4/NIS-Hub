@@ -36,11 +36,14 @@ export function CurrentLessonHero({
 
   // Tick clock every 1 second
   useEffect(() => {
-    setMounted(true);
+    const mountFrame = requestAnimationFrame(() => setMounted(true));
     const interval = setInterval(() => {
       setNow(new Date());
     }, 1000);
-    return () => clearInterval(interval);
+    return () => {
+      cancelAnimationFrame(mountFrame);
+      clearInterval(interval);
+    };
   }, []);
 
   // Filter lessons for today
@@ -151,6 +154,7 @@ export function CurrentLessonHero({
     const sName = subjectName(s, locale);
     const room = normalizeRoom(status.lesson.room);
     const lessonNum = lessonRange(status.lesson) || status.index;
+    const materialHref = materials[materialKey(status.lesson.subject_id, grade)] ?? librarySubjectHref(status.lesson.subject_id, grade);
 
     return (
       <aside className="lesson-status-bar surface-card is-live" aria-label={sName}>
@@ -179,11 +183,16 @@ export function CurrentLessonHero({
             </div>
           </div>
 
-          <div className="status-timer">
-            <span className="status-timer-value">{formatCountdown(status.secondsLeft)}</span>
-            <span className="status-timer-label">
-              {locale === "kk" ? "қоңырау" : locale === "en" ? "bell" : "звонок"}
-            </span>
+          <div className="status-bar-actions">
+            <Link prefetch={false} className="status-material-link" href={materialHref}>
+              <span aria-hidden="true">▣</span>{locale === "kk" ? "Оқулық" : locale === "en" ? "Textbook" : "Учебник"}
+            </Link>
+            <div className="status-timer">
+              <span className="status-timer-value">{formatCountdown(status.secondsLeft)}</span>
+              <span className="status-timer-label">
+                {locale === "kk" ? "қоңырау" : locale === "en" ? "bell" : "звонок"}
+              </span>
+            </div>
           </div>
         </div>
       </aside>
@@ -275,6 +284,11 @@ export function CurrentLessonHero({
   if (status.type === "after_school") {
     return (
       <aside className="lesson-status-bar surface-card is-done" aria-label="done">
+        <div className="status-done-glow" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
         <div className="status-bar-row">
           <div className="status-bar-left">
             <div className="status-done-icon" aria-hidden="true">✓</div>
@@ -294,7 +308,18 @@ export function CurrentLessonHero({
                   ? "All lessons complete"
                   : "Уроки на сегодня завершены"}
               </h2>
+              <p className="status-done-copy">
+                {locale === "kk"
+                  ? "Бүгінгі жоспар орындалды. Енді демалуға болады."
+                  : locale === "en"
+                  ? "Today’s plan is complete. Time to recharge."
+                  : "План на день выполнен. Можно выдохнуть."}
+              </p>
             </div>
+          </div>
+          <div className="status-done-total" aria-hidden="true">
+            <strong>{totalLessons}</strong>
+            <span>{locale === "kk" ? "бүгінгі сабақ" : locale === "en" ? "lessons today" : "урока сегодня"}</span>
           </div>
         </div>
       </aside>

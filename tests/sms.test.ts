@@ -107,7 +107,7 @@ test("SMS JCE Diary uses the verified routes, fields and real response semantics
   if(url.pathname==="/JceDiary/GetJceDiary")return j({Url:`/jce/Diary/Index?shId=${ids.year}&qId=${ids.term}&pId=${ids.parallel}&lId=${ids.klass}&studId=${ids.student}&subjects=${ids.subject}&theme=0&lang=ru&ch=1`});
   if(url.pathname==="/jce/Diary/Index")return response(authenticated+'<script src="/Jce/diary/app.js"></script>');
   if(url.pathname==="/Jce/Diary/GetSubjects")return j([{Name:"Математика",JournalId:ids.journal,Score:72.5,Mark:5,MarkComment:null,Evaluations:[{Type:1,EvalType:1,Formula:1,Name:"Суммативное оценивание за раздел",ShortName:"СОР",Percent:50,IsCanDontConsider:false,MaxScores:{[ids.work]:16},Id:ids.sor},{Type:2,EvalType:2,Formula:2,Name:"Суммативное оценивание за четверть",ShortName:"СОЧ",Percent:50,IsCanDontConsider:false,MaxScores:{[ids.work]:20},Id:ids.soch}],Id:ids.subject}]);
-  if(url.pathname==="/Jce/Diary/GetResultByEvalution")return j([{Name:fields.evalId===ids.sor?"Раздел 1":"Четверть 1",Description:null,Score:fields.evalId===ids.sor?13:18,MaxScore:fields.evalId===ids.sor?16:20,Disabled:false,Comment:null,RubricId:null,Id:ids.work}]);
+  if(url.pathname==="/Jce/Diary/GetResultByEvalution")return j([{Name:fields.evalId===ids.sor?"Раздел 1":"Четверть 1",Date:"20.09.2026",Description:null,Score:fields.evalId===ids.sor?13:18,MaxScore:fields.evalId===ids.sor?16:20,Disabled:false,Comment:null,RubricId:null,Id:ids.work}]);
   assert.fail("Unexpected SMS path: "+url.pathname);
  };
  const initial={url:new URL(origin+"/root"),body:authenticated};
@@ -125,7 +125,7 @@ test("SMS JCE Diary uses the verified routes, fields and real response semantics
  assert.match(calls.find(call=>call.path==="/Jce/Diary/GetSubjects")?.referer||"",/^https:\/\/sms\.ura\.nis\.edu\.kz\/jce\/Diary\/Index\?/);
  calls.length=0;
  const assessments=await fetchDiarySubject(new SmsHttp(config(),[],transport),selected,ids.subject);
- assert.equal(assessments.length,2);assert.deepEqual(assessments.map(item=>item.type),["sor","soch"]);assert.equal(assessments[0].percent,81.3);assert.equal(assessments[0].percentSource,"derived");assert.equal(assessments[0].date,undefined);
+ assert.equal(assessments.length,2);assert.deepEqual(assessments.map(item=>item.type),["sor","soch"]);assert.equal(assessments[0].percent,81.3);assert.equal(assessments[0].percentSource,"derived");assert.equal(assessments[0].date,"2026-09-20");
  const detailCalls=calls.filter(call=>call.path==="/Jce/Diary/GetResultByEvalution");assert.deepEqual(detailCalls.map(call=>call.fields),[{journalId:ids.journal,evalId:ids.sor,page:"1",start:"0",limit:"100"},{journalId:ids.journal,evalId:ids.soch,page:"1",start:"0",limit:"100"}]);
  await assert.rejects(fetchDiary(new SmsHttp(config(),[],async()=>response(login))),{code:"session_expired"});
 });
