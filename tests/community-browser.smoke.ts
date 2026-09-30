@@ -11,7 +11,7 @@ import { asUser, fixtureId as id } from "./helpers/database";
 import { themeBootstrap } from "../src/lib/theme";
 const artifacts = "/tmp/nis-community-browser";
 test(
-  "Community UI: isolated PostgreSQL transport, responsive themes, diary import, PDF cover and sidebar",
+  "Community UI: isolated PostgreSQL transport, responsive themes, diary import, cover placeholder and sidebar",
   { timeout: 120000 },
   async () => {
     const bundle = await build({
@@ -77,27 +77,6 @@ test(
       if (path === "/favicon.ico") {
         res.statusCode = 204;
         res.end();
-        return;
-      }
-      if (path.startsWith("/api/books/")) {
-        res.setHeader("Content-Type", "application/json");
-        res.end(JSON.stringify({ url: "/fixture.pdf" }));
-        return;
-      }
-      if (path === "/fixture.pdf") {
-        res.setHeader("Content-Type", "application/pdf");
-        res.end(
-          "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 240 360]/Resources<<>>/Contents 4 0 R>>endobj\n4 0 obj<</Length 33>>stream\n0.1 0.4 0.2 rg 0 0 240 360 re f\nendstream\nendobj\ntrailer<</Root 1 0 R>>\n%%EOF",
-        );
-        return;
-      }
-      if (path === "/pdfjs-dist/legacy/build/pdf.worker.min.mjs") {
-        res.setHeader("Content-Type", "application/javascript");
-        res.end(
-          readFileSync(
-            "node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-          ),
-        );
         return;
       }
       if (path === "/rpc" || path === "/incoming") {
@@ -316,7 +295,7 @@ test(
       await page.locator("summary").click();
       await expect(page.locator(".ai-study-panel form")).toBeVisible();
       await expect(
-        page.locator(".book-first-page .cover-canvas:not(.cover-pending)"),
+        page.getByRole("img", { name: "Cover: Biology — Cover unavailable" }),
       ).toBeVisible({
         timeout: 15000,
       });
