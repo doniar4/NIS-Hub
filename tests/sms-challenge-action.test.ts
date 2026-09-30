@@ -59,7 +59,7 @@ async function harness(responses: unknown[]) {
   });
   const form=(answers:Record<string,string>={})=>{const value=new FormData();for(const [key,item] of Object.entries({iin,password,...answers}))value.set(key,item);return value;};
   const plaintext=()=>{
-    const raw=jar.get(pendingCookie)?.value;assert.ok(raw?.startsWith("v1.pending."));
+    const raw=jar.get(pendingCookie)?.value;if(!raw?.startsWith("v1.pending."))throw new Error("Missing pending SMS challenge cookie");
     const bytes=Buffer.from(raw.slice("v1.pending.".length),"base64url"), decipher=createDecipheriv("aes-256-gcm",secret,bytes.subarray(0,12));
     decipher.setAuthTag(bytes.subarray(12,28));decipher.setAAD(Buffer.from("nis-sms-pending-v1:owner"));
     return Buffer.concat([decipher.update(bytes.subarray(28)),decipher.final()]).toString();
