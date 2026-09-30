@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { startTransition, useEffect, useRef, useState, type FormEvent } from "react";
 import { EyeOpenIcon, EyeNoneIcon } from "@radix-ui/react-icons";
-import { connectSms, disconnectSms, loadSmsSubject, refreshSms } from "@/app/actions/sms";
+import { cancelSmsLogin, connectSms, continueSmsLogin, disconnectSms, loadSmsSubject, refreshSms, sendSmsLoginCode } from "@/app/actions/sms";
 import { smsCopy } from "@/lib/sms/copy";
+import { smsChallengeCopy } from "@/lib/sms/challenge-copy";
 import type { SmsAssessment, SmsErrorCode, SmsResult } from "@/lib/sms/types";
 import type { SubjectRow } from "@/lib/database.types";
 import { subjectName } from "@/lib/i18n";
@@ -27,12 +28,34 @@ function ChevronIcon() {
 
 export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;sessionPresent:boolean;subjects?:SubjectRow[]}) {
   const {locale}=useI18n(), p=smsCopy(locale);
+  const challengeCopy=smsChallengeCopy(locale);
   const [result,setResult]=useState<SmsResult>({connected:sessionPresent,...(!enabled?{error:"feature_disabled" as const}:{})});
   const [pending,setPending]=useState(sessionPresent&&enabled);
   const [details,setDetails]=useState<Record<string,{loading?:boolean;assessments?:SmsAssessment[];error?:SmsErrorCode}>>({});
   const [iin, setIin] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const challengeForm=useRef<HTMLFormElement>(null);
+  const challengeAnswers=useRef<Record<string,string>>({});
+  const [resendWaiting,setResendWaiting]=useState(false);
+  const challenge=result.challenge;
+  useEffect(()=>{
+    const remaining=(challenge?.resendAt??0)-Date.now();
+    const update=window.setTimeout(()=>setResendWaiting(remaining>0),0);
+    const unlock=window.setTimeout(()=>setResendWaiting(false),Math.max(0,remaining));
+    return ()=>{window.clearTimeout(update);window.clearTimeout(unlock);};
+  },[challenge?.resendAt]);
+  useEffect(()=>{
+    if(!challenge)return;
+    challengeForm.current?.querySelector<HTMLInputElement>("input")?.focus();
+    const timeout=window.setTimeout(()=>{
+      ++requestId.current;
+      challengeAnswers.current={};
+      setIin("");setPassword("");setShowPassword(false);setPending(false);
+      setResult({connected:false,error:"session_expired"});
+    },Math.max(0,challenge.expiresAt-Date.now()));
+    return ()=>window.clearTimeout(timeout);
+  },[challenge]);
   const initialized=useRef(false);
   const termAutoselected=useRef(false);
   const requestId=useRef(0);
@@ -79,35 +102,70 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
     catch {if(requestId.current===id)setResult({connected:result.connected,error:"sms_unavailable"});}
     finally {if(requestId.current===id)setPending(false);}
   }
-  async function connect(event:FormEvent<HTMLFormElement>) {
+  function connect(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form=new FormData();
-    form.append("iin", iin.trim());
-    form.append("password", password);
+    if(pending)return;
+    const form=new FormData(event.currentTarget);
+    form.set("iin", iin.trim());
+    form.set("password", password);
+    startTransition(()=>submitLogin(form));
+  }
+  async function submitLogin(form:FormData,sendCode=false) {
+    for(const name of ["captchaInput","twoFactorAuthCode","application2FACode"]) {
+      const answer=form.get(name);
+      if(typeof answer==="string")challengeAnswers.current[name]=answer;
+      else if(challengeAnswers.current[name])form.set(name,challengeAnswers.current[name]);
+    }
     const id=++requestId.current; setPending(true);
     try {
-      const value=await connectSms(form);
+      const value=await (sendCode?sendSmsLoginCode(form):challenge?continueSmsLogin(form):connectSms(form));
       if(requestId.current===id) {
-        setResult(value);
+        const retryable=value.error&&["busy","timeout","sms_unavailable","invalid_input","verification_failed"].includes(value.error);
+        let retainedChallenge=value.challenge ?? (retryable?challenge:undefined);
+        if(sendCode&&retainedChallenge?.captcha&&challenge?.captcha&&!retainedChallenge.image) {
+          retainedChallenge={...retainedChallenge,image:challenge.image};
+        }
+        if(retainedChallenge?.image&&retainedChallenge.image!==challenge?.image)delete challengeAnswers.current.captchaInput;
+        setResult(retainedChallenge?{...value,challenge:retainedChallenge}:value);
         setDetails({});
         if(value.connected) {
           setIin("");
           setPassword("");
-        } else {
-          // On login failure, keep IIN so user does not need to retype 12 numbers, clear password
+          setShowPassword(false);
+          challengeAnswers.current={};
+        } else if(!retainedChallenge&&value.error!=="busy") {
+          setIin("");
           setPassword("");
+          setShowPassword(false);
+          challengeAnswers.current={};
         }
       }
     } catch {
       if(requestId.current===id) {
-        setResult({connected:result.connected,error:"sms_unavailable"});
-        setPassword("");
+        setResult({connected:result.connected,error:"sms_unavailable",...(challenge?{challenge}:{})});
+        if(!challenge){setIin("");setPassword("");setShowPassword(false);challengeAnswers.current={};}
       }
     } finally {
       form.delete("iin");
       form.delete("password");
+      form.delete("captchaInput");
+      form.delete("twoFactorAuthCode");
+      form.delete("application2FACode");
       if(requestId.current===id) setPending(false);
     }
+  }
+  function cancelLogin() {
+    if(pending)return;
+    setIin("");setPassword("");setShowPassword(false);
+    challengeAnswers.current={};
+    setResult({connected:false});
+    startTransition(()=>run(cancelSmsLogin));
+  }
+  function sendCode() {
+    if(pending||resendWaiting||!challengeForm.current)return;
+    const form=new FormData(challengeForm.current);
+    form.set("iin",iin.trim());form.set("password",password);
+    startTransition(()=>submitLogin(form,true));
   }
   const snapshot=result.snapshot;
   useEffect(() => {
@@ -159,9 +217,29 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
     {!result.connected ? <div className="sms-connect-shell" data-diary-arrive>
       <div className="surface-card sms-connect">
         <p className="eyebrow">NIS Hub × SMS</p>
-        <h2>{p.connect}</h2>
-        <p className="sms-connect-lead">{p.consent}</p>
-        <form onSubmit={connect} aria-describedby="sms-privacy">
+        <h2>{challenge?challengeCopy.title:p.connect}</h2>
+        <p className="sms-connect-lead" id="sms-login-description" role={challenge?"status":undefined}>{challenge?challengeCopy.description:p.consent}</p>
+        {challenge ? <form ref={challengeForm} onSubmit={connect} aria-describedby="sms-login-description sms-challenge-expiry">
+          {challenge.captcha&&challenge.image&&<>
+            {/* SMS supplies a session-bound data URI; it must not use the image optimizer. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={challenge.image} alt={challengeCopy.imageAlt} style={{maxWidth:"100%",height:"auto"}}/>
+            <label htmlFor="sms-captcha">{challengeCopy.captcha}</label>
+            <input key={challenge.image} id="sms-captcha" className="field" name="captchaInput" required maxLength={128} autoComplete="off" spellCheck={false} disabled={pending}/>
+          </>}
+          {challenge.twoFactor&&<>
+            <label htmlFor="sms-two-factor">{challengeCopy.twoFactor}</label>
+            <button type="button" className="button button-secondary" onClick={sendCode} disabled={pending||resendWaiting}>{resendWaiting?challengeCopy.codeWait:challengeCopy.sendCode}</button>
+            <input id="sms-two-factor" className="field" name="twoFactorAuthCode" required minLength={4} maxLength={4} autoComplete="one-time-code" inputMode="numeric" disabled={pending}/>
+          </>}
+          {challenge.application2FA&&<>
+            <label htmlFor="sms-application-code">{challengeCopy.application}</label>
+            <input id="sms-application-code" className="field" name="application2FACode" required minLength={6} maxLength={6} autoComplete="one-time-code" inputMode="numeric" disabled={pending}/>
+          </>}
+          <p id="sms-challenge-expiry">{challengeCopy.expires}: <time dateTime={new Date(challenge.expiresAt).toISOString()}>{new Intl.DateTimeFormat(localeTag,{hour:"2-digit",minute:"2-digit"}).format(challenge.expiresAt)}</time></p>
+          <button className="button sms-connect-button" type="submit" disabled={!enabled||pending||(challenge.captcha&&!challenge.image)}>{pending?p.pending:challengeCopy.submit}</button>
+          <button className="button button-secondary" type="button" disabled={pending} onClick={cancelLogin}>{challengeCopy.cancel}</button>
+        </form> : <form onSubmit={connect} aria-describedby="sms-privacy">
           <label htmlFor="sms-iin">{p.iin}</label>
           <input
             id="sms-iin"
@@ -223,7 +301,7 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
           <button className="button sms-connect-button" type="submit" disabled={!enabled || pending}>
             {pending ? p.pending : p.connect}
           </button>
-        </form>
+        </form>}
       </div>
       <aside className="sms-privacy-panel" id="sms-privacy">
         <span className="sms-privacy-icon"><ShieldIcon/></span>
@@ -267,7 +345,7 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
       </div>}
     </div>}
     {pending&&<div className="sms-progress" role="status"><span/>{p.pending}</div>}
-    {result.error&&<p className="notice notice-error" role="alert" data-diary-arrive>{p.errors[result.error]}</p>}
+    {result.error&&<p className="notice notice-error" role="alert" data-diary-arrive>{result.error==="interactive_required"?challengeCopy.unsupported:p.errors[result.error]}{result.error==="interactive_required"&&<> <a href="https://sms.ura.nis.edu.kz" target="_blank" rel="noopener noreferrer">{challengeCopy.official}</a></>}</p>}
     {snapshot&&!pending&&<div className="sms-subjects">
       {!snapshot.subjects.length&&<p className="surface-card sms-empty">{snapshot.filters&&!snapshot.filters.termId?p.selectTerm:p.empty}</p>}
       {snapshot.subjects.map((s,index)=>{

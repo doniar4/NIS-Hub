@@ -1,4 +1,4 @@
-export type SmsErrorCode = "bad_credentials" | "session_expired" | "sms_unavailable" | "sms_changed" | "parse_failed" | "timeout" | "feature_disabled" | "interactive_required" | "invalid_input" | "busy";
+export type SmsErrorCode = "bad_credentials" | "session_expired" | "sms_unavailable" | "sms_changed" | "parse_failed" | "timeout" | "feature_disabled" | "interactive_required" | "invalid_input" | "busy" | "verification_failed";
 export type SmsStudentContext = { displayName?: string; className?: string; schoolYear?: string; term?: string };
 export type SmsAssessment = { subject: string; title?: string; type?: "formative" | "sor" | "soch" | "other"; date?: string; score?: number; max?: number; percent?: number; percentSource?: "official_display" | "derived" };
 export type SmsEvaluationSource = { id:string; label:string; shortLabel?:string; type?: SmsAssessment["type"] };
@@ -7,7 +7,8 @@ export type SmsFilterOption = { id:string; label:string };
 export type SmsDiarySelection = { yearId?:string; termId?:string };
 export type SmsDiaryFilters = { yearId:string; termId?:string; years:SmsFilterOption[]; terms:SmsFilterOption[] };
 export type SmsDiarySnapshot = { student: SmsStudentContext; subjects: SmsSubjectSummary[]; filters?:SmsDiaryFilters; fetchedAt: string };
-export type SmsResult = { connected: boolean; snapshot?: SmsDiarySnapshot; error?: SmsErrorCode };
+export type SmsLoginChallenge = { captcha: boolean; twoFactor: boolean; application2FA: boolean; image?: string; expiresAt: number; resendAt?: number };
+export type SmsResult = { connected: boolean; snapshot?: SmsDiarySnapshot; error?: SmsErrorCode; challenge?: SmsLoginChallenge };
 export type SmsSubjectDetailResult = { assessments?:SmsAssessment[]; error?:SmsErrorCode };
 export type SmsCookie = { name: string; value: string; path: string; expires?: number };
 export type SmsSession = { version: 1; expires: number; cookies: SmsCookie[] };
