@@ -564,13 +564,8 @@ html[data-sidebar="collapsed"] .sidebar-brand-row .sidebar-collapse { width: 40p
 .ai-study-panel form { max-width: 44rem; }
 .ai-study-panel details > div > section { max-width: 65ch; }
 .book-first-page { position: relative; width: 86px; height: 124px; flex-shrink: 0; border: 1px solid var(--line-strong); border-radius: 3px; overflow: hidden; background: var(--surface); box-shadow: 3px 4px 9px rgb(25 45 32 / .09); }
-.book-first-page .reading-cover, .cover-canvas { display: block; width: 100%; height: 100%; object-fit: contain; border: 0; }
-.cover-canvas { animation: panel-reveal 250ms ease; }
-.cover-pending { visibility: hidden; position: absolute; }
-.cover-skeleton { width: 100%; height: 100%; background: linear-gradient(100deg, var(--sidebar) 25%, var(--surface) 45%, var(--sidebar) 65%); background-size: 250% 100%; animation: cover-loading 1.8s ease-in-out infinite; }
+.book-first-page .reading-cover { display: block; width: 100%; height: 100%; object-fit: contain; border: 0; }
 .cover-unavailable { display: flex; flex-direction: column; justify-content: center; gap: .6rem; padding: .5rem; height: 100%; font-size: .65rem; line-height: 1.35; color: var(--muted); text-align: center; }
-.cover-unavailable button { min-height: 44px; text-decoration: underline; color: var(--accent); }
-@keyframes cover-loading { to { background-position: -170% 0; } }
 /* Notification cards adapted from Uiverse.io by akshat-patel28. */
 .notification-center { position: relative; }
 .notification-trigger { position: relative; display: grid; place-items: center; width: 40px; height: 42px; border: 1px solid var(--line); border-radius: 6px; background: var(--sidebar); color: var(--accent); transition: background 180ms; }

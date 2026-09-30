@@ -1,0 +1,12 @@
+{
+  "file": "promo/nis-hub-promo.mp4",
+  "size": 8371758,
+  "fullDecode": "pass",
+  "browser": "Chromium",
+  "width": 1920,
+  "height": 1080,
+  "duration": 32,
+  "decodedFrames": 120,
+  "seekTo29AndEnd": "pass",
+  "errors": []
+}

@@ -1,0 +1,195 @@
+[
+  {
+    "event": "navigate",
+    "origin": "https://nis-hub-ura.vercel.app",
+    "route": "/schedule",
+    "at": "2026-09-30T03:31:31.988Z"
+  },
+  {
+    "event": "authorization-verified",
+    "route": "/schedule",
+    "method": "existing owner tab, actual protected UI; no cookie transfer",
+    "at": "2026-09-30T03:31:43.067Z"
+  },
+  {
+    "event": "navigate",
+    "origin": "https://nis-hub-ura.vercel.app",
+    "route": "/",
+    "at": "2026-09-30T03:31:43.074Z"
+  },
+  {
+    "event": "captured",
+    "id": "01-welcome",
+    "route": "/",
+    "frames": 82,
+    "at": "2026-09-30T03:32:03.046Z"
+  },
+  {
+    "event": "navigate",
+    "origin": "https://nis-hub-ura.vercel.app",
+    "route": "/",
+    "at": "2026-09-30T03:32:03.050Z"
+  },
+  {
+    "event": "captured",
+    "id": "02-day",
+    "route": "/",
+    "frames": 96,
+    "at": "2026-09-30T03:32:20.324Z"
+  },
+  {
+    "event": "navigate",
+    "origin": "https://nis-hub-ura.vercel.app",
+    "route": "/schedule",
+    "at": "2026-09-30T03:32:20.330Z"
+  },
+  {
+    "event": "captured",
+    "id": "03-week",
+    "route": "/schedule",
+    "frames": 203,
+    "at": "2026-09-30T03:32:46.869Z"
+  },
+  {
+    "event": "navigate",
+    "origin": "https://nis-hub-ura.vercel.app",
+    "route": "/library",
+    "at": "2026-09-30T03:32:46.879Z"
+  },
+  {
+    "event": "captured",
+    "id": "04-library",
+    "route": "/library",
+    "frames": 53,
+    "at": "2026-09-30T03:33:11.259Z"
+  },
+  {
+    "event": "navigate",
+    "origin": "https://nis-hub-ura.vercel.app",
+    "route": "/",
+    "at": "2026-09-30T03:33:11.277Z"
+  },
+  {
+    "event": "failed",
+    "reason": "TimeoutError",
+    "detail": "Expected route, element, privacy condition or capture failed; do not build partial footage.",
+    "at": "2026-09-30T03:33:36.584Z"
+  },
+  {
+    "event": "navigate",
+    "origin": "https://nis-hub-ura.vercel.app",
+    "route": "/schedule",
+    "at": "2026-09-30T03:35:54.709Z"
+  },
+  {
+    "event": "route-ready",
+    "route": "/schedule",
+    "at": "2026-09-30T03:36:03.591Z"
+  },
+  {
+    "event": "authorization-verified",
+    "route": "/schedule",
+    "method": "existing owner tab, actual protected UI; no cookie transfer",
+    "at": "2026-09-30T03:36:03.595Z"
+  },
+  {
+    "event": "navigate",
+    "origin": "https://nis-hub-ura.vercel.app",
+    "route": "/",
+    "at": "2026-09-30T03:36:03.653Z"
+  },
+  {
+    "event": "route-ready",
+    "route": "/",
+    "at": "2026-09-30T03:36:06.166Z"
+  },
+  {
+    "event": "reuse-verified-capture",
+    "id": "01-welcome",
+    "route": "/",
+    "at": "2026-09-30T03:36:06.249Z"
+  },
+  {
+    "event": "navigate",
+    "origin": "https://nis-hub-ura.vercel.app",
+    "route": "/",
+    "at": "2026-09-30T03:36:06.262Z"
+  },
+  {
+    "event": "route-ready",
+    "route": "/",
+    "at": "2026-09-30T03:36:11.237Z"
+  },
+  {
+    "event": "reuse-verified-capture",
+    "id": "02-day",
+    "route": "/",
+    "at": "2026-09-30T03:36:11.303Z"
+  },
+  {
+    "event": "navigate",
+    "origin": "https://nis-hub-ura.vercel.app",
+    "route": "/schedule",
+    "at": "2026-09-30T03:36:11.322Z"
+  },
+  {
+    "event": "route-ready",
+    "route": "/schedule",
+    "at": "2026-09-30T03:36:18.746Z"
+  },
+  {
+    "event": "reuse-verified-capture",
+    "id": "03-week",
+    "route": "/schedule",
+    "at": "2026-09-30T03:36:18.786Z"
+  },
+  {
+    "event": "navigate",
+    "origin": "https://nis-hub-ura.vercel.app",
+    "route": "/library",
+    "at": "2026-09-30T03:36:18.792Z"
+  },
+  {
+    "event": "route-ready",
+    "route": "/library",
+    "at": "2026-09-30T03:36:22.548Z"
+  },
+  {
+    "event": "reuse-verified-capture",
+    "id": "04-library",
+    "route": "/library",
+    "at": "2026-09-30T03:36:22.643Z"
+  },
+  {
+    "event": "navigate",
+    "origin": "https://nis-hub-ura.vercel.app",
+    "route": "/",
+    "at": "2026-09-30T03:36:22.691Z"
+  },
+  {
+    "event": "route-ready",
+    "route": "/",
+    "at": "2026-09-30T03:36:24.898Z"
+  },
+  {
+    "event": "captured",
+    "id": "05-theme",
+    "route": "/",
+    "frames": 77,
+    "at": "2026-09-30T03:36:59.404Z"
+  },
+  {
+    "event": "captured",
+    "id": "06-language",
+    "route": "/",
+    "frames": 91,
+    "at": "2026-09-30T03:37:59.642Z"
+  },
+  {
+    "event": "captured",
+    "id": "07-outro",
+    "route": "/",
+    "frames": 35,
+    "at": "2026-09-30T03:39:18.287Z"
+  }
+]

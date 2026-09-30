@@ -63,8 +63,6 @@ function Harness() {
             />
             <section className="surface-card">
               <BookCover
-                bookId="fixture"
-                variantId="fixture"
                 url={null}
                 title="Biology"
               />

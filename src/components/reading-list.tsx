@@ -46,8 +46,6 @@ export async function ReadingList({
                 key={book.id}
                 title={book.title}
                 url={book.cover_url}
-                bookId={book.book_id}
-                variantId={book.id}
               />
             )}
 
