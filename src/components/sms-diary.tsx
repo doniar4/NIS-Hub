@@ -122,7 +122,7 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
       if(requestId.current===id) {
         const retryable=value.error&&["busy","timeout","sms_unavailable","invalid_input","verification_failed"].includes(value.error);
         let retainedChallenge=value.challenge ?? (retryable?challenge:undefined);
-        if(sendCode&&retainedChallenge?.captcha&&challenge?.captcha&&!retainedChallenge.image) {
+        if(retainedChallenge?.captcha&&challenge?.captcha&&!retainedChallenge.image) {
           retainedChallenge={...retainedChallenge,image:challenge.image};
         }
         if(retainedChallenge?.image&&retainedChallenge.image!==challenge?.image)delete challengeAnswers.current.captchaInput;
@@ -188,7 +188,8 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
   const formatNumber=(value:number)=>new Intl.NumberFormat(localeTag,{maximumFractionDigits:1}).format(value);
   const selection=snapshot?.filters?{yearId:snapshot.filters.yearId,termId:snapshot.filters.termId}:{};
   async function loadDetails(subjectId:string) {
-    if(details[subjectId]?.loading||details[subjectId]?.assessments||!snapshot?.filters?.termId)return;
+    const subject=snapshot?.subjects.find(item=>item.sourceId===subjectId);
+    if(subject?.assessmentsLoaded||details[subjectId]?.loading||details[subjectId]?.assessments||!snapshot?.filters?.termId)return;
     setDetails(value=>({...value,[subjectId]:{loading:true}}));
     const loaded=await loadSmsSubject({yearId:snapshot.filters.yearId,termId:snapshot.filters.termId},subjectId);
     setDetails(value=>({...value,[subjectId]:loaded.assessments?{assessments:loaded.assessments}:{error:loaded.error||"sms_unavailable"}}));
@@ -352,7 +353,7 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
         const subject=matchingSubject(s.subject);
         const detail=s.sourceId?details[s.sourceId]:undefined;
         const assessments=detail?.assessments??s.assessments;
-        const counts=assessmentCounts(s,detail?.assessments);
+        const counts=s.assessmentsLoaded||detail?.assessments?assessmentCounts(s,detail?.assessments):undefined;
         return <article className={`sms-subject${snapshot.subjects.length%2===1&&index===snapshot.subjects.length-1?" sms-subject-wide":""}`} key={s.sourceId??s.subject} data-diary-card>
           <header className="sms-subject-heading">
             <div data-diary-motif><SubjectMotif subject={subject}/></div>
@@ -384,7 +385,7 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
               }
             }}
           >
-            <summary><span>{p.assessment}{detail?.assessments?` · ${assessments.length}`:""}</span><ChevronIcon/></summary>
+            <summary><span>{p.assessment}{s.assessmentsLoaded||detail?.assessments?` · ${assessments.length}`:""}</span><ChevronIcon/></summary>
             {detail?.loading&&<p className="sms-detail-state" role="status">{p.detailsLoading}</p>}
             {detail?.error&&<p className="sms-detail-state notice-error" role="alert">{p.errors[detail.error]}</p>}
             {!detail?.loading&&!detail?.error&&<ol className="sms-assessments">{assessments.map((a,assessmentIndex)=><li key={`${a.title??a.type??"assessment"}-${assessmentIndex}`}>

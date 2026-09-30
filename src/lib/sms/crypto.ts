@@ -2,7 +2,7 @@ import "server-only";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { SmsError } from "./errors";
 import type { SmsSession } from "./types";
-export const SMS_MAX_AGE_MS = 30 * 60 * 1000;
+export const SMS_MAX_AGE_MS = 2 * 60 * 60 * 1000;
 export function sealSession(session: SmsSession, key: Buffer, userId: string): string {
   const iv = randomBytes(12), cipher = createCipheriv("aes-256-gcm", key, iv);
   cipher.setAAD(Buffer.from("nis-sms-v1:" + userId));

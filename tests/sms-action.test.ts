@@ -47,7 +47,7 @@ test("Actual SMS action: auth first, transient credentials, safe errors, secure 
    if(scenario==="bad"){assert.equal(result.connected,false);assert.equal(result.error,"bad_credentials");assert.equal(jar.size,0);}
    else{
     assert.equal(result.connected,true);assert.equal(result.error,undefined);assert.equal(result.snapshot?.student.schoolYear,"2026–2027");assert.equal(result.snapshot?.filters?.termId,undefined);
-    const cookie=jar.get("__Host-nis-sms");assert.ok(cookie);assert.equal(cookie.options?.httpOnly,true);assert.equal(cookie.options?.secure,true);assert.equal(cookie.options?.sameSite,"lax");assert.equal(cookie.options?.path,"/");assert.ok(Number(cookie.options?.maxAge)<=1800);
+    const cookie=jar.get("__Host-nis-sms");assert.ok(cookie);assert.equal(cookie.options?.httpOnly,true);assert.equal(cookie.options?.secure,true);assert.equal(cookie.options?.sameSite,"lax");assert.equal(cookie.options?.path,"/");assert.ok(Number(cookie.options?.maxAge)<=7200);
     assert.ok(!cookie.value.includes("synthetic"));assert.equal(cookie.value.startsWith("id."),scenario==="overflow");assert.equal(rows.length,scenario==="overflow"?1:0);assert.ok(!JSON.stringify(rows).includes("synthetic"));
     await mod.exports.disconnectSms();assert.equal(jar.size,0);assert.equal(rows.length,0);
    }

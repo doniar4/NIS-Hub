@@ -138,7 +138,7 @@ test("SMS encrypted overflow: additive migration, own-only RLS, bounded storage,
   assert.equal((await db.query("select * from sms_sessions")).rows.length,1);
   await db.query("select save_sms_session($1,now()+interval '10 minutes')",[cipher]);
   assert.equal((await db.query("select * from sms_sessions")).rows.length,1);
-  await assert.rejects(db.query("select save_sms_session($1,now()+interval '31 minutes')",[cipher]));
+  await assert.rejects(db.query("select save_sms_session($1,now()+interval '121 minutes')",[cipher]));
   await assert.rejects(db.query("select save_sms_session($1,now()+interval '10 minutes')",["v1."+"x".repeat(40000)]));
   await assert.rejects(db.exec("update sms_sessions set ciphertext='bad'"));
   await asUser(db,fixtureId(2));assert.equal((await db.query("select * from sms_sessions")).rows.length,0);

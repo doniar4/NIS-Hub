@@ -31,7 +31,7 @@ function isolatedBoundaries() {
                 : args.path.endsWith("homework")
                   ? rpc + 'export const loadHomework=(...args)=>rpc("homework",args);export const saveHomework=async()=>({success:true});export const deleteHomework=async()=>({success:true});'
                   : args.path.endsWith("sms")
-                    ? 'export const refreshSms=async()=>({connected:false});export const connectSms=async()=>({connected:false});export const disconnectSms=async()=>({connected:false});export const loadSmsSubject=async()=>({assessments:[]});'
+                    ? 'export const refreshSms=async()=>({connected:false});export const connectSms=async()=>({connected:false});export const continueSmsLogin=async()=>({connected:false});export const sendSmsLoginCode=async()=>({connected:false});export const cancelSmsLogin=async()=>({connected:false});export const disconnectSms=async()=>({connected:false});export const loadSmsSubject=async()=>({assessments:[]});'
                     : args.path.endsWith("ai-study")
                       ? 'export const generateStudy=async()=>({response:{insufficient:true,sections:[]},source:{start:1,end:1}});'
                       : args.path.endsWith("study-answers")
@@ -206,6 +206,7 @@ test("reference redesign: welcome, signup and dashboard themes remain responsive
     assert.ok(menuBox && menuBox.width >= 44 && menuBox.height >= 44, "Mobile menu keeps a 44px touch target");
     await dashboardPage.screenshot({ path: join(artifacts, "dashboard-mobile-dark.png"), fullPage: true, animations: "disabled" });
     await expectNoHorizontalOverflow(dashboardPage);
+
     assert.deepEqual(dashboardErrors, []);
     await dashboardPage.close();
   } finally {

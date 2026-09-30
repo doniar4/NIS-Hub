@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useI18n } from "./locale-provider";
 import { SectionLink } from "./ui";
@@ -9,6 +9,7 @@ import { subjectName } from "@/lib/i18n";
 import { loadRecentSmsWorks } from "@/app/actions/sms";
 import type { SubjectRow } from "@/lib/database.types";
 import type { SmsAssessment } from "@/lib/sms/types";
+import {RECENT_SMS_CACHE_KEY,SMS_NOTICE_CACHE_KEY,parseSmsResultNotices,smsAssessmentChanges,smsAssessmentKey,snapshotAssessments,sortSmsAssessments} from "@/lib/sms/recent";
 
 interface RecentSmsGradesProps {
   subjects: SubjectRow[];
@@ -52,19 +53,19 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
 
   const localeTag = locale === "kk" ? "kk-KZ" : locale === "ru" ? "ru-KZ" : "en-GB";
 
-  function formatWorks(rawList: SmsAssessment[], previous: SmsAssessment[] = []): FormattedWorkItem[] {
-    const key = (item: SmsAssessment) => `${normalize(item.subject)}|${item.type ?? ""}|${item.date ?? ""}|${normalize(item.title ?? "")}`;
-    const before = new Map(previous.map((item) => [key(item), item]));
-    return rawList
-      .filter((a) => (a.type === "sor" || a.type === "soch") && a.score !== undefined)
-      .slice(0, 4)
+  const formatWorks=useCallback((rawList: SmsAssessment[], previous: SmsAssessment[] = []): FormattedWorkItem[] => {
+    const changes=smsAssessmentChanges(rawList,previous);
+    return sortSmsAssessments(rawList)
       .map((a, idx) => {
         const matched = findMatchingSubject(a.subject, subjects);
         const typeLabel =
           a.type === "sor"
             ? (locale === "kk" ? "БЖБ" : locale === "en" ? "SOR" : "СОР")
-            : (locale === "kk" ? "ТЖБ" : locale === "en" ? "SOCH" : "СОЧ");
-        const old = before.get(key(a));
+            : a.type === "soch"
+              ? (locale === "kk" ? "ТЖБ" : locale === "en" ? "SOCH" : "СОЧ")
+              : a.type === "formative"
+                ? (locale === "kk" ? "ҚБ" : locale === "en" ? "Formative" : "ФО")
+                : (locale === "kk" ? "Жұмыс" : locale === "en" ? "Assessment" : "Работа");
 
         return {
           id: `work-${a.subject}-${a.date ?? ""}-${idx}-${a.title ?? ""}`,
@@ -86,111 +87,130 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
                 new Date(a.date + "T12:00:00Z")
               )
             : undefined,
-          change: previous.length === 0 ? undefined : !old ? "new" : old.score !== a.score || old.max !== a.max || old.percent !== a.percent ? "updated" : undefined,
+          change: previous.length === 0 ? undefined : changes.get(smsAssessmentKey(a)),
         };
       });
-  }
+  },[locale,localeTag,subjects]);
 
   useEffect(() => {
-    const hydrateCache = window.setTimeout(() => {
-      try {
-        const cachedRaw = localStorage.getItem("sms_diary_recent_works");
-        if (cachedRaw) {
-          const parsed = JSON.parse(cachedRaw);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            cachedWorks.current = parsed;
-            setWorks(formatWorks(parsed));
-            setHasLoadedCache(true);
-          }
-        } else {
-          const detRaw = localStorage.getItem("sms_diary_details");
-          if (detRaw) {
-            const det = JSON.parse(detRaw);
-            const allAssessments: SmsAssessment[] = [];
-            for (const item of Object.values(det) as { assessments?: SmsAssessment[] }[]) {
-              if (item?.assessments) allAssessments.push(...item.assessments);
-            }
-            if (allAssessments.length > 0) {
-              allAssessments.sort((a, b) => (b.date || "0000").localeCompare(a.date || "0000"));
-              cachedWorks.current = allAssessments;
-              setWorks(formatWorks(allAssessments));
-              setHasLoadedCache(true);
-            }
-          }
-        }
-      } catch {
-        // Ignore invalid local cache and continue with the SMS source.
+    let alive=true,busy=false;
+    let hydrateTimer:number|undefined;
+    try {
+      let cached:SmsAssessment[]=[];
+      const cachedRaw=localStorage.getItem(RECENT_SMS_CACHE_KEY);
+      if(cachedRaw) {
+        const parsed=JSON.parse(cachedRaw);
+        if(Array.isArray(parsed))cached=sortSmsAssessments(parsed);
       }
-    }, 0);
+      if(!cached.length) {
+        const snapshotRaw=localStorage.getItem("sms_diary_snapshot");
+        if(snapshotRaw)cached=snapshotAssessments(JSON.parse(snapshotRaw));
+      }
+      if(!cached.length) {
+        const detailsRaw=localStorage.getItem("sms_diary_details");
+        if(detailsRaw)cached=sortSmsAssessments(Object.values(JSON.parse(detailsRaw) as Record<string,{assessments?:SmsAssessment[]}>).flatMap(item=>item.assessments??[]));
+      }
+      if(cached.length) {
+        cachedWorks.current=cached;
+        hydrateTimer=window.setTimeout(()=>{setWorks(formatWorks(cached));setHasLoadedCache(true);},0);
+      }
+    } catch {/* Invalid browser cache must not prevent a fresh SMS request. */}
 
-    // 2. Fetch fresh works in background if session is present
-    if (sessionPresent) {
-      startTransition(async () => {
+    const refresh=async()=>{
+      if(!sessionPresent||busy)return;
+      busy=true;
         try {
           const res = await loadRecentSmsWorks();
+          if(!alive)return;
           if (res.works) {
+            if(hydrateTimer!==undefined)window.clearTimeout(hydrateTimer);
+            const fresh=sortSmsAssessments(res.works),previous=cachedWorks.current;
             setConnected(true);
             try {
-              localStorage.setItem("sms_diary_recent_works", JSON.stringify(res.works));
+              localStorage.setItem(RECENT_SMS_CACHE_KEY,JSON.stringify(fresh));
             } catch {}
-            setWorks(formatWorks(res.works, cachedWorks.current));
-            cachedWorks.current = res.works;
+            setWorks(formatWorks(fresh,previous));
+            if(previous.length) {
+              const changes=smsAssessmentChanges(fresh,previous);
+              const changed=fresh.filter(item=>changes.has(smsAssessmentKey(item)));
+              if(changed.length) {
+                const notice={
+                id:`sms-${Date.now()}-${changed.map(smsAssessmentKey).join(";")}`,
+                kind:"sms" as const,
+                title:locale==="kk"?"SMS-те жаңа нәтижелер":locale==="en"?"New SMS results":"Новые результаты в SMS",
+                body_preview:changed.slice(0,3).map(item=>`${item.subject}: ${item.score}${item.max!==undefined?`/${item.max}`:""}`).join(" · ")+(changed.length>3?` · +${changed.length-3}`:""),
+                created_at:new Date().toISOString(),href:"/diary",read_at:null,
+                };
+                try {localStorage.setItem(SMS_NOTICE_CACHE_KEY,JSON.stringify([notice,...parseSmsResultNotices(localStorage.getItem(SMS_NOTICE_CACHE_KEY))].slice(0,20)));}catch{}
+                window.dispatchEvent(new Event("nis-sms-results"));
+              }
+            }
+            cachedWorks.current = fresh;
             setHasLoadedCache(true);
           } else if (res.error === "session_expired") {
             setConnected(false);
           }
         } catch {
           // Keep cached data
-        }
-      });
-    }
-    return () => window.clearTimeout(hydrateCache);
-  }, [sessionPresent]);
+        } finally {busy=false;}
+    };
+    if(sessionPresent)startTransition(()=>{void refresh();});
+    const timer=window.setInterval(()=>{if(!document.hidden)void refresh();},5*60*1000);
+    const onVisibility=()=>{if(!document.hidden)void refresh();};
+    document.addEventListener("visibilitychange",onVisibility);
+    return ()=>{alive=false;if(hydrateTimer!==undefined)window.clearTimeout(hydrateTimer);window.clearInterval(timer);document.removeEventListener("visibilitychange",onVisibility);};
+  }, [sessionPresent,formatWorks,locale]);
 
   const copy = {
     ru: {
-      title: "СОР и СОЧ из SMS",
-      source: "СОР · СОЧ",
-      connectLead: "Подключите SMS-дневник, чтобы видеть последние СОР и СОЧ прямо на главном экране.",
+      title: "Последние результаты из SMS",
+      source: "Все работы",
+      connectLead: "Подключите SMS-дневник, чтобы видеть все выставленные работы прямо на главном экране.",
       connectBtn: "Подключить дневник",
       openDiary: "Все работы в дневнике",
-      noWorks: "В текущей четверти пока нет выставленных СОР / СОЧ.",
+      noWorks: "В текущей четверти пока нет выставленных работ.",
       loading: "Загрузка работ из SMS…",
       newWork: "Новое",
       updatedWork: "Изменилось",
       types: {
         sor: "СОР",
         soch: "СОЧ",
+        formative: "ФО",
+        other: "Работа",
       },
     },
     kk: {
-      title: "SMS-тен БЖБ және ТЖБ",
-      source: "БЖБ · ТЖБ",
-      connectLead: "Басты экранда соңғы БЖБ мен ТЖБ көру үшін SMS-күнделікті байланыстырыңыз.",
+      title: "SMS-тегі соңғы нәтижелер",
+      source: "Барлық жұмыстар",
+      connectLead: "Барлық бағаланған жұмыстарды басты экранда көру үшін SMS-күнделікті байланыстырыңыз.",
       connectBtn: "Күнделікті қосу",
       openDiary: "Күнделіктегі барлық жұмыстар",
-      noWorks: "Ағымдағы тоқсанда әзірге БЖБ / ТЖБ жоқ.",
+      noWorks: "Ағымдағы тоқсанда әзірге бағаланған жұмыстар жоқ.",
       loading: "SMS жұмыстары жүктелуде…",
       newWork: "Жаңа",
       updatedWork: "Өзгерді",
       types: {
         sor: "БЖБ",
         soch: "ТЖБ",
+        formative: "ҚБ",
+        other: "Жұмыс",
       },
     },
     en: {
-      title: "SOR & SOCH from SMS",
-      source: "SOR · SOCH",
-      connectLead: "Connect SMS Diary to track latest SOR and SOCH scores on the dashboard.",
+      title: "Latest results from SMS",
+      source: "All assessments",
+      connectLead: "Connect SMS Diary to see every graded assessment on the dashboard.",
       connectBtn: "Connect Diary",
       openDiary: "All works in diary",
-      noWorks: "No graded SOR / SOCH in the current term yet.",
+      noWorks: "No graded assessments in the current term yet.",
       loading: "Loading works from SMS…",
       newWork: "New",
       updatedWork: "Updated",
       types: {
         sor: "SOR",
         soch: "SOCH",
+        formative: "Formative",
+        other: "Assessment",
       },
     },
   }[locale];
@@ -269,7 +289,7 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
                       <div className="recent-sms-submeta">
                         {work.type && (
                           <span className="recent-sms-type-chip" data-type={work.type}>
-                            {copy.types[work.type as "sor" | "soch"] || work.type}
+                            {copy.types[work.type] || work.type}
                           </span>
                         )}
                         <span title={work.title}>{work.title}</span>

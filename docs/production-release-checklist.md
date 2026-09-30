@@ -32,12 +32,17 @@ Current migrations, in order:
 22. `202609210001_v058_edupage_sync.sql`
 23. `202609250001_v063_edupage_catalog.sql`
 24. `202609260001_v064_personal_tasks.sql`
+25. `202609300001_sms_session_two_hours.sql`
 
 Regenerate or compare database types against the deployed schema after migration work.
 
 ## 2. Vercel and provider configuration
 
 Set real production values in Vercel. Do not use placeholders from `.env.example`.
+
+The committed `vercel.json` runs server functions in Dubai (`dxb1`), a compute region Vercel explicitly positions for Central Asia. Redeploy after changing this file; an existing deployment keeps its original region. No extra environment variable is required. If an SMS login still returns `interactive_required`, inspect the Vercel runtime log entry `[sms] provider verification required`: `domain_captcha` means SMS assigned its domain-bound Google CAPTCHA to the Vercel egress IP, while `password_change`, `authenticator_enrollment`, and `unknown_challenge` identify other provider-side steps. These log entries contain no account identifier, credentials, cookies, provider body or URL.
+
+Vercel uses dynamic outbound IPs by default. A stable or residential egress requires separately managed infrastructure (or Vercel Static IPs/Secure Compute) and cannot be produced by an application setting. Do not point `SMS_BASE_URL` at a generic proxy: the connector intentionally pins the official SMS origin. A trusted relay would need its own authenticated, allowlisted implementation and security review.
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or the legacy anon key)

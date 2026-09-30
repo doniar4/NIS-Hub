@@ -39,7 +39,9 @@ export class SmsHttp {
     const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
     try {
       for (let redirect = 0; redirect <= 5; redirect++) {
-        if (++this.calls > 24) throw new SmsError("sms_changed");
+        // Diary work preloading is bounded to 32 evaluation calls in addition
+        // to the verified navigation sequence.
+        if (++this.calls > 64) throw new SmsError("sms_changed");
         const cookie = this.cookies.filter(c => (c.expires === undefined || c.expires > Date.now()) && (url.pathname.toLowerCase() === c.path.toLowerCase() || url.pathname.toLowerCase().startsWith(c.path.toLowerCase().endsWith("/") ? c.path.toLowerCase() : c.path.toLowerCase() + "/"))).sort((a,b) => b.path.length-a.path.length).map(c => c.name + "=" + c.value).join("; ");
         const response = await this.transport(url, { method, cache: "no-store", redirect: "manual", signal: controller.signal,
           headers: { "User-Agent": "Mozilla/5.0", Accept: kind === "script" ? "text/javascript, application/javascript" : kind === "json" ? "application/json, text/json" : "text/html, application/json", "Accept-Language": "ru-RU",

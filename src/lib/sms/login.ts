@@ -49,7 +49,7 @@ export async function submitSmsLogin(http: SmsHttp, iin: string, password: strin
     if (!json || typeof json !== "object" || Array.isArray(json)) throw new SmsError("sms_changed");
     if (json.success !== true) {
       const data = json.data;
-      if (data === "NeedChangePassword") throw new SmsError("interactive_required");
+      if (data === "NeedChangePassword") throw new SmsError("interactive_required", "password_change");
       if (data === "TwoFactorAuthInfo") throw new SmsError("verification_failed");
       const challenge = loginChallenge(data);
       if (challenge) return {challenge, fields};
@@ -69,12 +69,12 @@ export function loginChallenge(data: unknown): SmsChallengeFlags | undefined {
     const value = data as Record<string,unknown>;
     flags.application2FA = value.needApplication2FA === true;
     if (flags.application2FA) {
-      if (value.qrCodeUrl) throw new SmsError("interactive_required");
+      if (value.qrCodeUrl) throw new SmsError("interactive_required", "authenticator_enrollment");
       return flags;
     }
     // Verified public SMS login client: type 2 uses a domain-bound Google widget;
     // all other types use captchaData as a PNG (including type 0).
-    if (value.captchaType === 2 || value.captchaType === "2") throw new SmsError("interactive_required");
+    if (value.captchaType === 2 || value.captchaType === "2") throw new SmsError("interactive_required", "domain_captcha");
     if (typeof value.captchaData === "string" && value.captchaData.length) {
       const raw = value.captchaData;
       if (raw.length > 350000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(raw)) throw new SmsError("sms_changed");
@@ -85,7 +85,7 @@ export function loginChallenge(data: unknown): SmsChallengeFlags | undefined {
       flags.captcha = true;
       flags.image = "data:image/png;base64," + raw;
     } else if (value.captchaType !== undefined && value.captchaType !== null && value.captchaType !== false && value.captchaType !== 0) {
-      throw new SmsError("interactive_required");
+      throw new SmsError("interactive_required", "unknown_challenge");
     }
   }
   return flags.captcha || flags.twoFactor || flags.application2FA ? flags : undefined;
@@ -107,10 +107,9 @@ export async function sendSmsCode(http: SmsHttp, iin: string, password: string, 
   form.set("login",iin); form.set("password",password);
   for (const name of ["twoFactorAuthCode","captchaInput","application2FACode"] as const) form.set(name,answers[name] ?? "");
   try {
-    const response = await http.request("/root/Account/SendTwoFactorAuthCode",form,"login");
-    let json;
-    try { json = JSON.parse(response.body); } catch { throw new SmsError("sms_changed"); }
-    if (json?.success !== true) throw new SmsError("sms_unavailable");
+    // The verified SMS client starts its cooldown after any successful HTTP
+    // callback and does not depend on a response envelope.
+    await http.request("/root/Account/SendTwoFactorAuthCode",form,"login");
   } finally {
     for (const name of ["login","password","twoFactorAuthCode","captchaInput","application2FACode"]) form.delete(name);
   }
@@ -119,6 +118,6 @@ export async function sendSmsCode(http: SmsHttp, iin: string, password: string, 
 // Keep the non-interactive helper for callers that cannot present challenges.
 export async function loginSms(http: SmsHttp, iin: string, password: string): Promise<{body: string; url: URL}> {
   const step = await beginSmsLogin(http, iin, password);
-  if (step.challenge) throw new SmsError("interactive_required");
+  if (step.challenge) throw new SmsError("interactive_required", "manual_challenge");
   return step.page;
 }

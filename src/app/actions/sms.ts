@@ -5,9 +5,9 @@ import { SmsHttp } from "@/lib/sms/http";
 import { createHmac } from "node:crypto";
 import { beginSmsLogin, submitSmsLogin, sendSmsCode, refreshSmsCaptcha, validCredentials, type SmsLoginAnswers, type SmsLoginStep } from "@/lib/sms/login";
 import { clearPendingSmsLogin, readPendingSmsLogin, savePendingSmsLogin, type PendingSmsLogin } from "@/lib/sms/pending";
-import { fetchDiary, fetchDiarySubject, fetchRecentWorks } from "@/lib/sms/grades";
+import { fetchDiaryWithWorks, fetchDiarySubject, fetchRecentWorks } from "@/lib/sms/grades";
 import { clearSmsSession, readSmsSession, saveSmsSession, hasSmsSession } from "@/lib/sms/session";
-import { safeSmsError, SmsError } from "@/lib/sms/errors";
+import { reportSmsFailure, safeSmsError, SmsError } from "@/lib/sms/errors";
 import type { SmsAssessment, SmsDiarySelection, SmsErrorCode, SmsResult, SmsSubjectDetailResult } from "@/lib/sms/types";
 // Concurrency and a minimum interval per warm process; no retries or polling.
 // This map contains NIS user IDs + expiry only, never credentials or SMS responses.
@@ -47,7 +47,7 @@ async function finishLogin(context: Awaited<ReturnType<typeof actionContext>>, h
   await saveSmsSession(supabase,user.id,http.cookies);
   const session = await readSmsSession(supabase,user.id);
   try {
-    const snapshot = await fetchDiary(http,step.page);
+    const snapshot = await fetchDiaryWithWorks(http,step.page);
     await saveSmsSession(supabase,user.id,http.cookies,session.expires);
     return {connected:true,snapshot};
   } catch (error) {
@@ -78,10 +78,11 @@ async function operation(connect: boolean, form?: FormData, selection:SmsDiarySe
     const session=await readSmsSession(supabase,user.id);
     connected=true;
     const http=new SmsHttp(config,session.cookies);
-    const snapshot=await fetchDiary(http,undefined,selection);
+    const snapshot=await fetchDiaryWithWorks(http,undefined,selection);
     await saveSmsSession(supabase,user.id,http.cookies,session.expires);
     return {connected:true,snapshot};
   } catch(error) {
+    reportSmsFailure(error);
     const code=safeSmsError(error);
     if(code==="session_expired") {
       try { await clearSmsSession(supabase); } catch { /* Cookie cleared even when encrypted TTL cleanup is unavailable. */ }
@@ -130,6 +131,7 @@ async function continueLogin(form: FormData, sendCode: boolean): Promise<SmsResu
     await savePendingSmsLogin(supabase,user.id,state);
     return await finishLogin(context,http,await submitSmsLogin(http,iin,password as string,state.fields,answers),iin,state);
   } catch (error) {
+    reportSmsFailure(error);
     const code=safeSmsError(error);
     const retryable=["busy","invalid_input","sms_unavailable","timeout","verification_failed"].includes(code);
     if (retryable && state && http) {

@@ -12,39 +12,47 @@ import {CalendarCheck2,Clock3} from "lucide-react";
 import { loadNotifications, dismissNotification } from "@/lib/community-client";
 import {snoozePersonalTask} from "@/app/actions/tasks";
 import type { AppNotification } from "@/lib/database.types";
+import {SMS_NOTICE_CACHE_KEY,parseSmsResultNotices,type SmsResultNotice} from "@/lib/sms/recent";
 import { communityCopy } from "@/lib/community-copy";
 import {tasksCopy} from "@/lib/tasks-copy";
 import { useI18n } from "./locale-provider";
 export function NotificationCenter() {
+  type NotificationItem=AppNotification|SmsResultNotice;
   const { locale } = useI18n(),
     p = communityCopy(locale),tasks=tasksCopy(locale);
   const [open, setOpen] = useState(false),
-    [items, setItems] = useState<AppNotification[]>([]),
+    [items, setItems] = useState<NotificationItem[]>([]),
     [unread, setUnread] = useState(0),
-    [toasts, setToasts] = useState<AppNotification[]>([]),
+    [toasts, setToasts] = useState<NotificationItem[]>([]),
     [error, setError] = useState("");
   const root = useRef<HTMLDivElement>(null),
     button = useRef<HTMLButtonElement>(null),
     seen = useRef<Set<string> | null>(null);
   const refresh = useCallback(async () => {
+    const sms=parseSmsResultNotices(localStorage.getItem(SMS_NOTICE_CACHE_KEY));
     const result = await loadNotifications();
     if ("error" in result) {
       setError(p[result.error]);
+      setItems(sms);
+      setUnread(sms.filter(item=>!item.read_at).length);
       return;
     }
-    setItems(result.data);
-    setUnread(result.unread);
+    const combined:NotificationItem[]=[...result.data,...sms].sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)).slice(0,30);
+    setItems(combined);
+    setUnread(result.unread+sms.filter(item=>!item.read_at).length);
     setError("");
     const previous = seen.current;
-    seen.current = new Set(result.data.map((n) => n.id));
+    seen.current = new Set(combined.map((n) => n.id));
     let notified=new Set<string>();
     try{notified=new Set<string>(JSON.parse(localStorage.getItem("nis-task-notified")??"[]"));}catch{}
-    const fresh = result.data.filter((n) => !n.read_at&&(previous?!previous.has(n.id):n.kind==="task"&&!notified.has(`${n.id}:${n.created_at}`)));
+    let smsNotified=new Set<string>();
+    try{smsNotified=new Set<string>(JSON.parse(localStorage.getItem("nis-sms-notified")??"[]"));}catch{}
+    const fresh = combined.filter((n) => !n.read_at&&(previous?!previous.has(n.id):n.kind==="task"?!notified.has(`${n.id}:${n.created_at}`):n.kind==="sms"&&!smsNotified.has(n.id)));
     if (previous||fresh.length) {
       const readIds = new Set(result.data.filter(n => n.read_at).map(n => n.id));
       setToasts((old) =>
           Array.from(
-            new Map([...old.filter(n => !readIds.has(n.id) && result.data.some(current=>current.id===n.id)).map(n=>result.data.find(current=>current.id===n.id)??n), ...fresh].map((n) => [n.id, n])).values(),
+            new Map([...old.filter(n => !readIds.has(n.id) && combined.some(current=>current.id===n.id)).map(n=>combined.find(current=>current.id===n.id)??n), ...fresh].map((n) => [n.id, n])).values(),
           ).slice(-3),
         );
       if("Notification" in window&&Notification.permission==="granted"&&localStorage.getItem("nis-task-browser-notifications")!=="disabled"&&document.hidden){
@@ -55,6 +63,14 @@ export function NotificationCenter() {
         }
         localStorage.setItem("nis-task-notified",JSON.stringify([...notified].slice(-100)));
       }
+      if("Notification" in window&&Notification.permission==="granted"&&localStorage.getItem("nis-task-browser-notifications")!=="disabled"&&document.hidden){
+        for(const notice of fresh.filter((n):n is SmsResultNotice=>n.kind==="sms")){
+          const systemNotice=new Notification(notice.title,{body:notice.body_preview,icon:"/icon.svg",tag:notice.id});
+          systemNotice.onclick=()=>{window.focus();window.location.assign(notice.href);systemNotice.close();};
+        }
+      }
+      for(const notice of fresh)if(notice.kind==="sms")smsNotified.add(notice.id);
+      if(fresh.some(notice=>notice.kind==="sms"))localStorage.setItem("nis-sms-notified",JSON.stringify([...smsNotified].slice(-100)));
     }
   }, [p,tasks]);
   useEffect(() => {
@@ -73,11 +89,13 @@ export function NotificationCenter() {
     void poll();
     const timer = setInterval(() => void poll(), 15000);
     window.addEventListener("nis-notifications-change", poll);
+    window.addEventListener("nis-sms-results",poll);
     document.addEventListener("visibilitychange", poll);
     return () => {
       alive = false;
       clearInterval(timer);
       window.removeEventListener("nis-notifications-change", poll);
+      window.removeEventListener("nis-sms-results",poll);
       document.removeEventListener("visibilitychange", poll);
     };
   }, [refresh]);
@@ -100,7 +118,15 @@ export function NotificationCenter() {
       document.removeEventListener("keydown", escape);
     };
   }, [open]);
-  const dismiss = async (id: string,kind:"message"|"task") => {
+  const dismiss = async (id: string,kind:"message"|"task"|"sms") => {
+    if(kind==="sms") {
+      const now=new Date().toISOString();
+      try {localStorage.setItem(SMS_NOTICE_CACHE_KEY,JSON.stringify(parseSmsResultNotices(localStorage.getItem(SMS_NOTICE_CACHE_KEY)).map(item=>item.id===id?{...item,read_at:now}:item)));}catch{}
+      setItems(old=>old.map(item=>item.id===id?{...item,read_at:now}:item));
+      setToasts(old=>old.filter(item=>item.id!==id));
+      setUnread(value=>Math.max(0,value-1));
+      return;
+    }
     const result = await dismissNotification(id,kind);
     if ("error" in result) {
       setError(p[result.error]);
@@ -157,7 +183,7 @@ export function NotificationCenter() {
                   className={`notification-card ${n.read_at ? "notification-read" : ""}`}
                 >
                   <span className="notification-icon">
-                    {n.kind==="task"?<CalendarCheck2 aria-hidden="true"/>:<ChatBubbleIcon aria-hidden="true" />}
+                    {n.kind==="task"?<CalendarCheck2 aria-hidden="true"/>:n.kind==="sms"?<BellIcon aria-hidden="true"/>:<ChatBubbleIcon aria-hidden="true" />}
                   </span>
                   <Link
                     href={n.href}
@@ -168,7 +194,7 @@ export function NotificationCenter() {
                     className="notification-copy"
                   >
                     <strong>{n.kind==="task"?tasks.reminderLabel:n.title}</strong>
-                    <span className="preview-lines">{n.kind==="task"?n.title:messagePreview(n.body_preview ?? "")}</span>
+                    <span className="preview-lines">{n.kind==="task"?n.title:n.kind==="sms"?n.body_preview:messagePreview(n.body_preview ?? "")}</span>
                     <time dateTime={n.created_at}>
                       {new Intl.DateTimeFormat(locale, {
                         day: "numeric",
@@ -196,15 +222,15 @@ export function NotificationCenter() {
           {toasts.map((n) => (
             <li key={n.id} className="notification-card">
               <span className="notification-icon">
-                {n.kind==="task"?<CalendarCheck2 aria-hidden="true"/>:<ChatBubbleIcon aria-hidden="true" />}
+                {n.kind==="task"?<CalendarCheck2 aria-hidden="true"/>:n.kind==="sms"?<BellIcon aria-hidden="true"/>:<ChatBubbleIcon aria-hidden="true" />}
               </span>
               <Link
                 className="notification-copy"
                 href={n.href}
                 onClick={() => void dismiss(n.id,n.kind)}
               >
-                <strong>{n.kind==="task"?tasks.reminderLabel:p.newMessage}</strong>
-                <span>{n.kind==="task"?n.title:`${p.from}: ${n.title}`}</span>{n.kind==="message"&&<span className="preview-lines">{messagePreview(n.body_preview ?? "")}</span>}
+                <strong>{n.kind==="task"?tasks.reminderLabel:n.kind==="sms"?n.title:p.newMessage}</strong>
+                <span>{n.kind==="task"?n.title:n.kind==="sms"?n.body_preview:`${p.from}: ${n.title}`}</span>{n.kind==="message"&&<span className="preview-lines">{messagePreview(n.body_preview ?? "")}</span>}
               </Link>
               {n.kind==="task"&&<button className="notification-dismiss" aria-label={`${tasks.snooze}: ${n.title}`} title={tasks.snooze} onClick={()=>void snooze(n.id)}><Clock3 aria-hidden="true"/></button>}
               <button

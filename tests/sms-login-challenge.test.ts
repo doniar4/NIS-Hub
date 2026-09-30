@@ -79,6 +79,18 @@ test("SMS authenticator challenge has priority over unrelated captcha type and d
   assert.throws(() => loginChallenge({ needApplication2FA: true, captchaType: 2, qrCodeUrl: "private-enrollment" }), { code: "interactive_required" });
 });
 
+test("SMS domain CAPTCHA carries a safe deployment diagnostic without exposing provider data", async () => {
+  const { loginChallenge } = await apiPromise;
+  try {
+    loginChallenge({ captchaType: 2, captchaData: "PRIVATE PROVIDER DATA" });
+    assert.fail("must reject a domain-bound CAPTCHA");
+  } catch (error) {
+    assert.equal((error as { code?: string }).code, "interactive_required");
+    assert.equal((error as { reason?: string }).reason, "domain_captcha");
+    assert.ok(!String(error).includes("PRIVATE"));
+  }
+});
+
 test("SMS CAPTCHA accepts bounded PNG data only", async () => {
   const { loginChallenge } = await apiPromise;
   for (const data of ["%%not-base64%%", "data:image/png;base64," + png, Buffer.from("<svg>private script</svg>").toString("base64"), png.replace(/=$/, ""), "a".repeat(350001)]) {

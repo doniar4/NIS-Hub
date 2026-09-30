@@ -109,6 +109,24 @@ export function AppFrame({
       : "expanded";
   }, [collapsed]);
 
+  useEffect(() => {
+    document.body.toggleAttribute("data-mobile-navigation-open", mobileOpen);
+
+    return () => {
+      document.body.removeAttribute("data-mobile-navigation-open");
+    };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 768px)");
+    const closeOnDesktop = () => {
+      if (media.matches && dialog.current?.open) dialog.current.close();
+    };
+
+    media.addEventListener("change", closeOnDesktop);
+    return () => media.removeEventListener("change", closeOnDesktop);
+  }, []);
+
   function toggle() {
     memoryCollapsed = !collapsed;
 
@@ -123,8 +141,13 @@ export function AppFrame({
   }
 
   function close() {
-    dialog.current?.close();
-    setMobileOpen(false);
+    if (dialog.current?.open) dialog.current.close();
+    else setMobileOpen(false);
+  }
+
+  function openMobileNavigation() {
+    if (!dialog.current?.open) dialog.current?.showModal();
+    setMobileOpen(Boolean(dialog.current?.open));
   }
 
   const links = [
@@ -277,10 +300,7 @@ export function AppFrame({
             aria-label={p.menu}
             aria-controls="mobile-navigation"
             aria-expanded={mobileOpen}
-            onClick={() => {
-              dialog.current?.showModal();
-              setMobileOpen(true);
-            }}
+            onClick={openMobileNavigation}
           >
             ☰
           </button>
@@ -376,7 +396,7 @@ export function AppFrame({
           }
         }}
       >
-        <div>
+        <div className="mobile-drawer-panel">
 
 
           <div className="flex items-center justify-between gap-3">
@@ -388,12 +408,12 @@ export function AppFrame({
             </Link>
 
             <button
-              className="button button-secondary"
+              className="icon-button mobile-drawer-close"
               type="button"
               onClick={close}
               aria-label={p.close}
             >
-              ×
+              <span aria-hidden="true">×</span>
             </button>
           </div>
 
