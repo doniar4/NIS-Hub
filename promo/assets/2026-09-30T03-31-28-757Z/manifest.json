@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "createdAt": "2026-09-30T03:39:18.294Z",
+  "sourceAudit": "promo/source-audit.md",
+  "resolution": [
+    1920,
+    1080
+  ],
+  "fps": 60,
+  "transition": 0.4,
+  "expectedDuration": 32,
+  "scenes": [
+    {
+      "id": "01-welcome",
+      "route": "/",
+      "source": "https://nis-hub-ura.vercel.app",
+      "duration": 3.4,
+      "title": "NIS Hub",
+      "subtitle": "Твой путь начинается здесь.",
+      "file": "01-welcome/start.png",
+      "screenshot": "01-welcome/start.png",
+      "captureKind": "screenshot",
+      "frameCount": 1,
+      "provenance": "Actual anonymous production welcome screenshot captured at start of scene 05; replaces rejected first take. No reconstructed UI."
+    },
+    {
+      "id": "02-day",
+      "route": "/",
+      "source": "https://nis-hub-ura.vercel.app",
+      "duration": 5.4,
+      "title": "Твой учебный день",
+      "subtitle": "Настоящее расписание · тестовый аккаунт",
+      "file": "02-day/capture.mp4",
+      "screenshot": "02-day/start.png",
+      "frameCount": 96,
+      "capturedSeconds": 5.833333,
+      "checkpointProvenance": "Recovered from successful route-log and actual recorded MP4 metadata; original crop coordinates not persisted."
+    },
+    {
+      "id": "03-week",
+      "route": "/schedule",
+      "source": "https://nis-hub-ura.vercel.app",
+      "duration": 5.4,
+      "title": "Неделя перед глазами",
+      "subtitle": "Переключение учебных дней",
+      "file": "03-week/capture.mp4",
+      "screenshot": "03-week/start.png",
+      "frameCount": 203,
+      "capturedSeconds": 8.2,
+      "checkpointProvenance": "Recovered from successful route-log and actual recorded MP4 metadata; original crop coordinates not persisted."
+    },
+    {
+      "id": "04-library",
+      "route": "/library",
+      "source": "https://nis-hub-ura.vercel.app",
+      "duration": 5.4,
+      "title": "Фильтры библиотеки",
+      "subtitle": "Каталог сейчас пуст — без вымышленных книг",
+      "file": "04-library/capture.mp4",
+      "screenshot": "04-library/start.png",
+      "frameCount": 53,
+      "capturedSeconds": 10.766667,
+      "checkpointProvenance": "Recovered from successful route-log and actual recorded MP4 metadata; original crop coordinates not persisted."
+    },
+    {
+      "id": "05-theme",
+      "route": "/",
+      "source": "https://nis-hub-ura.vercel.app",
+      "clip": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080
+      },
+      "duration": 5.4,
+      "title": "Светлая. Тёмная.",
+      "subtitle": "Тема меняется настоящей кнопкой сайта",
+      "file": "05-theme/capture.mp4",
+      "screenshot": "05-theme/start.png",
+      "frameCount": 77,
+      "capturedSeconds": 6.816
+    },
+    {
+      "id": "06-language",
+      "route": "/",
+      "source": "https://nis-hub-ura.vercel.app",
+      "clip": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080
+      },
+      "duration": 5.4,
+      "title": "RU · KZ · EN",
+      "subtitle": "Выбери язык интерфейса",
+      "file": "06-language/capture.mp4",
+      "screenshot": "06-language/start.png",
+      "frameCount": 91,
+      "capturedSeconds": 11.677
+    },
+    {
+      "id": "07-outro",
+      "route": "/",
+      "source": "https://nis-hub-ura.vercel.app",
+      "clip": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080
+      },
+      "duration": 4,
+      "title": "NIS Hub",
+      "subtitle": "Твой путь в NIS Hub начинается здесь.",
+      "file": "07-outro/capture.mp4",
+      "screenshot": "07-outro/start.png",
+      "frameCount": 35,
+      "capturedSeconds": 9.691
+    }
+  ]
+}
