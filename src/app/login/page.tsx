@@ -11,5 +11,6 @@ export default async function LoginPage({ searchParams }: {
         redirect(next);
     const welcomeParams = new URLSearchParams({ auth: "login", next });
     if (params.confirmation === "failed") welcomeParams.set("confirmation", "failed");
+    if (params.callback === "failed") welcomeParams.set("callback", "failed");
     redirect(`/?${welcomeParams.toString()}#welcome-auth`);
 }

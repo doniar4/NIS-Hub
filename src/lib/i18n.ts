@@ -761,9 +761,29 @@ const translations = {
     "Could not register. Check your email and password requirements."
   ],
   "checkEmail": [
-    "Проверьте почту: если регистрация доступна, вы получите письмо для подтверждения email.",
-    "Поштаңызды тексеріңіз: тіркелу қолжетімді болса, email растау хатын аласыз.",
-    "Check your inbox: if registration is available, you will receive an email confirmation."
+    "Проверьте почту: если аккаунт можно создать, мы отправили ссылку подтверждения. До подтверждения email вход недоступен.",
+    "Поштаңызды тексеріңіз: аккаунт құру мүмкін болса, растау сілтемесін жібердік. Email расталғанша кіру мүмкін емес.",
+    "Check your inbox: if an account can be created, we sent a confirmation link. Email sign-in is unavailable until confirmation."
+  ],
+  "continueWithGoogle": [
+    "Продолжить с Google",
+    "Google арқылы жалғастыру",
+    "Continue with Google"
+  ],
+  "orEmail": [
+    "или по email",
+    "немесе email арқылы",
+    "or with email"
+  ],
+  "oauthError": [
+    "Не удалось начать вход через Google. Повторите попытку позже.",
+    "Google арқылы кіруді бастау мүмкін болмады. Кейінірек қайталаңыз.",
+    "Could not start Google sign-in. Please try again later."
+  ],
+  "authLinkFailed": [
+    "Ссылка входа недействительна или устарела. Начните вход снова.",
+    "Кіру сілтемесі жарамсыз немесе ескірген. Қайта кіріп көріңіз.",
+    "The sign-in link is invalid or expired. Start sign-in again."
   ],
   "logoutError": [
     "Не удалось выйти. Повторите попытку.",
