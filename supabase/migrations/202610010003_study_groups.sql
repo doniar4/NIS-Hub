@@ -1,6 +1,6 @@
 begin;
 
-create table public.study_groups (
+create table if not exists public.study_groups (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.profiles(id) on delete cascade,
   name text not null check (char_length(btrim(name)) between 1 and 80),
@@ -9,7 +9,7 @@ create table public.study_groups (
   created_at timestamptz not null default clock_timestamp()
 );
 
-create table public.study_group_members (
+create table if not exists public.study_group_members (
   group_id uuid not null references public.study_groups(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   role text not null default 'member' check (role in ('owner', 'member')),
@@ -17,11 +17,11 @@ create table public.study_group_members (
   primary key (group_id, user_id)
 );
 
-create unique index study_group_single_owner
+create unique index if not exists study_group_single_owner
   on public.study_group_members(group_id) where role = 'owner';
-create index study_group_members_user on public.study_group_members(user_id, joined_at desc);
+create index if not exists study_group_members_user on public.study_group_members(user_id, joined_at desc);
 
-create table public.study_group_messages (
+create table if not exists public.study_group_messages (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references public.study_groups(id) on delete cascade,
   sender_id uuid not null references public.profiles(id) on delete cascade,
@@ -31,9 +31,9 @@ create table public.study_group_messages (
   unique (sender_id, client_id)
 );
 
-create index study_group_message_history
+create index if not exists study_group_message_history
   on public.study_group_messages(group_id, created_at desc, id desc);
-create index study_group_message_rate
+create index if not exists study_group_message_rate
   on public.study_group_messages(sender_id, created_at desc);
 
 alter table public.study_groups enable row level security;
@@ -45,7 +45,7 @@ revoke all on public.study_groups, public.study_group_members, public.study_grou
 grant select on public.study_groups, public.study_group_members, public.study_group_messages
   to authenticated;
 
-create function public.is_study_group_member(p_group uuid)
+create or replace function public.is_study_group_member(p_group uuid)
 returns boolean language sql stable security definer set search_path = '' as $$
   select exists(
     select 1 from public.study_group_members
@@ -60,7 +60,7 @@ create policy study_group_members_members on public.study_group_members
 create policy study_group_messages_members on public.study_group_messages
   for select to authenticated using (public.is_study_group_member(group_id));
 
-create function public.create_study_group(
+create or replace function public.create_study_group(
   p_name text,
   p_subject text,
   p_description text default '',
@@ -103,7 +103,7 @@ begin
 end;
 $$;
 
-create function public.study_group_inbox()
+create or replace function public.study_group_inbox()
 returns table(id uuid, name text, subject text, description text, members_count bigint, owner boolean, last_at timestamptz)
 language sql stable security definer set search_path = '' as $$
   select g.id, g.name, g.subject, g.description,
@@ -116,7 +116,7 @@ language sql stable security definer set search_path = '' as $$
   limit 100;
 $$;
 
-create function public.study_group_history(p_group uuid, p_before timestamptz default null, p_id uuid default null)
+create or replace function public.study_group_history(p_group uuid, p_before timestamptz default null, p_id uuid default null)
 returns table(id uuid, group_id uuid, sender_id uuid, author text, body text, client_id uuid, created_at timestamptz)
 language plpgsql stable security definer set search_path = '' as $$
 begin
@@ -131,7 +131,7 @@ begin
 end;
 $$;
 
-create function public.send_study_group_message(p_group uuid, p_body text, p_client uuid)
+create or replace function public.send_study_group_message(p_group uuid, p_body text, p_client uuid)
 returns uuid language plpgsql security definer set search_path = '' as $$
 declare uid uuid := auth.uid(); mid uuid; existing public.study_group_messages;
 begin
