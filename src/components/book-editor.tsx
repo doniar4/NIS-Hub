@@ -29,7 +29,29 @@ function EditionForm({id,book,subjects,action,edition,variantId,variants=[]}:Edi
   const [stableId] = useState(id);
   const router = useRouter();
   const prepared = useRef(!!edition);
+  const [logicalStatus, setLogicalStatus] = useState(book?.publication_status ?? "draft");
+  const [variantStatus, setVariantStatus] = useState(edition?.publication_status ?? "draft");
+  const [replace, setReplace] = useState(false);
   const issue = file ? pdfFileIssue(file) : null;
+
+  function handleLogicalStatusChange(next: string) {
+    if (next === "draft" || next === "published" || next === "archived") {
+      setLogicalStatus(next);
+      if (next === "published" && variantStatus === "draft") {
+        setVariantStatus("published");
+      }
+    }
+  }
+
+  function handleVariantStatusChange(next: string) {
+    if (next === "draft" || next === "published" || next === "archived") {
+      setVariantStatus(next);
+      if (next === "published" && logicalStatus === "draft") {
+        setLogicalStatus("published");
+      }
+    }
+  }
+
   return <form onSubmit={event => {
     event.preventDefault(); if (pending) return;
     const form = new FormData(event.currentTarget); form.delete("pdf");
@@ -39,7 +61,7 @@ function EditionForm({id,book,subjects,action,edition,variantId,variants=[]}:Edi
         if (file) {
           const invalid = await validatePdfFile(file);
           if (invalid) { setState({ error: p[invalid] }); return; }
-          if (prepared.current && form.get("replace") !== "on") { setState({ error: p.bookInvalid }); return; }
+          if (prepared.current && !replace && form.get("replace") !== "on") form.set("replace", "on");
           form.set("upload","yes"); form.set("file_name",file.name); form.set("file_type",file.type); form.set("file_size",String(file.size));
           // Finish sees the draft created during prepare, so explicit consent is
           // forwarded for that same operation, not inferred for future attempts.
@@ -47,7 +69,7 @@ function EditionForm({id,book,subjects,action,edition,variantId,variants=[]}:Edi
           if (prepare.error) { setState(prepare); return; }
           prepared.current = true;
           const result = await createClient().storage.from("book-files").upload(canonicalBookPath(variantId),
-            new Blob([file], { type: "application/pdf" }), { contentType: "application/pdf", cacheControl: "0", upsert: form.get("replace") === "on" });
+            new Blob([file], { type: "application/pdf" }), { contentType: "application/pdf", cacheControl: "0", upsert: true });
           if (result.error) { setState({ error: p.uploadError }); return; }
           form.set("replace", "on");
         }
@@ -69,15 +91,15 @@ function EditionForm({id,book,subjects,action,edition,variantId,variants=[]}:Edi
         <label><span className="field-label">{v.edition}</span><select className="field" name="language" defaultValue={edition?.language??EDITION_LANGUAGES.find(language=>!variants.some(item=>item.language===language))??"ru"}>{EDITION_LANGUAGES.map(language=><option value={language} key={language} disabled={variants.some(item=>item.id!==variantId&&item.language===language)}>{v[language]}</option>)}</select></label>
       </div>
       <Field label={p.pages} name="page_count" type="number" min={1} max={100000} defaultValue={edition?.page_count ?? ""}/>
-      <label className="block"><span className="field-label">{v.logicalStatus}</span><select className="field" name="publication_status" defaultValue={book?.publication_status ?? "draft"}>
+      <label className="block"><span className="field-label">{v.logicalStatus}</span><select className="field" name="publication_status" value={logicalStatus} onChange={e=>handleLogicalStatusChange(e.target.value)}>
         <option value="draft">{p.draft}</option><option value="published">{p.published}</option><option value="archived">{p.archived}</option>
       </select></label>
-      <label className="block"><span className="field-label">{v.editionStatus}</span><select className="field" name="variant_status" defaultValue={edition?.publication_status??"draft"}><option value="draft">{p.draft}</option><option value="published">{p.published}</option><option value="archived">{p.archived}</option></select></label>
-      <Field label={p.pdf} name="pdf" type="file" accept=".pdf,application/pdf" onChange={event => { setFile(event.target.files?.[0] ?? null); setState({}); }}/>
+      <label className="block"><span className="field-label">{v.editionStatus}</span><select className="field" name="variant_status" value={variantStatus} onChange={e=>handleVariantStatusChange(e.target.value)}><option value="draft">{p.draft}</option><option value="published">{p.published}</option><option value="archived">{p.archived}</option></select></label>
+      <Field label={p.pdf} name="pdf" type="file" accept=".pdf,application/pdf" onChange={event => { const chosen = event.target.files?.[0] ?? null; setFile(chosen); setState({}); if(chosen && prepared.current) setReplace(true); }}/>
       {file && <p role="status">{file.name} · {(file.size / 1048576).toFixed(2)} MiB ({file.size.toLocaleString(locale)} bytes)</p>}
       {issue && <p role="alert">{p[issue]}</p>}
       <p className="text-sm text-[var(--muted)]">{p.metadataHint}</p>
-      <label className="flex items-start gap-3 text-sm"><input type="checkbox" name="replace" className="mt-1"/>{p.replace}</label>
+      <label className="flex items-start gap-3 text-sm"><input type="checkbox" name="replace" className="mt-1" checked={replace} onChange={e=>setReplace(e.target.checked)}/>{p.replace}</label>
       <button type="submit" className="button" disabled={!!issue}>{pending ? p.uploading : p.save}</button>
     </fieldset>
     {state.error && <p role="alert">{state.error}</p>}{state.success && <p role="status">{state.success}</p>}
