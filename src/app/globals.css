@@ -1286,7 +1286,7 @@ html[data-sidebar="collapsed"] .sidebar-identity-row .sidebar-collapse { justify
   .mobile-menu { display: inline-flex !important; }
 }
 
-/* v1.0 interaction polish: tactile color/depth feedback without hover lift. */
+/* v1.7 interaction polish: tactile color/depth feedback without hover lift. */
 :is(button, a, [role="button"]):hover { transform:none!important; }
 .app-sidebar .sidebar-bottom { padding-top:.9rem; background:none!important; }
 .top-subject-slots { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; }

@@ -276,7 +276,7 @@ function PdfPage({
         </div>
       </div>
 
-      {nearby && loading && !canvasHost.current?.firstElementChild && (
+      {nearby && loading && (
         <p className="absolute mt-8 text-sm text-[var(--muted)]">
           {locale === "kk"
             ? `${number}-бет жүктелуде…`

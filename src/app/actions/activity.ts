@@ -72,7 +72,7 @@ export async function getAdminActivityStats(): Promise<AdminActivityStats | null
       new Set((recentRes.data ?? []).map((r) => r.user_id).filter(Boolean)),
     ) as string[];
 
-    let nameMap: Record<string, string> = {};
+    const nameMap: Record<string, string> = {};
     if (userIds.length > 0) {
       const profilesRes = await supabase
         .from("profiles")

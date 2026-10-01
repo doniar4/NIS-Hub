@@ -110,10 +110,14 @@ export function MessagesPanel({
 
   // Load pinned threads from localStorage
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("nis-pinned-threads");
-      if (raw) setPinnedIds(JSON.parse(raw));
-    } catch {}
+    const timer = window.setTimeout(() => {
+      try {
+        const raw = localStorage.getItem("nis-pinned-threads");
+        if (raw) setPinnedIds(JSON.parse(raw));
+      } catch {}
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   const togglePin = useCallback((id: string, e?: React.MouseEvent) => {
