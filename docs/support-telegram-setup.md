@@ -3,7 +3,7 @@
 ## Configuration
 1. Create a bot with Telegram's official BotFather and a restricted administrator chat. Add the bot and grant only the ability to send messages. Do not use a public student group.
 2. Obtain the destination chat ID through authorized Telegram tooling. Do not paste tokens, chat IDs, update payloads or student information in commits, screenshots or support tickets.
-3. Set server-only deployment secrets `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_CHAT_ID`, and the canonical HTTPS origin `APP_BASE_URL`. No `NEXT_PUBLIC_` prefix. Local development may use a localhost HTTP origin.
+3. Set server-only deployment secrets `TELEGRAM_BOT_TOKEN` and `TELEGRAM_ADMIN_CHAT_ID`. Ticket links use the canonical public `NEXT_PUBLIC_SITE_URL` origin (localhost HTTP is allowed in local development). Never use a `NEXT_PUBLIC_` prefix for Telegram secrets.
 4. Apply the v0.5 support migration and deploy the app. Use an existing admin account for moderation; no moderator role is introduced.
 5. In a real signed-in student session submit a harmless test ticket. Confirm it appears under Support even if Telegram is unavailable. In the configured admin chat confirm one notification and that its link requires login/admin or owner authorization. Reply/change status in NIS Hub, then verify the author can see it and a different student cannot.
 6. Check a harmless >400-character ticket: localized category, title, preview ending in … (without its tail), profile name, Asia/Oral timestamp and admin controls at the link. Test <, >, &, quotes and emoji without injecting Telegram markup. Confirm the short-message and missing-name cases too.

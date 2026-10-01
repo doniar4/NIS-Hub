@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {getTimetableMaterials} from "@/lib/schedule-material-queries";
 import {classGrade} from "@/lib/book-model";
 import {getNonSchoolDays} from "@/lib/calendar-queries";
@@ -17,11 +18,38 @@ import {safeNext,schoolDate} from "@/lib/validation";
 import {WelcomeScreen} from "@/components/welcome-screen";
 import {getPersonalTasks} from "@/lib/task-queries";
 
+import { absoluteSiteUrl } from "@/lib/site-url";
+import { socialProviderEnabled } from "@/lib/auth-providers";
+
+const publicTitle = "NIS Hub — Learning, Schedule, Books and Study Tools";
+const publicDescription = "NIS Hub brings together school schedules, books, homework, community and study tools in one place.";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const viewer = await getViewer();
+  if (viewer.user) return { robots: { index: false, follow: false } };
+  return {
+    title: { absolute: publicTitle },
+    description: publicDescription,
+    alternates: { canonical: absoluteSiteUrl("/") },
+    robots: { index: true, follow: true },
+    openGraph: {
+      title: publicTitle,
+      description: publicDescription,
+      siteName: "NIS Hub",
+      url: absoluteSiteUrl("/"),
+      type: "website",
+    },
+    twitter: { card: "summary", title: publicTitle, description: publicDescription },
+  };
+}
+
 export default async function Home({searchParams}:{searchParams:Promise<Record<string,string|string[]|undefined>>}) {
   const {t,locale}=await getI18n(),c=designCopy(locale),viewer=await getViewer();
   if(!viewer.user){
     const params=await searchParams,authMode=params.auth==="login"?"login":"signup";
     return <WelcomeScreen t={t} configured={viewer.configured} authMode={authMode}
+      googleEnabled={viewer.configured && socialProviderEnabled("google")}
+      callbackFailed={authMode==="login"&&params.callback==="failed"}
       loginNext={authMode==="login"?safeNext(params.next):"/"}
       confirmationFailed={authMode==="login"&&params.confirmation==="failed"}/>;
   }

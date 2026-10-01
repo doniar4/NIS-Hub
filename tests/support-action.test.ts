@@ -46,7 +46,7 @@ test("actual ticket action commits full data first, sends a bounded summary from
   const mod={exports:{} as {createTicket:(state:ActionState,form:FormData)=>Promise<ActionState>}};
   runInNewContext(result.outputFiles[0].text,{
    module:mod,exports:mod.exports,fixtureContext:context,URL,AbortSignal,
-   process:{env:{TELEGRAM_BOT_TOKEN:"test-only",TELEGRAM_ADMIN_CHAT_ID:"test-chat",APP_BASE_URL:"https://school.example"}},
+   process:{env:{TELEGRAM_BOT_TOKEN:"test-only",TELEGRAM_ADMIN_CHAT_ID:"test-chat",NEXT_PUBLIC_SITE_URL:"https://school.example"}},
    console:{warn:(...args:unknown[])=>logs.push(args)},
    fetch:async(_url:string,init:RequestInit)=>{
     events.push("notify");const body=String(init.body);sent.push(body);

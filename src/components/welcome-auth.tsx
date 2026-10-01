@@ -3,13 +3,16 @@
 import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useI18n } from "./locale-provider";
+import { GoogleSignIn } from "./google-sign-in";
 
-export function WelcomeAuth({ signupForm, loginForm, configured, initialMode = "signup", confirmationFailed = false }: {
+export function WelcomeAuth({ signupForm, loginForm, configured, initialMode = "signup", confirmationFailed = false, callbackFailed = false, googleEnabled = false }: {
   signupForm: ReactNode;
   loginForm: ReactNode;
   configured: boolean;
   initialMode?: "signup" | "login";
   confirmationFailed?: boolean;
+  callbackFailed?: boolean;
+  googleEnabled?: boolean;
 }) {
   const [mode, setMode] = useState<"signup" | "login">(initialMode);
   const id = useId();
@@ -31,7 +34,12 @@ export function WelcomeAuth({ signupForm, loginForm, configured, initialMode = "
     <h2 id="welcome-auth-title">{mode === "signup" ? t.signup : t.login}</h2>
     <p className="auth-subtitle">{mode === "signup" ? t.signupHint : t.loginHint}</p>
     {confirmationFailed && <p className="form-error" role="alert">{t.confirmFailed}</p>}
+    {callbackFailed && <p className="form-error" role="alert">{t.authLinkFailed}</p>}
     {!configured && <p className="notice" role="note">{t.authNotConfigured}</p>}
+    {googleEnabled && <div className="welcome-social-auth">
+      <GoogleSignIn />
+      <p className="auth-divider"><span>{t.orEmail}</span></p>
+    </div>}
     {(["signup", "login"] as const).map(value => <div key={value} role="tabpanel" id={`${id}-${value}-panel`}
       aria-labelledby={`${id}-${value}-tab`} hidden={mode !== value} className="welcome-auth-fields">
       {value === "signup" ? signupForm : loginForm}
