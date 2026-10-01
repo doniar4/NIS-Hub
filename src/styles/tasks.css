@@ -321,3 +321,69 @@
   border-color: var(--accent) !important;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent) !important;
 }
+
+.task-subtasks-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+}
+.task-subtask-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+}
+.task-subtask-item input[type="text"] {
+  flex: 1;
+}
+.task-subtask-item button {
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0.2rem;
+}
+.task-subtask-item button:hover {
+  color: var(--danger);
+}
+.task-subtasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  background: var(--hover);
+}
+.task-subtask-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.task-subtask-check input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+.task-subtask-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: var(--hover);
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+.task-notification-settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}

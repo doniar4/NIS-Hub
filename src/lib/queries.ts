@@ -71,8 +71,7 @@ export async function getReading() {
   if(variants.error)throw new Error("Could not load editions");
   const bookIds=[...new Set(variants.data.map(v=>v.book_id))];
   const books = bookIds.length ? await supabase.from("books").select("id,title,cover_path").in("id", bookIds).eq("publication_status","published") : { data: [], error: null };
-  if (books.error) throw new Error("Не удалось загрузить названия материалов.");
-  const catalog=variants.data.flatMap(v=>{const book=books.data?.find(b=>b.id===v.book_id);return book?[{...book,id:v.id,book_id:v.book_id,cover_path:v.cover_path,language:v.language}]:[];}), paths=catalog.map(coverPath).filter((path):path is string=>!!path);
+  const catalog=variants.data.flatMap(v=>{const book=books.data?.find(b=>b.id===v.book_id);return book?[{...book,id:v.id,book_id:v.book_id,cover_path:v.cover_path||book.cover_path,language:v.language}]:[];}), paths=catalog.map(coverPath).filter((path):path is string=>!!path);
   const covers=paths.length?await supabase.storage.from("book-covers").createSignedUrls(paths,BOOK_COVER_URL_TTL_SECONDS):{data:[]};
   const urls=new Map((covers.data??[]).map(row=>[row.path,row.signedUrl]));
   return { bookmarks: bookmarks.data.map(b=>({...b,book_id:b.book_variant_id})), progress: progress.data.map(b=>({...b,book_id:b.book_variant_id})), books: catalog.map(book=>({...book,cover_url:urls.get(coverPath(book)??"")??null})) };

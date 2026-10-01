@@ -289,8 +289,7 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
                 padding: 0,
               }}
               onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
-              tabIndex={-1}
+              aria-label={showPassword ? p.hidePassword : p.showPassword}
             >
               {showPassword ? (
                 <EyeNoneIcon width={18} height={18} aria-hidden="true" />

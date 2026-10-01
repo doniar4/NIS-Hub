@@ -14,7 +14,7 @@ export function ReaderWorkspace({children,inspector,information}:{children:React
   const desktop=useSyncExternalStore(subscribeDesktop,desktopSnapshot,()=>false);
   const studyIntent=useSyncExternalStore(subscribeHash,hashSnapshot,()=>false);
   const [requestedOpen,setOpen]=useState<boolean|null>(null);
-  const open=requestedOpen??(desktop||studyIntent);
+  const open=requestedOpen??studyIntent;
   useEffect(()=>{const hash=()=>{if(window.location.hash==="#ai-study")setOpen(true);};window.addEventListener("hashchange",hash);return ()=>window.removeEventListener("hashchange",hash);},[]);
   useEffect(()=>{
     const element=dialog.current;if(!element)return;

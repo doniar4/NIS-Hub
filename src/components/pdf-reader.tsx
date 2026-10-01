@@ -25,6 +25,24 @@ import type {
   PDFDocumentProxy,
   RenderTask,
 } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { Maximize2, Minimize2, Share2, Highlighter, Eraser, Check } from "lucide-react";
+
+export const HIGHLIGHT_COLORS = {
+  yellow: "rgba(250, 204, 21, 0.45)",
+  green: "rgba(34, 197, 94, 0.4)",
+  blue: "rgba(59, 130, 246, 0.4)",
+  black: "rgba(15, 23, 42, 0.85)",
+} as const;
+export type HighlightColor = keyof typeof HIGHLIGHT_COLORS;
+export type Highlight = {
+  id: string;
+  page: number;
+  color: HighlightColor;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
 
 function PdfPage({
   pdf,
@@ -34,6 +52,10 @@ function PdfPage({
   fit,
   zoom,
   root,
+  highlights = [],
+  activeTool = null,
+  onAddHighlight,
+  onDeleteHighlight,
 }: {
   pdf: PDFDocumentProxy;
   number: number;
@@ -42,14 +64,21 @@ function PdfPage({
   fit: "width" | "page";
   zoom: number;
   root: HTMLDivElement | null;
+  highlights?: Highlight[];
+  activeTool?: HighlightColor | "eraser" | null;
+  onAddHighlight?: (hl: Highlight) => void;
+  onDeleteHighlight?: (id: string) => void;
 }) {
   const element = useRef<HTMLDivElement>(null);
   const canvasHost = useRef<HTMLDivElement>(null);
+  const renderedSize = useRef<{ width: number; height: number } | null>(null);
+  const dragStart = useRef<{ x: number; y: number } | null>(null);
   const { locale } = useI18n();
 
   const [nearby, setNearby] = useState(number === 1);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [pageHeight, setPageHeight] = useState<number | null>(null);
 
   useEffect(() => {
     if (!element.current || !root) return;
@@ -72,15 +101,17 @@ function PdfPage({
   }, [number, root]);
 
   useEffect(() => {
-    if (!nearby) return;
+    if (!nearby) {
+      canvasHost.current?.replaceChildren();
+      return;
+    }
 
     let cancelled = false;
     let task: RenderTask | undefined;
-    let canvas: HTMLCanvasElement | undefined;
 
     async function render() {
       try {
-        setLoading(true);
+        setLoading(!canvasHost.current?.firstElementChild);
         setFailed(false);
 
         const source = await pdf.getPage(number);
@@ -102,15 +133,24 @@ function PdfPage({
           ),
         });
 
+        setPageHeight(viewport.height);
+
+        const existing = canvasHost.current?.firstElementChild as HTMLCanvasElement | null;
+        if (existing) {
+          existing.style.width = `${viewport.width}px`;
+          existing.style.height = `${viewport.height}px`;
+        }
+
         const ratio = Math.min(window.devicePixelRatio || 1, 2);
 
-        canvas = document.createElement("canvas");
+        const canvas = document.createElement("canvas");
 
         canvas.width = Math.floor(viewport.width * ratio);
         canvas.height = Math.floor(viewport.height * ratio);
 
         canvas.style.width = `${viewport.width}px`;
         canvas.style.height = `${viewport.height}px`;
+        canvas.style.display = "block";
 
         canvas.setAttribute("aria-hidden", "true");
 
@@ -127,6 +167,7 @@ function PdfPage({
 
         if (!cancelled) {
           canvasHost.current?.replaceChildren(canvas);
+          renderedSize.current = { width: viewport.width, height: viewport.height };
         }
       } catch (reason) {
         if (!cancelled && !isRenderCancellation(reason)) {
@@ -145,26 +186,97 @@ function PdfPage({
     return () => {
       cancelled = true;
       task?.cancel();
-      if (canvas) {
-        canvasHost.current?.replaceChildren();
-        canvas.width = 0;
-        canvas.height = 0;
-      }
     };
   }, [fit, height, nearby, number, pdf, width, zoom]);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!activeTool || activeTool === "eraser") return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    dragStart.current = { x, y };
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!activeTool || activeTool === "eraser" || !dragStart.current || !onAddHighlight) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const curX = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const curY = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    const start = dragStart.current;
+    dragStart.current = null;
+
+    let x = Math.min(start.x, curX);
+    let y = Math.min(start.y, curY);
+    let w = Math.abs(curX - start.x);
+    let h = Math.abs(curY - start.y);
+
+    if (w < 2 && h < 2) {
+      w = 60;
+      h = 3.5;
+      x = Math.max(2, start.x - 30);
+      y = Math.max(1, start.y - 1.7);
+    } else {
+      w = Math.max(2, w);
+      h = Math.max(1.5, h);
+    }
+
+    onAddHighlight({
+      id: crypto.randomUUID(),
+      page: number,
+      color: activeTool,
+      x: Number(x.toFixed(2)),
+      y: Number(y.toFixed(2)),
+      w: Number(w.toFixed(2)),
+      h: Number(h.toFixed(2)),
+    });
+  };
 
   return (
     <div
       ref={element}
       data-page={number}
-      className="relative flex min-h-64 justify-center border-b border-[var(--line)] bg-[var(--surface)] py-3 last:border-b-0"
+      style={{
+        minHeight: pageHeight ? `${pageHeight}px` : "300px",
+      }}
+      className="relative flex justify-center border-b border-[var(--line)] bg-[var(--surface)] py-3 last:border-b-0"
     >
       <div
         ref={canvasHost}
-        className="w-fit self-start"
-      />
+        className="w-fit self-start relative"
+      >
+        <div
+          className="pdf-highlight-layer"
+          style={{
+            cursor: activeTool ? (activeTool === "eraser" ? "pointer" : "crosshair") : "default",
+          }}
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+        >
+          {highlights.filter(h => h.page === number).map(h => (
+            <div
+              key={h.id}
+              className="pdf-highlight-item"
+              style={{
+                left: `${h.x}%`,
+                top: `${h.y}%`,
+                width: `${h.w}%`,
+                height: `${h.h}%`,
+                backgroundColor: HIGHLIGHT_COLORS[h.color],
+                mixBlendMode: h.color === "black" ? "normal" : "multiply",
+              }}
+              title={activeTool === "eraser" ? (locale === "kk" ? "Өшіру" : locale === "en" ? "Delete" : "Удалить маркер") : undefined}
+              onClick={(e) => {
+                if (activeTool === "eraser" && onDeleteHighlight) {
+                  e.stopPropagation();
+                  onDeleteHighlight(h.id);
+                }
+              }}
+            />
+          ))}
+        </div>
+      </div>
 
-      {nearby && loading && (
+      {nearby && loading && !canvasHost.current?.firstElementChild && (
         <p className="absolute mt-8 text-sm text-[var(--muted)]">
           {locale === "kk"
             ? `${number}-бет жүктелуде…`
@@ -209,7 +321,14 @@ export function PdfReader({
   const [fit, setFit] = useState<"width" | "page">("width");
 
   const [height, setHeight] = useState(650);
-  const [width, setWidth] = useState(600);
+  const [width, setWidth] = useState(() => {
+    if (typeof window !== "undefined") {
+      const isDesktop = window.innerWidth >= 1280;
+      const approx = isDesktop ? window.innerWidth - 420 : window.innerWidth >= 768 ? window.innerWidth - 260 : window.innerWidth - 32;
+      return Math.max(180, Math.floor(approx));
+    }
+    return 800;
+  });
 
   const [jump, setJump] = useState("");
   const [attempt, setAttempt] = useState(0);
@@ -227,12 +346,83 @@ export function PdfReader({
   const [message, setMessage] = useState("");
 
   const [bookmarks, setBookmarks] = useState(initialBookmarks);
-
   const [pending, startTransition] = useTransition();
 
   const viewportRef = useRef<HTMLDivElement>(null);
+  const readerRef = useRef<HTMLElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+  const [activeTool, setActiveTool] = useState<HighlightColor | "eraser" | null>(null);
+  const [highlights, setHighlights] = useState<Highlight[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(`nis-highlights-${variantId}`);
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return [];
+  });
+
   const [scrollRoot, setScrollRoot] =
     useState<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onFullscreenChange = () => setFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRoot;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.stopPropagation();
+      const atTop = el.scrollTop <= 0 && e.deltaY < 0;
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1 && e.deltaY > 0;
+      if (atTop || atBottom) {
+        e.preventDefault();
+      }
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [scrollRoot]);
+
+  const addHighlight = useCallback((hl: Highlight) => {
+    setHighlights(prev => {
+      const next = [...prev, hl];
+      try { localStorage.setItem(`nis-highlights-${variantId}`, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, [variantId]);
+
+  const deleteHighlight = useCallback((id: string) => {
+    setHighlights(prev => {
+      const next = prev.filter(h => h.id !== id);
+      try { localStorage.setItem(`nis-highlights-${variantId}`, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, [variantId]);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      readerRef.current?.requestFullscreen?.().then(() => setFullscreen(true)).catch(() => {
+        setFullscreen(prev => !prev);
+      });
+    } else {
+      document.exitFullscreen?.().then(() => setFullscreen(false)).catch(() => {
+        setFullscreen(false);
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? `${window.location.origin}/books/${bookId}/read?variant=${variantId}&page=${page}` : "";
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2200);
+    }
+  };
 
   const positioned = useRef(false);
   const currentPage = useRef(initialPage);
@@ -274,19 +464,34 @@ export function PdfReader({
   useEffect(() => {
     if (!viewportRef.current) return;
 
+    const containerWidth = scrollRoot ? scrollRoot.clientWidth : viewportRef.current.clientWidth;
+    if (containerWidth > 0) {
+      const initialWidth = Math.max(180, Math.floor(containerWidth) - 24);
+      setWidth((current) => (Math.abs(current - initialWidth) >= 8 ? initialWidth : current));
+    }
+
+    let timer: number | undefined;
     const observer = new ResizeObserver(([entry]) => {
-      setWidth(
-        Math.max(
-          180,
-          Math.floor(entry.contentRect.width)-24,
-        ),
-      );
+      if (!entry) return;
+      const currentContainerWidth = scrollRoot ? scrollRoot.clientWidth : entry.contentRect.width;
+      const newWidth = Math.max(180, Math.floor(currentContainerWidth) - 24);
+
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        setWidth((current) => {
+          if (Math.abs(current - newWidth) < 8) return current;
+          return newWidth;
+        });
+      }, 100);
     });
 
     observer.observe(viewportRef.current);
 
-    return () => observer.disconnect();
-  }, []);
+    return () => {
+      window.clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, [scrollRoot]);
 
   const goTo = useCallback(
     (next: number) => {
@@ -322,7 +527,10 @@ export function PdfReader({
       if(navigationAnchor.current!==null)return;
       const bounds=scrollRoot.getBoundingClientRect(),marker=bounds.top+Math.min(80,bounds.height*.2);
       // Preload margins are never evidence of the current reading page.
-      for(const element of scrollRoot.querySelectorAll<HTMLElement>("[data-page]")){
+      const children = scrollRoot.children;
+      for(let i=0; i<children.length; i++){
+        const element = children[i] as HTMLElement;
+        if(!element.dataset?.page) continue;
         const rect=element.getBoundingClientRect();
         if(rect.bottom>marker&&rect.top<bounds.bottom){visiblePage(Number(element.dataset.page));break;}
       }
@@ -347,10 +555,19 @@ export function PdfReader({
       if(element)scrollRoot.scrollTo({top:scrollRoot.scrollTop+element.getBoundingClientRect().top-scrollRoot.getBoundingClientRect().top-scrollRoot.clientTop,behavior:"instant"});
     };
     const observer=new ResizeObserver(()=>{if(!frame)frame=requestAnimationFrame(anchor);});
-    for(const element of scrollRoot.children)observer.observe(element);
+    const number=navigationAnchor.current??currentPage.current;
+    const activeEl=scrollRoot.querySelector<HTMLElement>(`[data-page="${number}"]`);
+    if(activeEl)observer.observe(activeEl);
     return ()=>{observer.disconnect();cancelAnimationFrame(frame);};
-  },[scrollRoot,pdf]);
-  useEffect(()=>{navigationAnchor.current=currentPage.current;},[width,height,fit,zoom]);
+  },[scrollRoot,pdf,page]);
+
+  useEffect(()=>{
+    navigationAnchor.current=currentPage.current;
+    if(!scrollRoot)return;
+    const number=currentPage.current;
+    const element=scrollRoot.querySelector<HTMLElement>(`[data-page="${number}"]`);
+    if(element)scrollRoot.scrollTo({top:scrollRoot.scrollTop+element.getBoundingClientRect().top-scrollRoot.getBoundingClientRect().top-scrollRoot.clientTop,behavior:"instant"});
+  },[width,height,fit,zoom,scrollRoot]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -594,8 +811,10 @@ export function PdfReader({
 
   return (
     <section
+      ref={readerRef}
       aria-label={t.reader}
       className="pdf-reader"
+      data-fullscreen={fullscreen}
     >
       {error ? (
         <div
@@ -663,6 +882,10 @@ export function PdfReader({
                   fit={fit}
                   zoom={zoom}
                   root={scrollRoot}
+                  highlights={highlights}
+                  activeTool={activeTool}
+                  onAddHighlight={addHighlight}
+                  onDeleteHighlight={deleteHighlight}
                 />
               ),
             )}
@@ -869,6 +1092,66 @@ export function PdfReader({
             }}
           >
             {v.fitPage}
+          </button>
+
+          {/* Marker tool & Palette */}
+          <div className="pdf-marker-palette">
+            <button
+              type="button"
+              className="button button-secondary button-small"
+              style={{ padding: "0.25rem 0.5rem", minHeight: "32px" }}
+              aria-pressed={activeTool !== null}
+              onClick={() => setActiveTool(activeTool ? null : "yellow")}
+              title={locale === "kk" ? "Мәтінді белгілеу (маркер)" : locale === "en" ? "Highlight text" : "Выделение маркером"}
+            >
+              <Highlighter size={15} style={{ color: activeTool && activeTool !== "eraser" ? (activeTool === "yellow" ? "#eab308" : activeTool === "green" ? "#22c55e" : activeTool === "blue" ? "#3b82f6" : "#000") : "inherit" }} />
+            </button>
+            {activeTool && (
+              <>
+                {(["yellow", "green", "blue", "black"] as HighlightColor[]).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className="pdf-color-dot"
+                    data-selected={activeTool === c}
+                    style={{
+                      backgroundColor: c === "yellow" ? "#facc15" : c === "green" ? "#22c55e" : c === "blue" ? "#3b82f6" : "#0f172a",
+                    }}
+                    onClick={() => setActiveTool(c)}
+                    title={c}
+                  />
+                ))}
+                <button
+                  type="button"
+                  className="button button-secondary button-small"
+                  style={{ padding: "0.2rem", minHeight: "26px", border: activeTool === "eraser" ? "1.5px solid var(--accent)" : "none" }}
+                  onClick={() => setActiveTool(activeTool === "eraser" ? "yellow" : "eraser")}
+                  title={locale === "kk" ? "Өшіргіш" : locale === "en" ? "Eraser" : "Ластик"}
+                >
+                  <Eraser size={13} />
+                </button>
+              </>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => void handleShare()}
+            title={locale === "kk" ? "Бөлісу" : locale === "en" ? "Share" : "Поделиться"}
+          >
+            {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
+            <span>{shareCopied ? (locale === "kk" ? "Көшірілді!" : locale === "en" ? "Copied!" : "Скопировано!") : (locale === "kk" ? "Бөлісу" : locale === "en" ? "Share" : "Поделиться")}</span>
+          </button>
+
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={toggleFullscreen}
+            aria-pressed={fullscreen}
+            title={fullscreen ? (locale === "kk" ? "Толық экраннан шығу" : locale === "en" ? "Exit full screen" : "Выйти из полноэкранного режима") : (locale === "kk" ? "Толық экран" : locale === "en" ? "Full screen" : "На весь экран")}
+          >
+            {fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </button>
 
           <button

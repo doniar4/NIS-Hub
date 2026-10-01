@@ -63,7 +63,7 @@ export function NotificationCenter() {
         }
         localStorage.setItem("nis-task-notified",JSON.stringify([...notified].slice(-100)));
       }
-      if("Notification" in window&&Notification.permission==="granted"&&localStorage.getItem("nis-task-browser-notifications")!=="disabled"&&document.hidden){
+      if("Notification" in window&&Notification.permission==="granted"&&localStorage.getItem("nis-sms-browser-notifications")!=="disabled"&&document.hidden){
         for(const notice of fresh.filter((n):n is SmsResultNotice=>n.kind==="sms")){
           const systemNotice=new Notification(notice.title,{body:notice.body_preview,icon:"/icon.svg",tag:notice.id});
           systemNotice.onclick=()=>{window.focus();window.location.assign(notice.href);systemNotice.close();};
@@ -77,7 +77,7 @@ export function NotificationCenter() {
     let alive = true,
       busy = false;
     const poll = async () => {
-      const backgroundReminders="Notification" in window&&Notification.permission==="granted"&&localStorage.getItem("nis-task-browser-notifications")!=="disabled";
+      const backgroundReminders="Notification" in window&&Notification.permission==="granted"&&(localStorage.getItem("nis-task-browser-notifications")!=="disabled"||localStorage.getItem("nis-sms-browser-notifications")!=="disabled");
       if (busy || !alive || (document.hidden&&!backgroundReminders)) return;
       busy = true;
       try {

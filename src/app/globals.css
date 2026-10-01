@@ -1311,3 +1311,94 @@ html[data-sidebar="collapsed"] .sidebar-identity-row .sidebar-collapse { justify
 .top-subject-modal-option .subject-motif-frame { position:static; flex:0 0 36px; width:36px; height:36px; color:var(--accent); }
 .top-subject-modal-option span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.86rem; }
 @media(max-width:640px) { .top-subject-slots,.top-subject-modal-grid { grid-template-columns:minmax(0,1fr); } }
+
+/* Chat Enhancements: replies, reactions, search, typing, pills */
+.message-reply-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.75rem;
+  margin-bottom: 0.5rem;
+  border-left: 3px solid var(--accent);
+  background: var(--hover);
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+.message-quote {
+  padding: 0.3rem 0.6rem;
+  margin-bottom: 0.4rem;
+  border-left: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-radius: 4px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.message-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+}
+.message-reaction-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: var(--hover);
+  border: 1px solid var(--line);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+.message-reaction-badge:hover {
+  border-color: var(--accent);
+}
+.message-actions-hover {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: 0.4rem;
+  opacity: 0.7;
+}
+.message-actions-hover:hover {
+  opacity: 1;
+}
+.message-typing-indicator {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-style: italic;
+  padding: 0.25rem 0.5rem;
+}
+.tab-pills {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--hover);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem;
+}
+.tab-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  height: 32px;
+  line-height: 1;
+}
+.tab-pill[aria-selected="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}

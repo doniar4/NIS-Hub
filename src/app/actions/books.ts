@@ -42,7 +42,8 @@ export async function saveBook(form:FormData,stage:"prepare"|"finish"):Promise<A
    }
   }
   const book=parsed.data;
-  const {error}=await supabase.rpc("save_book_edition",{p_book:book,p_variant:{id:vid.data,language:book.language,storage_path:path,page_count:book.page_count,file_size:size,publication_status:book.variant_status},p_prepare:stage==="prepare"});
+  const coverPath = form.get("cover_path") ? String(form.get("cover_path")) : (uploading ? `books/${vid.data}.jpg` : current?.cover_path ?? null);
+  const {error}=await supabase.rpc("save_book_edition",{p_book:{...book,cover_path:coverPath},p_variant:{id:vid.data,language:book.language,storage_path:path,page_count:book.page_count,file_size:size,publication_status:book.variant_status,cover_path:coverPath},p_prepare:stage==="prepare"});
   if(error){
    console.error("[saveBook] Error in save_book_edition RPC:", error);
    return {error:t.bookError};

@@ -28,7 +28,8 @@ export type ClassHomework={id:string;class_id:string;subject_id:string;due_date:
 export type CommunityReport={id:string;reporter_id:string;target_kind:"profile"|"message"|"homework";target_id:string;reason:"spam"|"harassment"|"privacy"|"other";detail:string;status:"open"|"resolved";created_at:string;resolved_at:string|null;resolved_by:string|null};
 export type TaskPriority="low"|"medium"|"high"|"urgent";
 export type TaskStatus="active"|"completed"|"archived";
-export type PersonalTask={id:string;owner_id:string;subject_id:string|null;title:string;notes:string;priority:TaskPriority;status:TaskStatus;due_at:string|null;remind_at:string|null;reminder_read_at:string|null;completed_at:string|null;created_at:string;updated_at:string};
+export type TaskSubtask = { id: string; title: string; completed: boolean };
+export type PersonalTask={id:string;owner_id:string;subject_id:string|null;title:string;notes:string;priority:TaskPriority;status:TaskStatus;due_at:string|null;remind_at:string|null;reminder_read_at:string|null;completed_at:string|null;created_at:string;updated_at:string;subtasks?:TaskSubtask[]};
 export type TaskReminder={id:string;task_id:string;title:string;priority:TaskPriority;due_at:string;remind_at:string;read_at:string|null};
 export type AppNotification={id:string;kind:"message"|"task";href:string;title:string;body_preview:string;created_at:string;read_at:string|null;thread_id?:string;task_id?:string;priority?:TaskPriority;due_at?:string};
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
@@ -66,6 +67,8 @@ export type Database = { public: {
     schedule: Table<Lesson, "class_id" | "date" | "lesson_number" | "subject_id">;
     profile_top_subjects: Table<{ profile_id: string; subject_id: string; position: number }, "profile_id" | "subject_id" | "position">;
     book_rights: Table<{ book_id: string; source: string; permission_note: string }, "book_id" | "source" | "permission_note">;
+    book_highlights: Table<{ id: string; user_id: string; book_variant_id: string; page_number: number; color: string; rects: Json; created_at: string }, "book_variant_id" | "page_number" | "color">;
+    user_activity_logs: Table<{ id: string; user_id: string | null; path: string; user_agent: string | null; created_at: string }, "path">;
   };
   Views: Record<string, never>;
   Functions: {
@@ -115,6 +118,8 @@ export type Database = { public: {
     complete_ai_study:{Args:{p_id:string;p_lease:string;p_response:string;p_signature:string;p_failed?:boolean};Returns:boolean};
     save_book_edition: {Args:{p_book:Json;p_variant:Json;p_prepare?:boolean};Returns:string};
     save_book: { Args: { p_book: Json }; Returns: string };
+    toggle_task_subtask: { Args: { p_task_id: string; p_subtask_id: string; p_completed: boolean }; Returns: Json };
+    log_user_activity: { Args: { p_path: string; p_user_agent?: string | null }; Returns: undefined };
   };
   Enums: { profile_role: "student" | "admin"; book_publication_status: Book["publication_status"]; book_license_status: "pending_review" | "approved" | "restricted" };
   CompositeTypes: Record<string, never>;

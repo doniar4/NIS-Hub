@@ -12,7 +12,11 @@ export function BookCover({ title, url }: { title: string; url: string | null })
   const hasImage = Boolean(url && failedUrl !== url);
 
   return (
-    <div className="book-first-page" role="img" aria-label={`${p.cover}: ${title}${hasImage ? "" : ` — ${p.coverFailed}`}`}>
+    <div
+      className="book-first-page"
+      role="img"
+      aria-label={`${p.cover}: ${title}${hasImage ? "" : ` — ${p.coverFailed}`}`}
+    >
       {url && hasImage ? (
         <Image
           unoptimized
