@@ -56,6 +56,7 @@ export function LibraryBrowser({
   const [q, setQ] = useState(initial.q);
   const [grade, setGrade] = useState(initial.grade);
   const [subject, setSubject] = useState(initial.subject);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const [previousInitial, setPreviousInitial] =
     useState(initial);
@@ -122,8 +123,20 @@ export function LibraryBrowser({
 
   return (
     <section aria-label={t.library}>
+      <button
+        type="button"
+        className="button button-secondary library-filter-toggle"
+        aria-controls="library-filter-fields"
+        aria-expanded={filtersOpen}
+        onClick={() => setFiltersOpen((value) => !value)}
+      >
+        {locale === "ru" ? "Фильтры" : locale === "kk" ? "Сүзгілер" : "Filters"}
+        <span aria-hidden="true">{[q, grade, subject].filter(Boolean).length || "⌄"}</span>
+      </button>
       <div
         role="search"
+        id="library-filter-fields"
+        data-open={filtersOpen}
         className="library-filters mt-8 grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(8rem,1.7fr)_minmax(6rem,.7fr)_minmax(10rem,1fr)_auto]"
       >
         <label>
