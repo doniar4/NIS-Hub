@@ -13,6 +13,12 @@ import {
   Eye,
   EyeOff,
   X,
+  Settings,
+  UserPlus,
+  Link2,
+  Bell,
+  BellOff,
+  Trash2,
 } from "lucide-react";
 import {
   loadInbox,
@@ -24,13 +30,39 @@ import {
   createStudyGroup,
   loadStudyGroupMessages,
   sendStudyGroupMessage,
+  loadStudyGroupInvites,
+  respondStudyGroupInvite,
+  joinStudyGroupCode,
+  loadStudyGroupFriends,
+  searchStudyGroupPeople,
+  inviteStudyGroupMembers,
+  loadStudyGroupMembers,
+  loadStudyGroupAudit,
+  createStudyGroupCode,
+  revokeStudyGroupCode,
+  updateStudyGroup,
+  setStudyGroupMemberRole,
+  removeStudyGroupMember,
+  setStudyGroupMuted,
+  leaveStudyGroup,
+  deleteStudyGroup,
+  readStudyGroup,
+  deleteStudyGroupMessage,
+  toggleStudyGroupReaction,
+  pinStudyGroupMessage,
 } from "@/lib/community-client";
-import type { DirectMessage, DmThread, StudyGroup, StudyGroupMessage } from "@/lib/database.types";
+import type { DirectMessage, DmThread, StudyGroup, StudyGroupAudit, StudyGroupInvite, StudyGroupMember, StudyGroupMessage, StudyGroupPerson } from "@/lib/database.types";
 import { communityCopy } from "@/lib/community-copy";
 import { useI18n } from "./locale-provider";
 import { ReloadButton } from "./reload-button";
 
 const EMOJI_REACTIONS = ["👍", "❤️", "💡", "🔥"];
+const GROUP_AVATARS=["📚","∑","⚗️","💻","🌍","🧬","🎨","🎵","🏛️","📈","🧠","🎓"];
+const GROUP_COLORS=["#4278c0","#7957b8","#138a72","#ba6438","#b34268","#267a9b","#78852f","#626d82"];
+
+function GroupAvatar({group,small=false}:{group:Pick<StudyGroup,"name"|"avatar_icon"|"avatar_color">;small?:boolean}){
+  return <span className={`group-avatar${small?" group-avatar-small":""}`} style={{"--group-color":GROUP_COLORS[group.avatar_color]??GROUP_COLORS[0]} as React.CSSProperties} aria-hidden="true">{GROUP_AVATARS[group.avatar_icon]??groupInitials(group.name)}</span>;
+}
 
 function groupInitials(name:string) {
   return name.split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toLocaleUpperCase()||"Г";
@@ -53,9 +85,11 @@ export function MessagesPanel({
     [pending, start] = useTransition();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [groups,setGroups]=useState<StudyGroup[]>([]);
-  const [groupForm,setGroupForm]=useState({name:"",subject:"",description:"",members:""});
+  const [groupForm,setGroupForm]=useState({name:"",subject:"",description:"",members:"",avatarIcon:0,avatarColor:0});
   const [groupError,setGroupError]=useState("");
   const [groupPending,startGroup]=useTransition();
+  const [groupInvites,setGroupInvites]=useState<StudyGroupInvite[]>([]);
+  const [joinCode,setJoinCode]=useState("");
 
   // Tab: all | pinned | groups
   const [tab, setTab] = useState<"all" | "pinned" | "groups">("all");
@@ -101,11 +135,13 @@ export function MessagesPanel({
     if("error" in result){setGroupError(result.error==="migration"?"Примените миграцию учебных групп.":p.failed);return;}
     setGroups(result.data);setGroupError("");
   },[p]);
+  const refreshGroupInvites=useCallback(async()=>{const result=await loadStudyGroupInvites();if("data" in result)setGroupInvites(result.data);},[]);
 
   useEffect(()=>{
-    const timer=window.setTimeout(()=>void refreshGroups(),0);
+    const timer=window.setTimeout(()=>{void refreshGroups();void refreshGroupInvites();},0);
     return()=>window.clearTimeout(timer);
-  },[refreshGroups]);
+  },[refreshGroups,refreshGroupInvites]);
+  useEffect(()=>{const code=new URLSearchParams(window.location.search).get("groupCode");if(!code)return;const timer=window.setTimeout(()=>{startGroup(async()=>{const result=await joinStudyGroupCode(code);if("id" in result){await refreshGroups();selectThread(result.id);window.history.replaceState(null,"",window.location.pathname);}});},0);return()=>window.clearTimeout(timer);},[refreshGroups]);
 
   useEffect(() => {
     let alive = true;
@@ -268,6 +304,15 @@ export function MessagesPanel({
           </div>
 
           {tab === "groups" && (
+            <div className="study-group-tools">
+            {groupInvites.length>0&&<details className="study-group-create" open>
+              <summary>Приглашения <span className="unread-count">{groupInvites.length}</span></summary>
+              <div className="group-invite-list">{groupInvites.map(invite=><div key={invite.id} className="group-invite-row"><span><strong>{invite.group_name}</strong><small>от {invite.inviter_name}</small></span><span className="flex gap-1"><button className="button button-small" onClick={()=>startGroup(async()=>{const result=await respondStudyGroupInvite(invite.id,true);if("id" in result){await Promise.all([refreshGroups(),refreshGroupInvites()]);selectThread(result.id);}})}>Принять</button><button className="button button-secondary button-small" onClick={()=>startGroup(async()=>{await respondStudyGroupInvite(invite.id,false);await refreshGroupInvites();})}>Отклонить</button></span></div>)}</div>
+            </details>}
+            <details className="study-group-create">
+              <summary><Link2 className="inline w-3.5 h-3.5 mr-1"/>Войти по коду</summary>
+              <form onSubmit={event=>{event.preventDefault();startGroup(async()=>{const result=await joinStudyGroupCode(joinCode);if("error" in result){setGroupError("Код неверный, истёк или отозван.");return;}setJoinCode("");await refreshGroups();selectThread(result.id);});}}><input className="field uppercase" value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())} minLength={8} maxLength={8} placeholder="ABCD2345"/><button className="button" disabled={groupPending}>Войти</button></form>
+            </details>
             <details className="study-group-create">
               <summary>{locale === "kk" ? "Топ құру" : locale === "en" ? "Create group" : "Создать группу"}</summary>
               <form onSubmit={(event)=>{
@@ -278,23 +323,27 @@ export function MessagesPanel({
                     subject:groupForm.subject,
                     description:groupForm.description,
                     members:groupForm.members.split(",").map(value=>value.trim()).filter(Boolean),
+                    avatarIcon:groupForm.avatarIcon,
+                    avatarColor:groupForm.avatarColor,
                   });
                   if("error" in result){
                     setGroupError(result.error==="migration"?"Примените миграцию учебных групп.":"Не удалось создать группу. Проверьте имена участников.");
                     return;
                   }
-                  setGroupForm({name:"",subject:"",description:"",members:""});
-                  await refreshGroups();selectThread(result.id);
+                  setGroupForm({name:"",subject:"",description:"",members:"",avatarIcon:0,avatarColor:0});
+                  await Promise.all([refreshGroups(),refreshGroupInvites()]);selectThread(result.id);
                 });
               }}>
                 <input className="field" required maxLength={80} placeholder={locale==="kk"?"Топ атауы":locale==="en"?"Group name":"Название группы"} value={groupForm.name} onChange={e=>setGroupForm(old=>({...old,name:e.target.value}))}/>
                 <input className="field" required maxLength={80} placeholder={locale==="kk"?"Пән":locale==="en"?"Subject":"Предмет"} value={groupForm.subject} onChange={e=>setGroupForm(old=>({...old,subject:e.target.value}))}/>
                 <textarea className="field" rows={2} maxLength={500} placeholder={locale==="kk"?"Сипаттама":locale==="en"?"Description":"Описание"} value={groupForm.description} onChange={e=>setGroupForm(old=>({...old,description:e.target.value}))}/>
-                <input className="field" maxLength={1830} placeholder={locale==="kk"?"Қатысушылардың аттары, үтір арқылы":locale==="en"?"Member names, comma-separated":"Имена участников через запятую"} value={groupForm.members} onChange={e=>setGroupForm(old=>({...old,members:e.target.value}))}/>
+                <div><span className="field-label">Аватар</span><div className="group-avatar-options">{GROUP_AVATARS.map((icon,index)=><button key={icon} type="button" aria-pressed={groupForm.avatarIcon===index} onClick={()=>setGroupForm(old=>({...old,avatarIcon:index}))}>{icon}</button>)}</div><div className="group-color-options">{GROUP_COLORS.map((color,index)=><button key={color} type="button" aria-label={`Цвет ${index+1}`} aria-pressed={groupForm.avatarColor===index} style={{background:color}} onClick={()=>setGroupForm(old=>({...old,avatarColor:index}))}/>)}</div></div>
+                <input className="field" maxLength={1830} placeholder={locale==="kk"?"Шақырылатын аттар, үтір арқылы":locale==="en"?"Names to invite, comma-separated":"Кого пригласить: имена через запятую"} value={groupForm.members} onChange={e=>setGroupForm(old=>({...old,members:e.target.value}))}/>
                 <button className="button" disabled={groupPending}>{groupPending?p.loading:(locale==="kk"?"Құру":locale==="en"?"Create":"Создать")}</button>
               </form>
               {groupError&&<p role="alert" className="form-error">{groupError}</p>}
             </details>
+            </div>
           )}
 
           {/* Search Bar */}
@@ -338,11 +387,7 @@ export function MessagesPanel({
                     aria-current={isSelected ? "page" : undefined}
                     onClick={() => selectThread(group.id)}
                   >
-                    <div className="relative">
-                      <span className="conversation-initial bg-[var(--accent-wash)] text-[var(--accent)] font-bold shadow-sm" aria-hidden="true">
-                        {groupInitials(group.name)}
-                      </span>
-                    </div>
+                    <div className="relative"><GroupAvatar group={group} small/></div>
                     <span className="min-w-0 flex-1 ml-2">
                       <strong className="text-sm font-medium text-[var(--ink)] truncate block">
                         {group.name}
@@ -351,6 +396,7 @@ export function MessagesPanel({
                         {group.subject} · {group.members_count} уч.
                       </span>
                     </span>
+                    {group.unread>0&&<span className="unread-count ml-auto">{group.unread}</span>}
                   </button>
                 );
               })}
@@ -445,6 +491,8 @@ export function MessagesPanel({
           group={currentGroup}
           userId={userId}
           onBack={backToList}
+          onChanged={refreshGroups}
+          onRemoved={()=>{setActive("");void refreshGroups();}}
         />
       ) : currentDm ? (
         <Conversation
@@ -1018,10 +1066,14 @@ function StudyGroupChat({
   group,
   userId,
   onBack,
+  onChanged,
+  onRemoved,
 }: {
   group: StudyGroup;
   userId: string;
   onBack: () => void;
+  onChanged:()=>Promise<void>;
+  onRemoved:()=>void;
 }) {
   const { locale } = useI18n(),
     p = communityCopy(locale);
@@ -1029,33 +1081,26 @@ function StudyGroupChat({
   const [loading,setLoading]=useState(true);
   const [sendError,setSendError]=useState("");
   const [sending,startSending]=useTransition();
-
   const [text, setText] = useState("");
   const [replyTarget, setReplyTarget] = useState<StudyGroupMessage | null>(null);
+  const [searchOpen,setSearchOpen]=useState(false);
+  const [searchQuery,setSearchQuery]=useState("");
   const listRef = useRef<HTMLOListElement>(null);
 
-  const refresh=useCallback(async()=>{
-    const result=await loadStudyGroupMessages(group.id);
+  const refresh=useCallback(async(query=searchQuery)=>{
+    const result=await loadStudyGroupMessages(group.id,undefined,query);
     if("error" in result){setSendError(result.error==="migration"?"Примените миграцию учебных групп.":p.failed);}
-    else {setMessages(result.data);setSendError("");}
+    else {setMessages(result.data);setSendError("");if(!query){await readStudyGroup(group.id);void onChanged();}}
     setLoading(false);
-  },[group.id,p]);
+  },[group.id,onChanged,p,searchQuery]);
   useEffect(()=>{
     const initial=window.setTimeout(()=>void refresh(),0);
     const timer=window.setInterval(()=>{if(!document.hidden)void refresh();},10000);
     return()=>{window.clearTimeout(initial);window.clearInterval(timer);};
   },[refresh]);
 
-  const saveGroupMessages = (msgs: StudyGroupMessage[]) => setMessages(msgs);
-
-  const addReaction = (messageId: string, emoji: string) => {
-    const updated = messages.map((m) => {
-      if (m.id !== messageId) return m;
-      const reactions = { ...(m.reactions || {}) };
-      reactions[emoji] = (reactions[emoji] || 0) + 1;
-      return { ...m, reactions };
-    });
-    saveGroupMessages(updated);
+  const addReaction = (messageId: string, emoji: number) => {
+    startSending(async()=>{const result=await toggleStudyGroupReaction(messageId,emoji);if("error" in result)setSendError(p.failed);else await refresh();});
   };
 
   const handleSend = (e: React.FormEvent) => {
@@ -1063,13 +1108,8 @@ function StudyGroupChat({
     const clean = text.trim();
     if (!clean) return;
 
-    let finalBody = clean;
-    if (replyTarget) {
-      finalBody = `> ${replyTarget.author}: ${replyTarget.body.slice(0, 80)}\n\n${clean}`;
-    }
-
     startSending(async()=>{
-      const result=await sendStudyGroupMessage(group.id,finalBody,crypto.randomUUID());
+      const result=await sendStudyGroupMessage(group.id,clean,crypto.randomUUID(),replyTarget?.id);
       if("error" in result){setSendError(p.failed);return;}
       setText("");setReplyTarget(null);await refresh();
       requestAnimationFrame(() => {
@@ -1090,11 +1130,7 @@ function StudyGroupChat({
           >
             ←
           </button>
-          <div className="relative">
-            <span className="conversation-initial bg-[var(--accent-wash)] text-[var(--accent)] font-bold shadow-sm" aria-hidden="true">
-              {groupInitials(group.name)}
-            </span>
-          </div>
+          <div className="relative"><GroupAvatar group={group}/></div>
           <div>
             <h2 className="section-title text-base sm:text-lg font-semibold text-[var(--ink)] leading-snug">
               {group.name}
@@ -1104,12 +1140,22 @@ function StudyGroupChat({
             </span>
           </div>
         </div>
+        <div className="flex items-center gap-1">
+          <button type="button" className="icon-button" aria-label="Поиск в группе" onClick={()=>setSearchOpen(value=>!value)}><Search className="w-4 h-4"/></button>
+          <button type="button" className="icon-button" aria-label={group.notifications_muted?"Включить уведомления":"Отключить уведомления"} onClick={()=>startSending(async()=>{const result=await setStudyGroupMuted(group.id,!group.notifications_muted);if("ok" in result)await onChanged();})}>{group.notifications_muted?<BellOff className="w-4 h-4"/>:<Bell className="w-4 h-4"/>}</button>
+          <SafetyMenu group={group.id}/>
+        </div>
       </header>
+
+      {searchOpen&&<form className="group-chat-search" onSubmit={event=>{event.preventDefault();setLoading(true);void refresh(searchQuery);}}><Search className="w-4 h-4"/><input className="field" type="search" maxLength={100} value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Поиск внутри группы…"/><button className="button button-small">Найти</button><button type="button" className="icon-button" aria-label={p.close} onClick={()=>{setSearchQuery("");setSearchOpen(false);void refresh("");}}><X className="w-4 h-4"/></button></form>}
 
       <div className="p-3 bg-[var(--hover)] border-b border-[var(--line)] text-xs text-[var(--muted)] flex items-center gap-2">
         <Users className="w-4 h-4 text-[var(--accent)] shrink-0" />
-        <span>{group.description}</span>
+        <span>{group.description||"Без описания"}</span>
       </div>
+      {group.pinned_message_id&&<div className="group-pinned"><Pin className="w-3.5 h-3.5"/><span>{messages.find(message=>message.id===group.pinned_message_id)?.body||"Закреплённое сообщение"}</span>{group.role!=="member"&&<button type="button" onClick={()=>startSending(async()=>{await pinStudyGroupMessage(group.id,null);await onChanged();})}><X className="w-3.5 h-3.5"/></button>}</div>}
+
+      <GroupManagement group={group} userId={userId} busy={sending} run={startSending} onChanged={onChanged} onRemoved={onRemoved}/>
 
       <ol
         ref={listRef}
@@ -1129,7 +1175,7 @@ function StudyGroupChat({
         ) : (
           messages.map((m) => {
             const isOwn = m.sender_id === userId;
-            const quoteMatch = m.body.match(/^> ([^\n]+)\n\n([\s\S]*)$/);
+            const replied=messages.find(candidate=>candidate.id===m.reply_to);
 
             return (
               <li
@@ -1146,12 +1192,8 @@ function StudyGroupChat({
                     isOwn ? "message-own" : ""
                   }`}
                 >
-                  {quoteMatch && (
-                    <div className="message-quote">
-                      {quoteMatch[1]}
-                    </div>
-                  )}
-                  <p>{quoteMatch ? quoteMatch[2] : m.body}</p>
+                  {replied&&<div className="message-quote"><strong>{replied.author}</strong>: {replied.deleted_at?"Сообщение удалено":replied.body.slice(0,100)}</div>}
+                  <p className={m.deleted_at?"italic text-[var(--muted)]":""}>{m.deleted_at?"Сообщение удалено":m.body}</p>
 
                   <div className="message-meta mt-1 text-[10px] text-[var(--muted)]">
                     <time dateTime={m.created_at}>
@@ -1169,9 +1211,9 @@ function StudyGroupChat({
                           key={emoji}
                           type="button"
                           className="message-reaction-badge"
-                          onClick={() => addReaction(m.id, emoji)}
+                          onClick={() => addReaction(m.id,Number(emoji))}
                         >
-                          <span>{emoji}</span>
+                          <span>{EMOJI_REACTIONS[Number(emoji)]??"👍"}</span>
                           <span className="font-semibold">{count}</span>
                         </button>
                       ))}
@@ -1179,16 +1221,16 @@ function StudyGroupChat({
                   )}
                 </div>
 
-                <div
+                {!m.deleted_at&&<div
                   className={`message-actions-hover opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1 ${
                     isOwn ? "mr-1" : "ml-1"
                   }`}
                 >
-                  {EMOJI_REACTIONS.map((emoji) => (
+                  {EMOJI_REACTIONS.map((emoji,index) => (
                     <button
                       key={emoji}
                       type="button"
-                      onClick={() => addReaction(m.id, emoji)}
+                      onClick={() => addReaction(m.id,index)}
                       className="p-1 text-xs hover:scale-125 transition-transform"
                       title={emoji}
                     >
@@ -1203,7 +1245,10 @@ function StudyGroupChat({
                   >
                     <Reply className="w-3.5 h-3.5" />
                   </button>
-                </div>
+                  {group.role!=="member"&&<button type="button" className="p-1 text-[var(--muted)]" title="Закрепить" onClick={()=>startSending(async()=>{const result=await pinStudyGroupMessage(group.id,m.id);if("ok" in result)await onChanged();})}><Pin className="w-3.5 h-3.5"/></button>}
+                  {(isOwn||group.role!=="member")&&<button type="button" className="p-1 text-[var(--muted)]" title="Удалить" onClick={()=>startSending(async()=>{const result=await deleteStudyGroupMessage(m.id);if("ok" in result)await refresh();})}><Trash2 className="w-3.5 h-3.5"/></button>}
+                  {!isOwn&&<SafetyMenu peer={m.sender_id} groupMessage={m.id}/>}
+                </div>}
               </li>
             );
           })
@@ -1241,6 +1286,7 @@ function StudyGroupChat({
               maxLength={2000}
               required
               value={text}
+              disabled={sending||(group.admins_only_post&&group.role==="member")}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -1248,13 +1294,13 @@ function StudyGroupChat({
                 }
               }}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Написать в учебную группу…"
+              placeholder={group.admins_only_post&&group.role==="member"?"Писать могут только администраторы":"Написать в учебную группу…"}
             />
           </label>
           <button
             type="submit"
             className="button flex items-center justify-center p-3 h-10 w-10 shrink-0"
-            disabled={!text.trim()||sending}
+            disabled={!text.trim()||sending||(group.admins_only_post&&group.role==="member")}
             aria-label={p.send}
             title={p.send}
           >
@@ -1264,4 +1310,27 @@ function StudyGroupChat({
       </form>
     </section>
   );
+}
+
+const AUDIT_LABELS=["Группа создана","Отправлены приглашения","Приглашение принято","Приглашение отклонено","Создан код","Вход по коду","Код отозван","Настройки изменены","Роль изменена","Участник удалён","Сообщение удалено","Сообщение закреплено"];
+
+function GroupManagement({group,userId,busy,run,onChanged,onRemoved}:{group:StudyGroup;userId:string;busy:boolean;run:React.TransitionStartFunction;onChanged:()=>Promise<void>;onRemoved:()=>void}){
+  const [members,setMembers]=useState<StudyGroupMember[]>([]),[people,setPeople]=useState<StudyGroupPerson[]>([]),[audit,setAudit]=useState<StudyGroupAudit[]>([]);
+  const [selected,setSelected]=useState<string[]>([]),[peopleQuery,setPeopleQuery]=useState(""),[code,setCode]=useState(""),[hours,setHours]=useState(24),[uses,setUses]=useState(10),[error,setError]=useState("");
+  const [settings,setSettings]=useState({name:group.name,subject:group.subject,description:group.description,icon:group.avatar_icon,color:group.avatar_color,adminsOnly:group.admins_only_post,membersInvite:group.members_can_invite});
+  const canManage=group.role!=="member",canInvite=canManage||group.members_can_invite;
+  const load=useCallback(async()=>{const tasks=[loadStudyGroupMembers(group.id),canInvite?loadStudyGroupFriends(group.id):Promise.resolve({data:[] as StudyGroupPerson[]}),canManage?loadStudyGroupAudit(group.id):Promise.resolve({data:[] as StudyGroupAudit[]})] as const;const [m,f,a]=await Promise.all(tasks);if("data" in m)setMembers(m.data);if("data" in f)setPeople(f.data);if("data" in a)setAudit(a.data);},[canInvite,canManage,group.id]);
+  const act=(work:()=>Promise<unknown>,reload=true)=>run(async()=>{setError("");try{const result=await work();if(result&&typeof result==="object"&&"error" in result){setError("Не удалось выполнить действие.");return;}if(reload)await load();await onChanged();}catch{setError("Не удалось выполнить действие.");}});
+  return <details className="group-management" onToggle={event=>{if(event.currentTarget.open)void load();}}>
+    <summary><Settings className="w-4 h-4"/><span>Управление группой</span><small>{group.role==="owner"?"Владелец":group.role==="admin"?"Администратор":"Участник"}</small></summary>
+    <div className="group-management-body">
+      {canManage&&<section><h3>Настройки</h3><div className="group-settings-grid"><input className="field" maxLength={80} value={settings.name} onChange={e=>setSettings(v=>({...v,name:e.target.value}))}/><input className="field" maxLength={80} value={settings.subject} onChange={e=>setSettings(v=>({...v,subject:e.target.value}))}/><textarea className="field" maxLength={500} rows={2} value={settings.description} onChange={e=>setSettings(v=>({...v,description:e.target.value}))}/></div><div className="group-avatar-options">{GROUP_AVATARS.map((icon,index)=><button key={icon} type="button" aria-pressed={settings.icon===index} onClick={()=>setSettings(v=>({...v,icon:index}))}>{icon}</button>)}</div><div className="group-color-options">{GROUP_COLORS.map((color,index)=><button key={color} type="button" aria-label={`Цвет ${index+1}`} aria-pressed={settings.color===index} style={{background:color}} onClick={()=>setSettings(v=>({...v,color:index}))}/>)}</div><label className="group-check"><input type="checkbox" checked={settings.adminsOnly} onChange={e=>setSettings(v=>({...v,adminsOnly:e.target.checked}))}/>Только администраторы могут писать</label><label className="group-check"><input type="checkbox" checked={settings.membersInvite} onChange={e=>setSettings(v=>({...v,membersInvite:e.target.checked}))}/>Участники могут приглашать друзей</label><button className="button button-small" disabled={busy} onClick={()=>act(()=>updateStudyGroup({group:group.id,...settings}),false)}>Сохранить</button></section>}
+      {canInvite&&<section><h3><UserPlus className="inline w-4 h-4"/> Пригласить людей</h3><form className="group-people-search" onSubmit={e=>{e.preventDefault();run(async()=>{const result=await searchStudyGroupPeople(group.id,peopleQuery);if("data" in result)setPeople(result.data);else setError("Введите не менее 2 символов.");});}}><input className="field" value={peopleQuery} onChange={e=>setPeopleQuery(e.target.value)} minLength={2} maxLength={60} placeholder="Найти любого по имени…"/><button className="button button-secondary button-small">Найти</button></form><div className="group-people-list">{people.length===0?<small>Друзья появятся здесь. Можно также найти любого пользователя.</small>:people.map(person=><label key={person.id}><input type="checkbox" disabled={person.member||person.invited} checked={selected.includes(person.id)} onChange={e=>setSelected(old=>e.target.checked?[...old,person.id]:old.filter(id=>id!==person.id))}/><span>{person.display_name}{person.friend&&<small>друг</small>}</span><em>{person.member?"уже в группе":person.invited?"приглашён":""}</em></label>)}</div><button className="button button-small" disabled={busy||selected.length===0} onClick={()=>act(async()=>{await inviteStudyGroupMembers(group.id,selected);setSelected([]);})}>Отправить приглашения ({selected.length})</button></section>}
+      {canManage&&<section><h3><Link2 className="inline w-4 h-4"/> Ссылка и код приглашения</h3><div className="group-code-controls"><label>Часов<input className="field" type="number" min={1} max={168} value={hours} onChange={e=>setHours(Number(e.target.value))}/></label><label>Входов<input className="field" type="number" min={1} max={100} value={uses} onChange={e=>setUses(Number(e.target.value))}/></label><button className="button button-small" onClick={()=>run(async()=>{const result=await createStudyGroupCode(group.id,hours,uses);if("code" in result)setCode(result.code);else setError("Не удалось создать код.");})}>Создать</button></div>{code&&<div className="group-code"><strong>{code}</strong><button className="button button-secondary button-small" onClick={()=>void navigator.clipboard?.writeText(`${window.location.origin}/messages?groupCode=${code}`)}>Копировать ссылку</button><button className="button button-secondary button-small" onClick={()=>act(async()=>{await revokeStudyGroupCode(group.id);setCode("");})}>Отозвать</button></div>}</section>}
+      <section><h3>Участники</h3><div className="group-member-list">{members.map(member=><div key={member.user_id}><span><strong>{member.display_name}</strong><small>{member.role==="owner"?"владелец":member.role==="admin"?"администратор":"участник"}</small></span>{group.role==="owner"&&member.role!=="owner"&&<button className="button button-secondary button-small" onClick={()=>act(()=>setStudyGroupMemberRole(group.id,member.user_id,member.role==="admin"?"member":"admin"))}>{member.role==="admin"?"Снять админа":"Сделать админом"}</button>}{canManage&&member.user_id!==userId&&member.role!=="owner"&&!(group.role==="admin"&&member.role==="admin")&&<button className="icon-button group-danger" aria-label="Удалить участника" onClick={()=>act(()=>removeStudyGroupMember(group.id,member.user_id))}><Trash2 className="w-4 h-4"/></button>}</div>)}</div></section>
+      {canManage&&<section><h3>Журнал действий</h3><ol className="group-audit">{audit.slice(0,20).map(item=><li key={item.id}><span>{AUDIT_LABELS[item.action]??"Действие"}</span><small>{item.actor_name} · {new Intl.DateTimeFormat("ru",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(item.created_at))}</small></li>)}</ol></section>}
+      {error&&<p className="form-error" role="alert">{error}</p>}
+      <footer className="group-exit-actions">{group.role==="owner"?<button className="button button-secondary group-danger" disabled={busy} onClick={()=>{if(window.confirm("Удалить группу и всю её историю?"))run(async()=>{const result=await deleteStudyGroup(group.id);if("ok" in result)onRemoved();});}}><Trash2 className="w-4 h-4"/> Удалить группу</button>:<button className="button button-secondary group-danger" disabled={busy} onClick={()=>{if(window.confirm("Выйти из группы?"))run(async()=>{const result=await leaveStudyGroup(group.id);if("ok" in result)onRemoved();});}}>Выйти из группы</button>}</footer>
+    </div>
+  </details>;
 }

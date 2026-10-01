@@ -53,6 +53,10 @@ returns boolean language sql stable security definer set search_path = '' as $$
   );
 $$;
 
+drop policy if exists study_groups_members on public.study_groups;
+drop policy if exists study_group_members_members on public.study_group_members;
+drop policy if exists study_group_messages_members on public.study_group_messages;
+
 create policy study_groups_members on public.study_groups
   for select to authenticated using (public.is_study_group_member(id));
 create policy study_group_members_members on public.study_group_members
