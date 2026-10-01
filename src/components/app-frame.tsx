@@ -21,6 +21,7 @@ import { v05Copy } from "@/lib/v05-copy";
 import { Sprout } from "./brand";
 
 import { communityCopy } from "@/lib/community-copy";
+import { v053Copy } from "@/lib/v053-copy";
 
 let memoryCollapsed = false;
 
@@ -87,6 +88,7 @@ export function AppFrame({
   const { locale, t } = useI18n();
   const p = v05Copy(locale);
   const community = communityCopy(locale);
+  const mobileCommunity = v053Copy(locale);
   const pathname = usePathname();
   const [optimisticRoute, setOptimisticRoute] = useState<string | null>(null);
   const [previousPath, setPreviousPath] = useState(pathname);
@@ -102,6 +104,12 @@ export function AppFrame({
   const searchInput = useRef<HTMLInputElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!searchExpanded || !window.matchMedia("(max-width: 767px)").matches) return;
+    const focusTimer = window.setTimeout(() => searchInput.current?.focus(), 0);
+    return () => window.clearTimeout(focusTimer);
+  }, [searchExpanded]);
 
   useEffect(() => {
     document.documentElement.dataset.sidebar = snapshot()
@@ -161,6 +169,7 @@ export function AppFrame({
   ];
 
   const renderNavIcon = (href: string) => {
+    if (href === "/people") return <ChatBubbleIcon aria-hidden="true" />;
     if (href === "/messages") return <ChatBubbleIcon aria-hidden="true" />;
     if (href === "/diary") return <ReaderIcon aria-hidden="true" />;
     if (href === "/") return <NavIcon index={0} />;
@@ -380,6 +389,29 @@ export function AppFrame({
         </footer>
         </div>
       </div>
+
+      <nav className="mobile-bottom-nav" aria-label={t.mainNav}>
+        {([
+          ["/", t.home],
+          ["/library", t.library],
+          ["/schedule", t.schedule],
+          ["/people", mobileCommunity.community],
+          ["/profile", t.profile],
+        ] as const).map(([href, label]) => (
+          <Link
+            key={href}
+            href={href}
+            prefetch={false}
+            aria-label={label}
+            aria-current={(href === "/people" ? ["/people", "/friends", "/messages"].some((route) => activeRoute.startsWith(route)) : href === "/profile" ? activeRoute.startsWith("/profile") : isRouteActive(href)) ? "page" : undefined}
+            className="mobile-bottom-link"
+            onClick={() => setOptimisticRoute(href)}
+          >
+            {renderNavIcon(href)}
+            <span>{label}</span>
+          </Link>
+        ))}
+      </nav>
 
       <dialog
         ref={dialog}

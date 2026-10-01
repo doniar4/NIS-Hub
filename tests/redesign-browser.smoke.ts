@@ -7,6 +7,7 @@ import { basename, join } from "node:path";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
 import { themeBootstrap } from "../src/lib/theme";
+import { subjects } from "./browser/fixtures";
 
 const publicOrigin = process.env.NIS_PUBLIC_BASE_URL ?? "http://localhost:3000";
 const artifacts = process.env.NIS_BROWSER_ARTIFACTS ?? "/tmp/nis-redesign-results";
@@ -192,9 +193,9 @@ test("reference redesign: welcome, signup and dashboard themes remain responsive
     const dashboardErrors: string[] = [];
     dashboardPage.on("pageerror", (error) => dashboardErrors.push(error.message));
     await dashboardPage.goto(`${dashboardOrigin}/?locale=ru`);
-    await expect(dashboardPage.locator(".selected-lesson")).toBeVisible();
+    await expect(dashboardPage.locator(".lesson-status-bar")).toBeVisible();
     await expect(dashboardPage.locator(".home-timetable")).toBeVisible();
-    assert.equal(await dashboardPage.locator(".dashboard-primary > *").count(), 2, "Current dashboard primary structure is preserved");
+    assert.equal(await dashboardPage.locator(".dashboard-primary > *").count(), 3, "Current dashboard primary structure is preserved");
     await setTheme(dashboardPage, "light");
     await expectNoHorizontalOverflow(dashboardPage);
     await dashboardPage.screenshot({ path: join(artifacts, "dashboard-light.png"), fullPage: true, animations: "disabled" });
@@ -206,8 +207,65 @@ test("reference redesign: welcome, signup and dashboard themes remain responsive
     assert.ok(menuBox && menuBox.width >= 44 && menuBox.height >= 44, "Mobile menu keeps a 44px touch target");
     await dashboardPage.screenshot({ path: join(artifacts, "dashboard-mobile-dark.png"), fullPage: true, animations: "disabled" });
     await expectNoHorizontalOverflow(dashboardPage);
+    await dashboardPage.locator(".global-search button").click();
+    await expect(dashboardPage.locator(".global-search")).toHaveAttribute("data-expanded", "true");
+    await expect(dashboardPage.locator(".global-search input")).toBeFocused();
+    await expectNoHorizontalOverflow(dashboardPage);
+    await dashboardPage.locator(".global-search input").press("Escape");
+    await dashboardPage.locator(".mobile-menu").click();
+    await expect(dashboardPage.locator(".mobile-drawer")).toBeVisible();
+    await dashboardPage.locator(".mobile-drawer-close").click();
+    await expect(dashboardPage.locator(".mobile-drawer")).toBeHidden();
 
-    assert.deepEqual(dashboardErrors, []);
+    for (const width of [320, 360, 375, 390, 393, 430, 768, 1440]) {
+      await dashboardPage.setViewportSize({ width, height: width === 1440 ? 900 : 844 });
+      await expectNoHorizontalOverflow(dashboardPage);
+      if (width < 768) {
+        await expect(dashboardPage.locator(".mobile-bottom-nav a")).toHaveCount(5);
+        await expect(dashboardPage.locator('.mobile-bottom-nav a[aria-current="page"]')).toHaveCount(1);
+        const boxes = await dashboardPage.locator(".mobile-bottom-nav a").evaluateAll((links) =>
+          links.map((link) => Math.round(link.getBoundingClientRect().height)),
+        );
+        assert.ok(boxes.every((height) => height >= 44), "Every bottom tab is touch sized");
+      } else {
+        await expect(dashboardPage.locator(".mobile-bottom-nav")).toBeHidden();
+      }
+    }
+    await dashboardPage.setViewportSize({ width: 390, height: 844 });
+    await dashboardPage.goto(`${dashboardOrigin}/library?locale=ru`);
+    await expect(dashboardPage.locator(".library-grid li")).toHaveCount(125);
+    await expect(dashboardPage.locator(".library-filter-toggle")).toBeVisible();
+    await expect(dashboardPage.locator("#library-filter-fields")).toBeHidden();
+    await dashboardPage.locator(".library-filter-toggle").click();
+    await expect(dashboardPage.locator("#library-filter-fields")).toBeVisible();
+    const requests: string[] = [];
+    dashboardPage.on("request", (request) => requests.push(request.url()));
+    await dashboardPage.locator("#library-filter-fields select").nth(1).selectOption(subjects[1].id);
+    assert.ok((await dashboardPage.locator(".library-grid li").count()) > 0);
+    assert.ok((await dashboardPage.locator(".library-grid li").count()) < 125);
+    assert.ok(new URL(dashboardPage.url()).searchParams.get("subject") === subjects[1].id);
+    assert.deepEqual(requests.filter((url) => url.includes("/api/")), [], "Local filters never fetch data");
+    await expectNoHorizontalOverflow(dashboardPage);
+    await dashboardPage.screenshot({ path: join(artifacts, "library-mobile-dark.png"), fullPage: true, animations: "disabled" });
+    await dashboardPage.setViewportSize({ width: 320, height: 568 });
+    await expectNoHorizontalOverflow(dashboardPage);
+    await dashboardPage.goto(`${dashboardOrigin}/schedule?locale=ru`);
+    await expect(dashboardPage.locator(".schedule-day-content")).toBeVisible();
+    await dashboardPage.locator(".day-square-btn").nth(1).click();
+    await expect(dashboardPage.locator(".day-square-btn").nth(1)).toHaveAttribute("aria-selected", "true");
+    await expectNoHorizontalOverflow(dashboardPage);
+    await dashboardPage.screenshot({ path: join(artifacts, "schedule-mobile-dark.png"), fullPage: true, animations: "disabled" });
+    await dashboardPage.goto(`${dashboardOrigin}/profile?locale=ru`);
+    await expect(dashboardPage.locator(".profile-heading")).toBeVisible();
+    const taskTitleHeight = await dashboardPage.locator(".task-center-heading h2").evaluate((heading) => heading.getBoundingClientRect().height);
+    assert.ok(taskTitleHeight < 65, "Task title remains readable at 320px");
+    await expectNoHorizontalOverflow(dashboardPage);
+    await dashboardPage.screenshot({ path: join(artifacts, "profile-mobile-dark.png"), fullPage: true, animations: "disabled" });
+    for (const locale of ["ru", "kk", "en"]) {
+      await dashboardPage.goto(`${dashboardOrigin}/library?locale=${locale}`);
+      await expect(dashboardPage.locator(".library-filter-toggle")).toBeVisible();
+      await expectNoHorizontalOverflow(dashboardPage);
+    }
     await dashboardPage.close();
   } finally {
     await browser.close();

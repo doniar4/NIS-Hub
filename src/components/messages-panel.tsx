@@ -70,9 +70,20 @@ export function MessagesPanel({
     };
   }, [p]);
   const current = threads.find((t) => t.id === active);
+  const indexRef = useRef<HTMLElement>(null);
+  function selectThread(id: string) {
+    setActive(id);
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(".conversation-back")?.focus());
+    }
+  }
+  function backToList() {
+    setActive("");
+    requestAnimationFrame(() => indexRef.current?.querySelector<HTMLButtonElement>(".conversation-link")?.focus());
+  }
   return (
-    <div className="messages-layout">
-      <aside className="surface-card messages-index">
+    <div className="messages-layout" data-conversation-open={Boolean(current)}>
+      <aside ref={indexRef} className="surface-card messages-index">
         <div className="flex items-center justify-between pb-3 border-b border-[var(--line)]">
           <h2 className="section-title text-xl">{p.newChat}</h2>
 
@@ -88,7 +99,7 @@ export function MessagesPanel({
                 setError(p[result.error]);
                 return;
               }
-              setActive(result.id);
+              selectThread(result.id);
               setName("");
               await refresh();
             });
@@ -163,7 +174,7 @@ export function MessagesPanel({
                   type="button"
                   className="conversation-link w-full text-left"
                   aria-current={thread.id === active ? "page" : undefined}
-                  onClick={() => setActive(thread.id)}
+                  onClick={() => selectThread(thread.id)}
                 >
                   <div className="relative">
                     <span className="conversation-initial" aria-hidden="true">
@@ -202,6 +213,7 @@ export function MessagesPanel({
             setDrafts((old) => ({ ...old, [current.id]: value }))
           }
           onRead={refresh}
+          onBack={backToList}
         />
       ) : (
         <section className="surface-card conversation-empty flex flex-col items-center justify-center p-12 text-center min-h-[460px]">
@@ -222,12 +234,14 @@ function Conversation({
   draft,
   saveDraft,
   onRead,
+  onBack,
 }: {
   thread: DmThread;
   userId: string;
   draft: string;
   saveDraft: (value: string) => void;
   onRead: () => Promise<void>;
+  onBack: () => void;
 }) {
   const { locale } = useI18n(),
     p = communityCopy(locale);
@@ -319,6 +333,7 @@ function Conversation({
   return (
     <section className="surface-card conversation-panel">
       <header className="conversation-heading flex items-center justify-between pb-4 border-b border-[var(--line)]">
+        <button type="button" className="icon-button conversation-back" onClick={onBack} aria-label={v053Copy(locale).previous}>←</button>
         <Link
           href={"/people/" + thread.peer_id + "?thread=" + thread.id}
           className="conversation-profile"

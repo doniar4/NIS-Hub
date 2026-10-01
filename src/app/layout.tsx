@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@fontsource-variable/outfit";
 import "@fontsource-variable/noto-sans/wght.css";
 import "./globals.css";
+import "../styles/mobile.css";
 import {experienceBootstrap} from "@/lib/experience";
 import {FullLoadIntro} from "@/components/full-load-intro";
 import { themeBootstrap } from "@/lib/theme";
