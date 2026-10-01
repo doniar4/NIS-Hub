@@ -5,6 +5,8 @@ import type {
   AppNotification,
   DirectMessage,
   DmThread,
+  StudyGroup,
+  StudyGroupMessage,
   TaskReminder,
   WebNotification,
 } from "@/lib/database.types";
@@ -107,6 +109,37 @@ export async function markConversationRead(
   } catch {
     return { error: "failed" };
   }
+}
+export async function loadStudyGroups(): Promise<{data:StudyGroup[]}|Failure> {
+  try {
+    const {supabase}=await actionContext();
+    const {data,error}=await supabase.rpc("study_group_inbox");
+    return error?failure(error):{data};
+  } catch { return {error:"failed"}; }
+}
+export async function createStudyGroup(input:{name:string;subject:string;description:string;members:string[]}):Promise<{id:string}|Failure> {
+  if(!input||typeof input.name!=="string"||!input.name.trim()||input.name.trim().length>80||typeof input.subject!=="string"||!input.subject.trim()||input.subject.trim().length>80||typeof input.description!=="string"||input.description.length>500||!Array.isArray(input.members)||input.members.length>30||input.members.some(name=>typeof name!=="string"||name.length>60))return {error:"failed"};
+  try {
+    const {supabase}=await actionContext();
+    const {data,error}=await supabase.rpc("create_study_group",{p_name:input.name.trim(),p_subject:input.subject.trim(),p_description:input.description.trim(),p_members:input.members.map(name=>name.trim()).filter(Boolean)});
+    return error?failure(error):{id:data};
+  } catch { return {error:"failed"}; }
+}
+export async function loadStudyGroupMessages(group:string,before?:{at:string;id:string}):Promise<{data:StudyGroupMessage[];more:boolean}|Failure> {
+  if(!uuid.safeParse(group).success||(before&&(!uuid.safeParse(before.id).success||!/^\d{4}-\d\d-\d\dT[\d:.]+(?:Z|[+-]\d\d:\d\d)$/.test(before.at))))return {error:"failed"};
+  try {
+    const {supabase}=await actionContext();
+    const {data,error}=await supabase.rpc("study_group_history",{p_group:group,p_before:before?.at??null,p_id:before?.id??null});
+    return error?failure(error):{data:data.slice(0,50).reverse(),more:data.length>50};
+  } catch { return {error:"failed"}; }
+}
+export async function sendStudyGroupMessage(group:string,body:string,client:string):Promise<{id:string}|Failure> {
+  if(!uuid.safeParse(group).success||!uuid.safeParse(client).success||typeof body!=="string"||!body.trim()||body.trim().length>2000)return {error:"failed"};
+  try {
+    const {supabase}=await actionContext();
+    const {data,error}=await supabase.rpc("send_study_group_message",{p_group:group,p_body:body.trim(),p_client:client});
+    return error?failure(error):{id:data};
+  } catch { return {error:"failed"}; }
 }
 export async function loadNotifications(): Promise<
   { data: AppNotification[]; unread: number } | Failure

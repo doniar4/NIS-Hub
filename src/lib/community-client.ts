@@ -18,6 +18,10 @@ export const sendMessage = (thread: string, body: string, client: string) =>
   safe(actions.sendMessage(thread, body, client));
 export const markConversationRead = (thread: string, message: string) =>
   safe(actions.markConversationRead(thread, message));
+export const loadStudyGroups=()=>safe(actions.loadStudyGroups());
+export const createStudyGroup=(input:{name:string;subject:string;description:string;members:string[]})=>safe(actions.createStudyGroup(input));
+export const loadStudyGroupMessages=(group:string,before?:{at:string;id:string})=>safe(actions.loadStudyGroupMessages(group,before));
+export const sendStudyGroupMessage=(group:string,body:string,client:string)=>safe(actions.sendStudyGroupMessage(group,body,client));
 export const loadNotifications = () => safe(actions.loadNotifications());
 export const dismissNotification = (id: string,kind:"message"|"task"="message") =>
   safe(actions.dismissNotification(id,kind));

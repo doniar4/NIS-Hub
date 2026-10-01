@@ -1,6 +1,8 @@
 import type { Person } from "./people";
 export type DmThread = {peer_id:string;last_deleted:boolean;blocked:boolean;id:string;peer_name:string;last_body:string|null;last_at:string;unread:number};
 export type DirectMessage = {deleted_at:string|null;id:string;thread_id:string;sender_id:string;body:string;client_id:string;created_at:string};
+export type StudyGroup = {id:string;name:string;subject:string;description:string;members_count:number;owner:boolean;last_at:string};
+export type StudyGroupMessage = {id:string;group_id:string;sender_id:string;author:string;body:string;client_id:string;created_at:string;reactions?:Record<string,number>};
 export type WebNotification = {body_preview:string;id:string;thread_id:string;actor_name:string;created_at:string;read_at:string|null};
 export type Profile = { id: string; display_name: string | null; class_id: string | null; avatar_path: string | null; bio: string | null; role: "student" | "admin"; created_at: string; updated_at: string };
 export type ClassRow = { id: string; name: string; grade: number | null; section: string | null; created_at: string };
@@ -45,6 +47,9 @@ export type Database = { public: {
     personal_tasks:Table<PersonalTask,"owner_id"|"title">;
     community_reports:Table<CommunityReport,"reporter_id"|"target_kind"|"target_id"|"reason">;
     direct_messages: Table<DirectMessage,"thread_id"|"sender_id"|"body"|"client_id">;
+    study_groups:Table<{id:string;owner_id:string;name:string;subject:string;description:string;created_at:string},"owner_id"|"name"|"subject">;
+    study_group_members:Table<{group_id:string;user_id:string;role:"owner"|"member";joined_at:string},"group_id"|"user_id">;
+    study_group_messages:Table<StudyGroupMessage,"group_id"|"sender_id"|"body"|"client_id">;
     web_notifications: Table<{id:string;recipient_id:string;actor_id:string;thread_id:string;message_id:string;created_at:string;read_at:string|null},"recipient_id"|"actor_id"|"thread_id"|"message_id">;
     schedule_import_batches: Table<ScheduleVersion, "source_type"|"row_count"|"status"|"snapshot">;
     non_school_days: Table<NonSchoolDay, "start_date"|"end_date"|"type"|"label">;
@@ -92,6 +97,10 @@ export type Database = { public: {
     save_profile_v053:{Args:{p_name:string;p_class:string|null;p_subjects:string[];p_bio:string};Returns:undefined};
     start_dm:{Args:{p_name:string};Returns:string};
     send_dm:{Args:{p_thread:string;p_body:string;p_client:string};Returns:string};
+    create_study_group:{Args:{p_name:string;p_subject:string;p_description?:string;p_members?:string[]};Returns:string};
+    study_group_inbox:{Args:Record<string,never>;Returns:StudyGroup[]};
+    study_group_history:{Args:{p_group:string;p_before?:string|null;p_id?:string|null};Returns:StudyGroupMessage[]};
+    send_study_group_message:{Args:{p_group:string;p_body:string;p_client:string};Returns:string};
     dm_inbox:{Args:Record<string,never>;Returns:DmThread[]};
     read_dm:{Args:{p_thread:string;p_message:string};Returns:undefined};
     notification_feed:{Args:Record<string,never>;Returns:WebNotification[]};

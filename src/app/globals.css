@@ -589,6 +589,17 @@ html[data-sidebar="collapsed"] .sidebar-brand-row .sidebar-collapse { width: 40p
 @keyframes toast-arrive { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
 .messages-layout { display: grid; grid-template-columns: minmax(240px, .8fr) minmax(0, 1.7fr); gap: 1.25rem; margin-top: 2rem; align-items: start; }
 .messages-index { padding: 1.25rem; min-width: 0; }
+.messages-search { position: relative; margin-bottom: .75rem; }
+.messages-search > svg { position: absolute; z-index: 1; top: 50%; left: .85rem; width: 16px; height: 16px; color: var(--muted); transform: translateY(-50%); pointer-events: none; }
+.messages-search > .field { width: 100%; min-height: 44px; padding: .65rem .9rem .65rem 2.5rem; font-size: .8rem; line-height: 1.4; }
+.messages-empty-state { display: grid; justify-items: center; gap: .65rem; padding: 1.5rem 1rem; border: 1px dashed var(--line); border-radius: 6px; color: var(--muted); text-align: center; }
+.messages-empty-state > svg { width: 24px; height: 24px; }
+.messages-empty-state > p { font-size: .8rem; line-height: 1.5; }
+.study-group-create { margin-bottom: .75rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.study-group-create > summary { min-height: 40px; padding: .65rem .8rem; color: var(--accent); font-size: .8rem; font-weight: 600; cursor: pointer; }
+.study-group-create > form { display: grid; gap: .6rem; padding: 0 .75rem .75rem; }
+.study-group-create textarea.field { resize: vertical; }
+.study-group-create .form-error { margin: 0 .75rem .75rem; }
 .conversation-list { display: flex; flex-direction: column; gap: .45rem; margin-top: 1.6rem; max-height: 60dvh; overflow-y: auto; }
 .conversation-link { display: flex; align-items: center; gap: .65rem; text-align: left; padding: .7rem .5rem; min-height: 70px; border: 1px solid transparent; border-radius: 6px; transition: background 180ms, border-color 180ms; }
 .conversation-link[aria-current="page"], .conversation-link:hover { background: var(--sidebar-active); border-color: var(--line-strong); }

@@ -20,71 +20,21 @@ import {
   loadMessages,
   sendMessage,
   markConversationRead,
+  loadStudyGroups,
+  createStudyGroup,
+  loadStudyGroupMessages,
+  sendStudyGroupMessage,
 } from "@/lib/community-client";
-import type { DirectMessage, DmThread } from "@/lib/database.types";
+import type { DirectMessage, DmThread, StudyGroup, StudyGroupMessage } from "@/lib/database.types";
 import { communityCopy } from "@/lib/community-copy";
 import { useI18n } from "./locale-provider";
 import { ReloadButton } from "./reload-button";
 
-type StudyGroup = {
-  id: string;
-  name: string;
-  subject: string;
-  grade: string;
-  membersCount: number;
-  initials: string;
-  description: string;
-};
-
-const STUDY_GROUPS: StudyGroup[] = [
-  {
-    id: "group-math-9a",
-    name: "Математика 9А",
-    subject: "Алгебра & Геометрия",
-    grade: "9",
-    membersCount: 22,
-    initials: "М9",
-    description: "Разбор задач СОР/СОЧ и олимпиадной математики.",
-  },
-  {
-    id: "group-phys-10c",
-    name: "Физика 10С",
-    subject: "Механика & Термодинамика",
-    grade: "10",
-    membersCount: 26,
-    initials: "Ф1",
-    description: "Подготовка к лабораторным работам и разбор формул.",
-  },
-  {
-    id: "group-cs-10",
-    name: "Информатика 10",
-    subject: "Алгоритмы & Python",
-    grade: "10",
-    membersCount: 19,
-    initials: "И1",
-    description: "Алгоритмы поиска, графы и олимпиадное программирование.",
-  },
-  {
-    id: "group-chem-9",
-    name: "Химия 9",
-    subject: "Неорганическая химия",
-    grade: "9",
-    membersCount: 17,
-    initials: "Х9",
-    description: "Реакции, уравнения и подготовка к формативным работам.",
-  },
-];
-
-type GroupMessage = {
-  id: string;
-  author: string;
-  authorId: string;
-  body: string;
-  created_at: string;
-  reactions?: Record<string, number>;
-};
-
 const EMOJI_REACTIONS = ["👍", "❤️", "💡", "🔥"];
+
+function groupInitials(name:string) {
+  return name.split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toLocaleUpperCase()||"Г";
+}
 
 export function MessagesPanel({
   userId,
@@ -102,6 +52,10 @@ export function MessagesPanel({
     [loaded, setLoaded] = useState(false),
     [pending, start] = useTransition();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [groups,setGroups]=useState<StudyGroup[]>([]);
+  const [groupForm,setGroupForm]=useState({name:"",subject:"",description:"",members:""});
+  const [groupError,setGroupError]=useState("");
+  const [groupPending,startGroup]=useTransition();
 
   // Tab: all | pinned | groups
   const [tab, setTab] = useState<"all" | "pinned" | "groups">("all");
@@ -142,6 +96,16 @@ export function MessagesPanel({
     }
     setLoaded(true);
   }, [p]);
+  const refreshGroups=useCallback(async()=>{
+    const result=await loadStudyGroups();
+    if("error" in result){setGroupError(result.error==="migration"?"Примените миграцию учебных групп.":p.failed);return;}
+    setGroups(result.data);setGroupError("");
+  },[p]);
+
+  useEffect(()=>{
+    const timer=window.setTimeout(()=>void refreshGroups(),0);
+    return()=>window.clearTimeout(timer);
+  },[refreshGroups]);
 
   useEffect(() => {
     let alive = true;
@@ -173,7 +137,7 @@ export function MessagesPanel({
   }, [p]);
 
   const currentDm = threads.find((t) => t.id === active);
-  const currentGroup = STUDY_GROUPS.find((g) => g.id === active);
+  const currentGroup = groups.find((g) => g.id === active);
   const indexRef = useRef<HTMLElement>(null);
 
   function selectThread(id: string) {
@@ -210,7 +174,7 @@ export function MessagesPanel({
       return (b.last_at || "").localeCompare(a.last_at || "");
     });
 
-  const filteredGroups = STUDY_GROUPS.filter((g) => {
+  const filteredGroups = groups.filter((g) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return g.name.toLowerCase().includes(q) || g.subject.toLowerCase().includes(q);
@@ -303,21 +267,68 @@ export function MessagesPanel({
             </button>
           </div>
 
+          {tab === "groups" && (
+            <details className="study-group-create">
+              <summary>{locale === "kk" ? "Топ құру" : locale === "en" ? "Create group" : "Создать группу"}</summary>
+              <form onSubmit={(event)=>{
+                event.preventDefault();
+                startGroup(async()=>{
+                  const result=await createStudyGroup({
+                    name:groupForm.name,
+                    subject:groupForm.subject,
+                    description:groupForm.description,
+                    members:groupForm.members.split(",").map(value=>value.trim()).filter(Boolean),
+                  });
+                  if("error" in result){
+                    setGroupError(result.error==="migration"?"Примените миграцию учебных групп.":"Не удалось создать группу. Проверьте имена участников.");
+                    return;
+                  }
+                  setGroupForm({name:"",subject:"",description:"",members:""});
+                  await refreshGroups();selectThread(result.id);
+                });
+              }}>
+                <input className="field" required maxLength={80} placeholder={locale==="kk"?"Топ атауы":locale==="en"?"Group name":"Название группы"} value={groupForm.name} onChange={e=>setGroupForm(old=>({...old,name:e.target.value}))}/>
+                <input className="field" required maxLength={80} placeholder={locale==="kk"?"Пән":locale==="en"?"Subject":"Предмет"} value={groupForm.subject} onChange={e=>setGroupForm(old=>({...old,subject:e.target.value}))}/>
+                <textarea className="field" rows={2} maxLength={500} placeholder={locale==="kk"?"Сипаттама":locale==="en"?"Description":"Описание"} value={groupForm.description} onChange={e=>setGroupForm(old=>({...old,description:e.target.value}))}/>
+                <input className="field" maxLength={1830} placeholder={locale==="kk"?"Қатысушылардың аттары, үтір арқылы":locale==="en"?"Member names, comma-separated":"Имена участников через запятую"} value={groupForm.members} onChange={e=>setGroupForm(old=>({...old,members:e.target.value}))}/>
+                <button className="button" disabled={groupPending}>{groupPending?p.loading:(locale==="kk"?"Құру":locale==="en"?"Create":"Создать")}</button>
+              </form>
+              {groupError&&<p role="alert" className="form-error">{groupError}</p>}
+            </details>
+          )}
+
           {/* Search Bar */}
-          <div className="relative mb-3">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[var(--muted)] pointer-events-none" />
+          <div className="messages-search">
+            <Search aria-hidden="true" />
             <input
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={tab === "groups" ? (locale === "kk" ? "Топтарды іздеу…" : locale === "en" ? "Search groups…" : "Поиск групп…") : p.searchChats}
-              className="field pl-8 text-xs py-1.5 h-8 w-full"
+              className="field"
             />
           </div>
 
           {tab === "groups" ? (
             <nav className="conversation-list" aria-label={p.studyGroups}>
-              {filteredGroups.map((group) => {
+              {!filteredGroups.length ? (
+                <div className="messages-empty-state">
+                  <Users aria-hidden="true" />
+                  <p>
+                    {searchQuery
+                      ? locale === "kk"
+                        ? "Топтар табылмады"
+                        : locale === "en"
+                          ? "No groups found"
+                          : "Группы не найдены"
+                      : locale === "kk"
+                        ? "Әзірге оқу топтары жоқ"
+                        : locale === "en"
+                          ? "No study groups yet"
+                          : "Пока нет учебных групп"}
+                  </p>
+                </div>
+              ) : filteredGroups.map((group) => {
                 const isSelected = active === group.id;
                 return (
                   <button
@@ -329,7 +340,7 @@ export function MessagesPanel({
                   >
                     <div className="relative">
                       <span className="conversation-initial bg-[var(--accent-wash)] text-[var(--accent)] font-bold shadow-sm" aria-hidden="true">
-                        {group.initials}
+                        {groupInitials(group.name)}
                       </span>
                     </div>
                     <span className="min-w-0 flex-1 ml-2">
@@ -337,7 +348,7 @@ export function MessagesPanel({
                         {group.name}
                       </strong>
                       <span className="conversation-preview text-xs text-[var(--muted)] truncate block mt-0.5">
-                        {group.subject} · {group.membersCount} уч.
+                        {group.subject} · {group.members_count} уч.
                       </span>
                     </span>
                   </button>
@@ -1014,26 +1025,28 @@ function StudyGroupChat({
 }) {
   const { locale } = useI18n(),
     p = communityCopy(locale);
-  const [messages, setMessages] = useState<GroupMessage[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = localStorage.getItem("nis-group-msgs-" + group.id);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [messages, setMessages] = useState<StudyGroupMessage[]>([]);
+  const [loading,setLoading]=useState(true);
+  const [sendError,setSendError]=useState("");
+  const [sending,startSending]=useTransition();
 
   const [text, setText] = useState("");
-  const [replyTarget, setReplyTarget] = useState<GroupMessage | null>(null);
+  const [replyTarget, setReplyTarget] = useState<StudyGroupMessage | null>(null);
   const listRef = useRef<HTMLOListElement>(null);
 
-  const saveGroupMessages = (msgs: GroupMessage[]) => {
-    setMessages(msgs);
-    try {
-      localStorage.setItem("nis-group-msgs-" + group.id, JSON.stringify(msgs));
-    } catch {}
-  };
+  const refresh=useCallback(async()=>{
+    const result=await loadStudyGroupMessages(group.id);
+    if("error" in result){setSendError(result.error==="migration"?"Примените миграцию учебных групп.":p.failed);}
+    else {setMessages(result.data);setSendError("");}
+    setLoading(false);
+  },[group.id,p]);
+  useEffect(()=>{
+    const initial=window.setTimeout(()=>void refresh(),0);
+    const timer=window.setInterval(()=>{if(!document.hidden)void refresh();},10000);
+    return()=>{window.clearTimeout(initial);window.clearInterval(timer);};
+  },[refresh]);
+
+  const saveGroupMessages = (msgs: StudyGroupMessage[]) => setMessages(msgs);
 
   const addReaction = (messageId: string, emoji: string) => {
     const updated = messages.map((m) => {
@@ -1055,20 +1068,13 @@ function StudyGroupChat({
       finalBody = `> ${replyTarget.author}: ${replyTarget.body.slice(0, 80)}\n\n${clean}`;
     }
 
-    const newMsg: GroupMessage = {
-      id: "gm-" + Date.now(),
-      author: "Вы",
-      authorId: userId,
-      body: finalBody,
-      created_at: new Date().toISOString(),
-      reactions: {},
-    };
-
-    saveGroupMessages([...messages, newMsg]);
-    setText("");
-    setReplyTarget(null);
-    requestAnimationFrame(() => {
-      if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+    startSending(async()=>{
+      const result=await sendStudyGroupMessage(group.id,finalBody,crypto.randomUUID());
+      if("error" in result){setSendError(p.failed);return;}
+      setText("");setReplyTarget(null);await refresh();
+      requestAnimationFrame(() => {
+        if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+      });
     });
   };
 
@@ -1086,7 +1092,7 @@ function StudyGroupChat({
           </button>
           <div className="relative">
             <span className="conversation-initial bg-[var(--accent-wash)] text-[var(--accent)] font-bold shadow-sm" aria-hidden="true">
-              {group.initials}
+              {groupInitials(group.name)}
             </span>
           </div>
           <div>
@@ -1094,7 +1100,7 @@ function StudyGroupChat({
               {group.name}
             </h2>
             <span className="text-xs text-[var(--muted)]">
-              {group.subject} · {group.membersCount} участников
+              {group.subject} · {group.members_count} участников
             </span>
           </div>
         </div>
@@ -1110,7 +1116,9 @@ function StudyGroupChat({
         className="message-history flex-1 overflow-y-auto px-4 py-2 space-y-3"
         aria-label={group.name}
       >
-        {messages.length === 0 ? (
+        {loading ? (
+          <li className="conversation-empty p-8 text-center text-sm text-[var(--muted)]">{p.loading}</li>
+        ) : messages.length === 0 ? (
           <li className="conversation-empty p-8 text-center text-sm text-[var(--muted)]">
             {locale === "kk"
               ? "Әзірге хабарламалар жоқ. Алғашқы болып жазыңыз."
@@ -1120,7 +1128,7 @@ function StudyGroupChat({
           </li>
         ) : (
           messages.map((m) => {
-            const isOwn = m.authorId === userId || m.author === "Вы";
+            const isOwn = m.sender_id === userId;
             const quoteMatch = m.body.match(/^> ([^\n]+)\n\n([\s\S]*)$/);
 
             return (
@@ -1206,6 +1214,7 @@ function StudyGroupChat({
         className="message-compose mt-auto p-3 border-t border-[var(--line)] bg-[var(--surface)]"
         onSubmit={handleSend}
       >
+        {sendError&&<p role="alert" className="form-error">{sendError}</p>}
         {replyTarget && (
           <div className="message-reply-preview">
             <span className="truncate">
@@ -1245,7 +1254,7 @@ function StudyGroupChat({
           <button
             type="submit"
             className="button flex items-center justify-center p-3 h-10 w-10 shrink-0"
-            disabled={!text.trim()}
+            disabled={!text.trim()||sending}
             aria-label={p.send}
             title={p.send}
           >
