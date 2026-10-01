@@ -7,6 +7,7 @@ import {asUser,fixtureId as id} from "./helpers/database";
 test("study groups are private to members and persist messages",async()=>{
   const db=await v051Database();
   try {
+    await db.exec(readFileSync(new URL("../supabase/migrations/202610010003_study_groups.sql",import.meta.url),"utf8"));
     await db.exec(readFileSync(new URL("../supabase/migrations/202610010004_study_group_features.sql",import.meta.url),"utf8"));
     await db.exec(`
       insert into auth.users(id) values('${id(1)}'),('${id(2)}'),('${id(3)}');

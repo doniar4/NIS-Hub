@@ -64,6 +64,18 @@ create policy study_group_members_members on public.study_group_members
 create policy study_group_messages_members on public.study_group_messages
   for select to authenticated using (public.is_study_group_member(group_id));
 
+-- A manually applied newer group migration may already have expanded these
+-- RPC return rows. PostgreSQL cannot CREATE OR REPLACE an OUT-row type, so
+-- recreate the baseline signatures explicitly; the next migration upgrades
+-- them again in the same push.
+drop function if exists public.study_group_inbox();
+drop function if exists public.study_group_history(uuid,timestamptz,uuid,text);
+drop function if exists public.study_group_history(uuid,timestamptz,uuid);
+drop function if exists public.send_study_group_message(uuid,text,uuid,uuid);
+drop function if exists public.send_study_group_message(uuid,text,uuid);
+drop function if exists public.create_study_group(text,text,text,text[],integer,integer);
+drop function if exists public.create_study_group(text,text,text,text[]);
+
 create or replace function public.create_study_group(
   p_name text,
   p_subject text,
