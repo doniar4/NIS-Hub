@@ -35,11 +35,32 @@ function normalize(value: string): string {
   return value.normalize("NFKC").toLocaleLowerCase().trim();
 }
 
+const subjectAliasMap: Record<string, string> = {
+  "казахский язык и литература": "қазақ тілі мен әдебиеті",
+  "қазақ тілі мен әдебиеті": "казахский язык и литература",
+  "русский язык и литература": "орыс тілі мен әдебиеті",
+  "орыс тілі мен әдебиеті": "русский язык и литература",
+  "история казахстана": "қазақстан тарихы",
+  "қазақстан тарихы": "история казахстана",
+  "всемирная история": "дүниежүзі тарихы",
+  "дүниежүзі тарихы": "всемирная история",
+  "физическая культура": "дене шынықтыру",
+  "дене шынықтыру": "физическая культура",
+  "основы права": "құқық негіздері",
+  "құқық негіздері": "основы права",
+};
+
 function findMatchingSubject(name: string, subjects: SubjectRow[]): SubjectRow | undefined {
   const norm = normalize(name);
-  const matches = subjects.filter((s) =>
+  let matches = subjects.filter((s) =>
     [s.name, s.name_ru, s.name_kz, s.name_en, s.short_name].some((v) => v && normalize(v) === norm)
   );
+  if (matches.length !== 1 && subjectAliasMap[norm]) {
+    const aliasNorm = normalize(subjectAliasMap[norm]);
+    matches = subjects.filter((s) =>
+      [s.name, s.name_ru, s.name_kz, s.name_en, s.short_name].some((v) => v && normalize(v) === aliasNorm)
+    );
+  }
   return matches.length === 1 ? matches[0] : undefined;
 }
 
@@ -280,7 +301,10 @@ export function RecentSmsGrades({ subjects, sessionPresent }: RecentSmsGradesPro
                 <div key={work.id} className="recent-sms-item">
                   <div className="recent-sms-info">
                     <div className="recent-sms-motif">
-                      <SubjectMotif subject={work.matchedSubject} />
+                      <SubjectMotif
+                        subject={work.matchedSubject}
+                        name={work.subjectName || work.rawSubject}
+                      />
                     </div>
                     <div className="recent-sms-titles">
                       <div className="recent-sms-subject" title={work.rawSubject}>

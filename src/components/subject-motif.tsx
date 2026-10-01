@@ -4,8 +4,22 @@ import type { SubjectRow } from "@/lib/database.types";
  * Architectural, precision-engraved subject emblems.
  * Designed with academic geometry, golden ratio curves, and authentic Kazakh motifs.
  */
-export function SubjectMotif({ subject }: { subject: SubjectRow | undefined }) {
-  const name = [subject?.name, subject?.name_en, subject?.short_name]
+export function SubjectMotif({
+  subject,
+  name: explicitName,
+}: {
+  subject?: SubjectRow;
+  name?: string;
+}) {
+  const name = [
+    explicitName,
+    subject?.name,
+    subject?.name_ru,
+    subject?.name_kz,
+    subject?.name_en,
+    subject?.short_name,
+  ]
+    .filter(Boolean)
     .join(" ")
     .toLowerCase();
 
@@ -26,7 +40,28 @@ export function SubjectMotif({ subject }: { subject: SubjectRow | undefined }) {
         <circle cx="98" cy="84" r="2.5" fill="currentColor" />
       </>
     );
-  } else if (/физ|physics/.test(name)) {
+  } else if (/физкультур|физическ.*культур|дене|шынықтыру|спорт|sport|workout|\bpe\b|physical\s*ed/.test(name)) {
+    // Physical Education / Sports: Olympic torch & flame of victory, laurel arcs & stadium tracks
+    content = (
+      <>
+        <circle cx="60" cy="55" r="46" stroke="currentColor" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.5" />
+        {/* Stadium / track curved parallels */}
+        <path d="M28 82 Q60 102 92 82" stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" fill="none" opacity="0.6" />
+        <path d="M34 88 Q60 106 86 88" stroke="currentColor" strokeWidth="0.8" strokeDasharray="2 2" fill="none" opacity="0.4" />
+        {/* Olympic Torch handle & bowl */}
+        <path d="M56 86 L53 62 H67 L64 86 Z" stroke="currentColor" strokeWidth="1.2" fill="none" />
+        <line x1="50" y1="62" x2="70" y2="62" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="54" y1="74" x2="66" y2="74" stroke="currentColor" strokeWidth="0.8" opacity="0.6" />
+        {/* Ascending dynamic torch flame tongues */}
+        <path d="M60 20 C64 30 72 36 70 46 C68 53 63 58 60 62 C57 58 52 53 50 46 C48 36 56 30 60 20 Z" stroke="currentColor" strokeWidth="1.3" fill="color-mix(in srgb, currentColor 12%, transparent)" />
+        <path d="M52 42 C47 34 52 26 52 26 C52 26 45 34 47 45 C48 53 54 58 57 61" stroke="currentColor" strokeWidth="1.1" fill="none" strokeLinecap="round" />
+        <path d="M68 42 C73 34 68 26 68 26 C68 26 75 34 73 45 C72 53 66 58 63 61" stroke="currentColor" strokeWidth="1.1" fill="none" strokeLinecap="round" />
+        {/* Victory laurel arcs */}
+        <path d="M26 64 Q24 42 38 30" stroke="currentColor" strokeWidth="1" strokeLinecap="round" fill="none" />
+        <path d="M94 64 Q96 42 82 30" stroke="currentColor" strokeWidth="1" strokeLinecap="round" fill="none" />
+      </>
+    );
+  } else if (/физик|physics/.test(name)) {
     // Physics: Quantum atomic orbitals, harmonic wave vectors, focal nucleus
     content = (
       <>
@@ -106,7 +141,7 @@ export function SubjectMotif({ subject }: { subject: SubjectRow | undefined }) {
         ))}
       </>
     );
-  } else if (/каз|казах|қазақ|рус|russian|англ|english|литерат|әдебиет|literature|тіл|язык/.test(name)) {
+  } else if (/каз|казах|қазақ|рус|russian|англ|english|ағылшын|неміс|немец|француз|қытай|китай|литерат|әдебиет|literature|тіл|язык|language/.test(name)) {
     // Languages / Literature: Classical writing quill, open scroll with Kazakh ornamental corner
     content = (
       <>

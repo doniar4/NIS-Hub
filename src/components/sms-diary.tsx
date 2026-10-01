@@ -356,7 +356,7 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
         const counts=s.assessmentsLoaded||detail?.assessments?assessmentCounts(s,detail?.assessments):undefined;
         return <article className={`sms-subject${snapshot.subjects.length%2===1&&index===snapshot.subjects.length-1?" sms-subject-wide":""}`} key={s.sourceId??s.subject} data-diary-card>
           <header className="sms-subject-heading">
-            <div data-diary-motif><SubjectMotif subject={subject}/></div>
+            <div data-diary-motif><SubjectMotif subject={subject} name={s.subject}/></div>
             <div className="sms-subject-title"><h2>{subject?subjectName(subject,locale):s.subject}</h2>
               <div className="sms-result-line"><strong>{s.percent===undefined?"—":formatNumber(s.percent)+"%"}</strong><span>{s.percent===undefined?p.noScore:s.percentSource==="derived"?p.derived:p.official}</span></div>
             </div>
