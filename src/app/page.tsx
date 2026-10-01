@@ -66,7 +66,8 @@ export default async function Home({searchParams}:{searchParams:Promise<Record<s
   const materials=classId?await getTimetableMaterials([...new Set(lessons.map(l=>l.subject_id))],[grade]):{};
   return <SiteShell><HomeMotion>
     <header className="dashboard-heading"><div><p className="eyebrow">{c.welcome}</p>
-      <h1>{viewer.profile?.display_name?c.hello+", "+viewer.profile.display_name:"NIS Hub"}</h1></div>
+      <h1>{viewer.profile?.display_name?c.hello+", "+viewer.profile.display_name:"NIS Hub"}</h1>
+      <p className="dashboard-date">{new Intl.DateTimeFormat(locale,{timeZone:"Asia/Oral",weekday:"long",day:"numeric",month:"long"}).format(now)}</p></div>
       {classId&&<span className="status-chip">{classes.find(item=>item.id===classId)?.name}</span>}
     </header>
     <HomeStudyDashboard lessons={lessons} subjects={subjects} tasks={tasks} classId={classId} today={today} nonSchoolDays={nonSchoolDays} grade={grade} materials={materials}

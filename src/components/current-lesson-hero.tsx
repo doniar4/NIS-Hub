@@ -28,7 +28,7 @@ export function CurrentLessonHero({
   grade = null,
   materials = {},
 }: CurrentLessonHeroProps) {
-  const { locale, t } = useI18n();
+  const { locale } = useI18n();
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState<Date>(() => new Date());
 
@@ -147,6 +147,10 @@ export function CurrentLessonHero({
   }
 
   const totalLessons = todayLessons.length;
+  const lessonRail=(active:number)=><div className="status-day-rail" aria-label={locale==="kk"?`Бүгін ${totalLessons} сабақ`:locale==="en"?`${totalLessons} lessons today`:`Сегодня ${totalLessons} уроков`}>
+    <span className="status-rail-label">{locale==="kk"?"Күн жолы":locale==="en"?"Today":"Маршрут дня"}</span>
+    <span className="status-rail-dots" aria-hidden="true">{todayLessons.map((lesson,index)=><i key={lesson.id} data-state={index<active?"done":index===active?"current":"next"}>{index+1}</i>)}</span>
+  </div>;
 
   // ─── Ongoing lesson ───
   if (status.type === "ongoing") {
@@ -180,6 +184,7 @@ export function CurrentLessonHero({
                 )}
               </div>
               <h2 className="status-subject">{sName}</h2>
+              {lessonRail(status.index-1)}
             </div>
           </div>
 
@@ -225,6 +230,7 @@ export function CurrentLessonHero({
                 {room && <span className="status-pill">{room}</span>}
               </div>
               <h2 className="status-subject">{sName}</h2>
+              {lessonRail(status.index-1)}
             </div>
           </div>
 
@@ -246,7 +252,7 @@ export function CurrentLessonHero({
     const room = normalizeRoom(status.nextLesson.room);
 
     return (
-      <aside className="lesson-status-bar surface-card" aria-label={sName}>
+      <aside className="lesson-status-bar surface-card is-before" aria-label={sName}>
         <div className="status-bar-row">
           <div className="status-bar-left">
             <div className="status-motif">
@@ -266,6 +272,7 @@ export function CurrentLessonHero({
                 </span>
               </div>
               <h2 className="status-subject">{sName}</h2>
+              {lessonRail(0)}
             </div>
           </div>
 
