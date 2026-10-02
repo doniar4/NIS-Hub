@@ -170,8 +170,8 @@ function CoverGenerator({bookId,variantId,storagePath}:{bookId:string;variantId:
       await supabase.from("books").update({cover_path:path}).eq("id",bookId);
       setMsg(locale==="kk"?"Обложка сақталды!":locale==="en"?"Cover saved!":"Обложка обновлена!");
       router.refresh();
-    }catch(err){
-      console.error("[CoverGenerator]",err);
+    }catch{
+      if(process.env.NODE_ENV==="development")console.error("[CoverGenerator] operation failed");
       setMsg(locale==="kk"?"Қате орын алды":locale==="en"?"Error occurred":"Произошла ошибка");
     }finally{
       setRunning(false);

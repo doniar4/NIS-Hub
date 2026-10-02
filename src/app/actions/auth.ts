@@ -11,6 +11,17 @@ import { allowedSocialProvider, socialProviderEnabled } from "@/lib/auth-provide
 import { headers } from "next/headers";
 import { markWelcomeComplete } from "@/lib/welcome-server";
 import type { ActionState } from "@/lib/action-state";
+const safeAuthCodes = new Set([
+    "invalid_credentials", "email_not_confirmed", "over_email_send_rate_limit",
+    "over_request_rate_limit",
+]);
+function diagnosticCode(value: unknown): string {
+    return typeof value === "string" && safeAuthCodes.has(value) ? value : "unknown";
+}
+function diagnosticStatus(value: unknown): number {
+    return typeof value === "number" && Number.isInteger(value) && value >= 100 && value <= 599 ? value : 0;
+}
+
 export async function completeWelcome() {
     await markWelcomeComplete();
     redirect("/signup");
@@ -44,8 +55,8 @@ export async function authenticate(mode: "login" | "signup", _state: ActionState
             // cookies, headers, or the raw provider error object.
             console.warn("[auth] Supabase authentication failed", {
                 mode,
-                code: result.error.code ?? "unknown",
-                status: result.error.status ?? 0,
+                code: diagnosticCode(result.error.code),
+                status: diagnosticStatus(result.error.status),
             });
 
             if (result.error.status === 429)
@@ -65,8 +76,8 @@ export async function authenticate(mode: "login" | "signup", _state: ActionState
             if (verification.error || !verification.data.user) {
                 console.warn("[auth] Supabase session verification failed", {
                     mode,
-                    code: verification.error?.code ?? "missing_user",
-                    status: verification.error?.status ?? 0,
+                    code: verification.error ? diagnosticCode(verification.error.code) : "missing_user",
+                    status: diagnosticStatus(verification.error?.status),
                 });
                 return { error: t.saveError };
             }

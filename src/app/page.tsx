@@ -49,6 +49,7 @@ export default async function Home({searchParams}:{searchParams:Promise<Record<s
     const params=await searchParams,authMode=params.auth==="login"?"login":"signup";
     return <WelcomeScreen t={t} configured={viewer.configured} authMode={authMode}
       googleEnabled={viewer.configured && socialProviderEnabled("google")}
+      appleEnabled={viewer.configured && socialProviderEnabled("apple")}
       callbackFailed={authMode==="login"&&params.callback==="failed"}
       loginNext={authMode==="login"?safeNext(params.next):"/"}
       confirmationFailed={authMode==="login"&&params.confirmation==="failed"}/>;

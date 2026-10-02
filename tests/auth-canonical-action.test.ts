@@ -116,3 +116,16 @@ test("existing password login still verifies user and ignores unsafe next redire
   assert.ok(!JSON.stringify(unconfirmed.logs).includes("test@example.org"));
   assert.ok(!JSON.stringify(unconfirmed.logs).includes("safe-test-password"));
 });
+
+test("auth diagnostics allowlist provider codes and HTTP status", async () => {
+  const source = await isolatedAuth();
+  const secret = "fixture-secret-should-not-be-logged";
+  const failure = loadAuth(source, { auth: { signInWithPassword: async () => ({
+    error: { code: secret, status: secret, message: secret },
+  }) } }, {});
+  assert.equal((await failure.actions.authenticate("login", {}, credentials())).error, "login failed");
+  const serialized = JSON.stringify(failure.logs);
+  assert.ok(!serialized.includes(secret));
+  assert.ok(serialized.includes("unknown"));
+  assert.ok(serialized.includes("status"));
+});
