@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   MagnifyingGlassIcon,
   ChatBubbleIcon,
@@ -24,6 +24,7 @@ import { communityCopy } from "@/lib/community-copy";
 import { v053Copy } from "@/lib/v053-copy";
 
 let memoryCollapsed = false;
+const hoverPrefetchRoutes = new Set(["/", "/library", "/schedule", "/profile"]);
 
 function snapshot() {
   try {
@@ -86,6 +87,7 @@ export function AppFrame({
   admin?: boolean;
 }) {
   const { locale, t } = useI18n();
+  const router = useRouter();
   const p = v05Copy(locale);
   const community = communityCopy(locale);
   const mobileCommunity = v053Copy(locale);
@@ -206,6 +208,8 @@ export function AppFrame({
         return (
           <Link
             key={href}
+            onMouseEnter={() => { if (hoverPrefetchRoutes.has(href)) router.prefetch(href); }}
+            onFocus={() => { if (hoverPrefetchRoutes.has(href)) router.prefetch(href); }}
             prefetch={false}
             href={href}
             title={!mobile && collapsed ? label : undefined}
