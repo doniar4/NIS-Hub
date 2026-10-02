@@ -4,6 +4,7 @@ export const uuid = z.uuid("Некорректный идентификатор.
 const optionalText = (max: number) => z.string().trim().max(max).transform(value => value || null);
 const optionalId = z.union([uuid, z.literal("")]).transform(value => value || null);
 const optionalInt = (min: number, max: number) => z.union([z.literal(""), z.coerce.number().int().min(min).max(max)]).transform(value => value === "" ? null : value);
+const tags = z.string().max(500).transform(value => [...new Set(value.split(",").map(tag => tag.trim()).filter(Boolean))].slice(0, 20));
 export const dateSchema = z.iso.date("Укажите существующую дату.");
 export const pageSchema = z.coerce.number().int().min(1).max(100000);
 export const credentialsSchema = z.object({ email: z.email("Проверьте email.").max(254), password: z.string().min(8, "Минимум 8 символов.").max(128) });
@@ -16,6 +17,7 @@ export const profileSchema = z.object({
 export const pdfPathSchema = z.string().min(1).max(500).regex(/^[A-Za-z0-9_-][A-Za-z0-9/_-]*\.pdf$/, "Укажите путь к PDF внутри book-files, например books/sample.pdf.");
 export const bookSchema = z.object({
   id: optionalId, title: z.string().trim().min(1).max(200), subject_id: uuid, class_id: optionalId,
+  description: optionalText(1000).default(null), tags: tags.default([]), quarter: optionalInt(1, 4).default(null),
   author: optionalText(200), publisher: optionalText(200), publication_year: optionalInt(1000, 9999), language: optionalText(40),
   file_path: pdfPathSchema, page_count: optionalInt(1, 100000),
   publication_status: z.enum(["draft", "published", "archived"]),

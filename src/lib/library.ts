@@ -1,5 +1,5 @@
 import type { Book } from "./database.types";
-export type LibraryBook = Pick<Book, "id" | "title" | "grade" | "subject_id">;
+export type LibraryBook = Pick<Book, "id" | "title" | "grade" | "subject_id"> & Partial<Pick<Book, "description" | "tags" | "quarter">>;
 export type LibraryFilters = { q: string; grade: string; subject: string };
 export const LIBRARY_PAGE_SIZE = 200;
 export const LIBRARY_BOOK_LIMIT = 5000;

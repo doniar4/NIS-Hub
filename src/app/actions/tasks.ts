@@ -3,7 +3,7 @@
 import {revalidatePath} from "next/cache";
 import {z} from "zod";
 import {actionContext} from "@/lib/auth";
-import type {PersonalTask,TaskPriority,TaskStatus,TaskSubtask} from "@/lib/database.types";
+import type {PersonalTask,TaskStatus} from "@/lib/database.types";
 import {uuid} from "@/lib/validation";
 
 type TaskFailure={error:"invalid"|"migration"|"failed"|"rate"|"limit"|"unavailable"};

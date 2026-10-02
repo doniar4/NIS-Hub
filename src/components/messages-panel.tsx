@@ -6,19 +6,11 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { ChatBubbleIcon, PaperPlaneIcon } from "@radix-ui/react-icons";
 import {
   Search,
-  Pin,
-  PinOff,
   Reply,
-  Users,
   Eye,
   EyeOff,
   X,
-  Settings,
-  UserPlus,
-  Link2,
-  Bell,
-  BellOff,
-  Trash2,
+  BookOpen,
 } from "lucide-react";
 import {
   loadInbox,
@@ -26,47 +18,13 @@ import {
   loadMessages,
   sendMessage,
   markConversationRead,
-  loadStudyGroups,
-  createStudyGroup,
-  loadStudyGroupMessages,
-  sendStudyGroupMessage,
-  loadStudyGroupInvites,
-  respondStudyGroupInvite,
-  joinStudyGroupCode,
-  loadStudyGroupFriends,
-  searchStudyGroupPeople,
-  inviteStudyGroupMembers,
-  loadStudyGroupMembers,
-  loadStudyGroupAudit,
-  createStudyGroupCode,
-  revokeStudyGroupCode,
-  updateStudyGroup,
-  setStudyGroupMemberRole,
-  removeStudyGroupMember,
-  setStudyGroupMuted,
-  leaveStudyGroup,
-  deleteStudyGroup,
-  readStudyGroup,
-  deleteStudyGroupMessage,
-  toggleStudyGroupReaction,
-  pinStudyGroupMessage,
 } from "@/lib/community-client";
-import type { DirectMessage, DmThread, StudyGroup, StudyGroupAudit, StudyGroupInvite, StudyGroupMember, StudyGroupMessage, StudyGroupPerson } from "@/lib/database.types";
+import type { DirectMessage, DmThread } from "@/lib/database.types";
 import { communityCopy } from "@/lib/community-copy";
 import { useI18n } from "./locale-provider";
 import { ReloadButton } from "./reload-button";
 
 const EMOJI_REACTIONS = ["👍", "❤️", "💡", "🔥"];
-const GROUP_AVATARS=["📚","∑","⚗️","💻","🌍","🧬","🎨","🎵","🏛️","📈","🧠","🎓"];
-const GROUP_COLORS=["#4278c0","#7957b8","#138a72","#ba6438","#b34268","#267a9b","#78852f","#626d82"];
-
-function GroupAvatar({group,small=false}:{group:Pick<StudyGroup,"name"|"avatar_icon"|"avatar_color">;small?:boolean}){
-  return <span className={`group-avatar${small?" group-avatar-small":""}`} style={{"--group-color":GROUP_COLORS[group.avatar_color]??GROUP_COLORS[0]} as React.CSSProperties} aria-hidden="true">{GROUP_AVATARS[group.avatar_icon]??groupInitials(group.name)}</span>;
-}
-
-function groupInitials(name:string) {
-  return name.split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toLocaleUpperCase()||"Г";
-}
 
 export function MessagesPanel({
   userId,
@@ -84,42 +42,7 @@ export function MessagesPanel({
     [loaded, setLoaded] = useState(false),
     [pending, start] = useTransition();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [groups,setGroups]=useState<StudyGroup[]>([]);
-  const [groupForm,setGroupForm]=useState({name:"",subject:"",description:"",members:"",avatarIcon:0,avatarColor:0});
-  const [groupError,setGroupError]=useState("");
-  const [groupPending,startGroup]=useTransition();
-  const [groupInvites,setGroupInvites]=useState<StudyGroupInvite[]>([]);
-  const [joinCode,setJoinCode]=useState("");
-
-  // Tab: all | pinned | groups
-  const [tab, setTab] = useState<"all" | "pinned" | "groups">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [pinnedIds, setPinnedIds] = useState<string[]>([]);
-
-  // Load pinned threads from localStorage
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      try {
-        const raw = localStorage.getItem("nis-pinned-threads");
-        if (raw) setPinnedIds(JSON.parse(raw));
-      } catch {}
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  const togglePin = useCallback((id: string, e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setPinnedIds((prev) => {
-      const next = prev.includes(id)
-        ? prev.filter((item) => item !== id)
-        : [...prev, id];
-      try {
-        localStorage.setItem("nis-pinned-threads", JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  }, []);
 
   const refresh = useCallback(async () => {
     const result = await loadInbox();
@@ -130,18 +53,6 @@ export function MessagesPanel({
     }
     setLoaded(true);
   }, [p]);
-  const refreshGroups=useCallback(async()=>{
-    const result=await loadStudyGroups();
-    if("error" in result){setGroupError(result.error==="migration"?"Примените миграцию учебных групп.":p.failed);return;}
-    setGroups(result.data);setGroupError("");
-  },[p]);
-  const refreshGroupInvites=useCallback(async()=>{const result=await loadStudyGroupInvites();if("data" in result)setGroupInvites(result.data);},[]);
-
-  useEffect(()=>{
-    const timer=window.setTimeout(()=>{void refreshGroups();void refreshGroupInvites();},0);
-    return()=>window.clearTimeout(timer);
-  },[refreshGroups,refreshGroupInvites]);
-  useEffect(()=>{const code=new URLSearchParams(window.location.search).get("groupCode");if(!code)return;const timer=window.setTimeout(()=>{startGroup(async()=>{const result=await joinStudyGroupCode(code);if("id" in result){await refreshGroups();selectThread(result.id);window.history.replaceState(null,"",window.location.pathname);}});},0);return()=>window.clearTimeout(timer);},[refreshGroups]);
 
   useEffect(() => {
     let alive = true;
@@ -173,7 +84,6 @@ export function MessagesPanel({
   }, [p]);
 
   const currentDm = threads.find((t) => t.id === active);
-  const currentGroup = groups.find((g) => g.id === active);
   const indexRef = useRef<HTMLElement>(null);
 
   function selectThread(id: string) {
@@ -192,10 +102,9 @@ export function MessagesPanel({
     );
   }
 
-  // Filter threads by search query and tab
+  // Filter threads by search query
   const filteredThreads = threads
     .filter((t) => {
-      if (tab === "pinned" && !pinnedIds.includes(t.id)) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       return (
@@ -203,21 +112,10 @@ export function MessagesPanel({
         (t.last_body && t.last_body.toLowerCase().includes(q))
       );
     })
-    .sort((a, b) => {
-      const aPinned = pinnedIds.includes(a.id) ? 1 : 0;
-      const bPinned = pinnedIds.includes(b.id) ? 1 : 0;
-      if (aPinned !== bPinned) return bPinned - aPinned;
-      return (b.last_at || "").localeCompare(a.last_at || "");
-    });
-
-  const filteredGroups = groups.filter((g) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return g.name.toLowerCase().includes(q) || g.subject.toLowerCase().includes(q);
-  });
+    .sort((a, b) => (b.last_at || "").localeCompare(a.last_at || ""));
 
   return (
-    <div className="messages-layout" data-conversation-open={Boolean(currentDm || currentGroup)}>
+    <div className="messages-layout" data-conversation-open={Boolean(currentDm)}>
       <aside ref={indexRef} className="surface-card messages-index">
         <div className="flex items-center justify-between pb-3 border-b border-[var(--line)]">
           <h2 className="section-title text-xl">{p.newChat}</h2>
@@ -271,230 +169,84 @@ export function MessagesPanel({
           </div>
         )}
 
-        <div className="mt-6">
-          {/* Symmetrical, equal-width Tab Pills without emojis */}
-          <div className="tab-pills" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === "all"}
-              className="tab-pill"
-              onClick={() => setTab("all")}
-            >
-              {p.all} ({threads.length})
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === "pinned"}
-              className="tab-pill"
-              onClick={() => setTab("pinned")}
-            >
-              {p.pinned} ({threads.filter((t) => pinnedIds.includes(t.id)).length})
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === "groups"}
-              className="tab-pill"
-              onClick={() => setTab("groups")}
-            >
-              {p.studyGroups}
-            </button>
-          </div>
-
-          {tab === "groups" && (
-            <div className="study-group-tools">
-            {groupInvites.length>0&&<details className="study-group-create" open>
-              <summary>Приглашения <span className="unread-count">{groupInvites.length}</span></summary>
-              <div className="group-invite-list">{groupInvites.map(invite=><div key={invite.id} className="group-invite-row"><span><strong>{invite.group_name}</strong><small>от {invite.inviter_name}</small></span><span className="flex gap-1"><button className="button button-small" onClick={()=>startGroup(async()=>{const result=await respondStudyGroupInvite(invite.id,true);if("id" in result){await Promise.all([refreshGroups(),refreshGroupInvites()]);selectThread(result.id);}})}>Принять</button><button className="button button-secondary button-small" onClick={()=>startGroup(async()=>{await respondStudyGroupInvite(invite.id,false);await refreshGroupInvites();})}>Отклонить</button></span></div>)}</div>
-            </details>}
-            <details className="study-group-create">
-              <summary><Link2 className="inline w-3.5 h-3.5 mr-1"/>Войти по коду</summary>
-              <form onSubmit={event=>{event.preventDefault();startGroup(async()=>{const result=await joinStudyGroupCode(joinCode);if("error" in result){setGroupError("Код неверный, истёк или отозван.");return;}setJoinCode("");await refreshGroups();selectThread(result.id);});}}><input className="field uppercase" value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())} minLength={8} maxLength={8} placeholder="ABCD2345"/><button className="button" disabled={groupPending}>Войти</button></form>
-            </details>
-            <details className="study-group-create">
-              <summary>{locale === "kk" ? "Топ құру" : locale === "en" ? "Create group" : "Создать группу"}</summary>
-              <form onSubmit={(event)=>{
-                event.preventDefault();
-                startGroup(async()=>{
-                  const result=await createStudyGroup({
-                    name:groupForm.name,
-                    subject:groupForm.subject,
-                    description:groupForm.description,
-                    members:groupForm.members.split(",").map(value=>value.trim()).filter(Boolean),
-                    avatarIcon:groupForm.avatarIcon,
-                    avatarColor:groupForm.avatarColor,
-                  });
-                  if("error" in result){
-                    setGroupError(result.error==="migration"?"Примените миграцию учебных групп.":"Не удалось создать группу. Проверьте имена участников.");
-                    return;
-                  }
-                  setGroupForm({name:"",subject:"",description:"",members:"",avatarIcon:0,avatarColor:0});
-                  await Promise.all([refreshGroups(),refreshGroupInvites()]);selectThread(result.id);
-                });
-              }}>
-                <input className="field" required maxLength={80} placeholder={locale==="kk"?"Топ атауы":locale==="en"?"Group name":"Название группы"} value={groupForm.name} onChange={e=>setGroupForm(old=>({...old,name:e.target.value}))}/>
-                <input className="field" required maxLength={80} placeholder={locale==="kk"?"Пән":locale==="en"?"Subject":"Предмет"} value={groupForm.subject} onChange={e=>setGroupForm(old=>({...old,subject:e.target.value}))}/>
-                <textarea className="field" rows={2} maxLength={500} placeholder={locale==="kk"?"Сипаттама":locale==="en"?"Description":"Описание"} value={groupForm.description} onChange={e=>setGroupForm(old=>({...old,description:e.target.value}))}/>
-                <div><span className="field-label">Аватар</span><div className="group-avatar-options">{GROUP_AVATARS.map((icon,index)=><button key={icon} type="button" aria-pressed={groupForm.avatarIcon===index} onClick={()=>setGroupForm(old=>({...old,avatarIcon:index}))}>{icon}</button>)}</div><div className="group-color-options">{GROUP_COLORS.map((color,index)=><button key={color} type="button" aria-label={`Цвет ${index+1}`} aria-pressed={groupForm.avatarColor===index} style={{background:color}} onClick={()=>setGroupForm(old=>({...old,avatarColor:index}))}/>)}</div></div>
-                <input className="field" maxLength={1830} placeholder={locale==="kk"?"Шақырылатын аттар, үтір арқылы":locale==="en"?"Names to invite, comma-separated":"Кого пригласить: имена через запятую"} value={groupForm.members} onChange={e=>setGroupForm(old=>({...old,members:e.target.value}))}/>
-                <button className="button" disabled={groupPending}>{groupPending?p.loading:(locale==="kk"?"Құру":locale==="en"?"Create":"Создать")}</button>
-              </form>
-              {groupError&&<p role="alert" className="form-error">{groupError}</p>}
-            </details>
-            </div>
-          )}
-
-          {/* Search Bar */}
+        <div className="mt-5">
           <div className="messages-search">
             <Search aria-hidden="true" />
             <input
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={tab === "groups" ? (locale === "kk" ? "Топтарды іздеу…" : locale === "en" ? "Search groups…" : "Поиск групп…") : p.searchChats}
+              placeholder={p.searchChats}
               className="field"
             />
           </div>
 
-          {tab === "groups" ? (
-            <nav className="conversation-list" aria-label={p.studyGroups}>
-              {!filteredGroups.length ? (
-                <div className="messages-empty-state">
-                  <Users aria-hidden="true" />
-                  <p>
-                    {searchQuery
-                      ? locale === "kk"
-                        ? "Топтар табылмады"
-                        : locale === "en"
-                          ? "No groups found"
-                          : "Группы не найдены"
-                      : locale === "kk"
-                        ? "Әзірге оқу топтары жоқ"
-                        : locale === "en"
-                          ? "No study groups yet"
-                          : "Пока нет учебных групп"}
-                  </p>
-                </div>
-              ) : filteredGroups.map((group) => {
-                const isSelected = active === group.id;
-                return (
-                  <button
-                    key={group.id}
-                    type="button"
-                    className="conversation-link w-full text-left"
-                    aria-current={isSelected ? "page" : undefined}
-                    onClick={() => selectThread(group.id)}
+          <nav className="conversation-list" aria-label={p.messages}>
+            {!loaded ? (
+              <div className="space-y-2 py-2">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 p-2 rounded bg-[var(--sidebar)] opacity-60 animate-pulse"
                   >
-                    <div className="relative"><GroupAvatar group={group} small/></div>
-                    <span className="min-w-0 flex-1 ml-2">
-                      <strong className="text-sm font-medium text-[var(--ink)] truncate block">
-                        {group.name}
-                      </strong>
-                      <span className="conversation-preview text-xs text-[var(--muted)] truncate block mt-0.5">
-                        {group.subject} · {group.members_count} уч.
-                      </span>
-                    </span>
-                    {group.unread>0&&<span className="unread-count ml-auto">{group.unread}</span>}
-                  </button>
-                );
-              })}
-            </nav>
-          ) : (
-            <nav className="conversation-list" aria-label={p.messages}>
-              {!loaded ? (
-                <div className="space-y-2 py-2">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-2 p-2 rounded bg-[var(--sidebar)] opacity-60 animate-pulse"
-                    >
-                      <div className="h-9 w-9 rounded-full bg-[var(--line-strong)]" />
-                      <div className="flex-1 space-y-1">
-                        <div className="h-3 w-3/4 rounded bg-[var(--line-strong)]" />
-                        <div className="h-2 w-1/2 rounded bg-[var(--line)]" />
-                      </div>
+                    <div className="h-9 w-9 rounded-full bg-[var(--line-strong)]" />
+                    <div className="flex-1 space-y-1">
+                      <div className="h-3 w-3/4 rounded bg-[var(--line-strong)]" />
+                      <div className="h-2 w-1/2 rounded bg-[var(--line)]" />
                     </div>
-                  ))}
-                </div>
-              ) : !filteredThreads.length ? (
-                <div className="p-4 text-center rounded border border-dashed border-[var(--line)]">
-                  <p className="text-xs text-[var(--muted)]">
-                    {searchQuery ? "Ничего не найдено" : tab === "pinned" ? "Нет закрепленных чатов" : p.noThreads}
-                  </p>
-                </div>
-              ) : (
-                filteredThreads.map((thread) => {
-                  const isPinned = pinnedIds.includes(thread.id);
-                  const isSelected = thread.id === active;
-                  return (
-                    <div
-                      key={thread.id}
-                      className="relative group flex items-center"
+                  </div>
+                ))}
+              </div>
+            ) : !filteredThreads.length ? (
+              <div className="p-4 text-center rounded border border-dashed border-[var(--line)]">
+                <p className="text-xs text-[var(--muted)]">
+                  {searchQuery ? "Ничего не найдено" : p.noThreads}
+                </p>
+              </div>
+            ) : (
+              filteredThreads.map((thread) => {
+                const isSelected = thread.id === active;
+                return (
+                  <div
+                    key={thread.id}
+                    className="relative flex items-center"
+                  >
+                    <button
+                      type="button"
+                      className="conversation-link w-full text-left"
+                      aria-current={isSelected ? "page" : undefined}
+                      onClick={() => selectThread(thread.id)}
                     >
-                      <button
-                        type="button"
-                        className="conversation-link w-full text-left pr-8"
-                        aria-current={isSelected ? "page" : undefined}
-                        onClick={() => selectThread(thread.id)}
-                      >
-                        <div className="relative">
-                          <span className="conversation-initial" aria-hidden="true">
-                            {thread.peer_name?.slice(0, 1).toLocaleUpperCase() || "N"}
-                          </span>
-                        </div>
-                        <span className="min-w-0 flex-1 ml-2">
-                          <span className="flex items-center gap-1.5">
-                            <strong className="text-sm font-medium text-[var(--ink)] truncate block">
-                              {thread.peer_name}
-                            </strong>
-                            {isPinned && (
-                              <Pin className="w-3 h-3 text-[var(--accent)] shrink-0 inline" aria-label={p.pinned} />
-                            )}
-                          </span>
-                          <span className="conversation-preview text-xs text-[var(--muted)] truncate block mt-0.5">
-                            {thread.last_deleted
-                              ? v053Copy(locale).deleted
-                              : (thread.last_body ?? p.emptyChat)}
-                          </span>
+                      <div className="relative">
+                        <span className="conversation-initial" aria-hidden="true">
+                          {thread.peer_name?.slice(0, 1).toLocaleUpperCase() || "N"}
                         </span>
-                        {thread.unread > 0 && (
-                          <span className="unread-count ml-auto shadow-sm">
-                            {thread.unread}
-                          </span>
-                        )}
-                      </button>
-
-                      {/* Pin Toggle Button */}
-                      <button
-                        type="button"
-                        onClick={(e) => togglePin(thread.id, e)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-[var(--hover)] text-[var(--muted)] transition-opacity"
-                        aria-label={isPinned ? p.unpin : p.pin}
-                        title={isPinned ? p.unpin : p.pin}
-                      >
-                        {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                  );
-                })
-              )}
-            </nav>
-          )}
+                      </div>
+                      <span className="min-w-0 flex-1 ml-2">
+                        <strong className="text-sm font-medium text-[var(--ink)] truncate block">
+                          {thread.peer_name}
+                        </strong>
+                        <span className="conversation-preview text-xs text-[var(--muted)] truncate block mt-0.5">
+                          {thread.last_deleted
+                            ? v053Copy(locale).deleted
+                            : (thread.last_body ?? p.emptyChat)}
+                        </span>
+                      </span>
+                      {thread.unread > 0 && (
+                        <span className="unread-count ml-auto shadow-sm">
+                          {thread.unread}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </nav>
         </div>
       </aside>
 
-      {currentGroup ? (
-        <StudyGroupChat
-          key={currentGroup.id}
-          group={currentGroup}
-          userId={userId}
-          onBack={backToList}
-          onChanged={refreshGroups}
-          onRemoved={()=>{setActive("");void refreshGroups();}}
-        />
-      ) : currentDm ? (
+      {currentDm ? (
         <Conversation
           key={currentDm.id}
           thread={currentDm}
@@ -514,6 +266,123 @@ export function MessagesPanel({
           <h2 className="section-title text-2xl mb-2">{p.messages}</h2>
           <p className="text-sm text-[var(--muted)] max-w-xs">{p.chooseChat}</p>
         </section>
+      )}
+    </div>
+  );
+}
+
+function parseMaterialLink(urlStr: string): { href: string; page?: string } | null {
+  const match = urlStr.match(/(?:https?:\/\/[^\s/]+)?(\/books\/[0-9a-fA-F-]+(?:\/read)?(?:\?[^\s]+)?)/);
+  if (!match) return null;
+  const href = match[1];
+  const pageMatch = href.match(/[?&]page=(\d+)/);
+  return {
+    href,
+    page: pageMatch ? pageMatch[1] : undefined,
+  };
+}
+
+function MessageContent({
+  text,
+  deleted,
+  locale,
+}: {
+  text: string;
+  deleted?: boolean;
+  locale: "ru" | "kk" | "en";
+}) {
+  const p = communityCopy(locale);
+  if (deleted) {
+    return <p className="italic text-[var(--muted)]">{v053Copy(locale).deleted}</p>;
+  }
+
+  const urlRegex = /((?:https?:\/\/[^\s]+)|(?:\/books\/[0-9a-fA-F-]+(?:\/read)?(?:\?[^\s]+)?))/g;
+  const parts: (string | { url: string })[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  const materials: { href: string; page?: string }[] = [];
+  const seenHrefs = new Set<string>();
+
+  while ((match = urlRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    const rawUrl = match[1];
+    parts.push({ url: rawUrl });
+    const mat = parseMaterialLink(rawUrl);
+    if (mat && !seenHrefs.has(mat.href)) {
+      seenHrefs.add(mat.href);
+      materials.push(mat);
+    }
+    lastIndex = match.index + rawUrl.length;
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return (
+    <div>
+      <p>
+        {parts.map((part, idx) => {
+          if (typeof part === "string") return part;
+          const isInternal = part.url.startsWith("/") || part.url.includes("/books/");
+          const mat = parseMaterialLink(part.url);
+          const linkHref = mat ? mat.href : part.url;
+
+          if (isInternal) {
+            return (
+              <Link
+                key={idx}
+                href={linkHref}
+                className="text-link underline break-all font-medium inline-flex items-center gap-1"
+              >
+                {part.url}
+              </Link>
+            );
+          }
+          return (
+            <a
+              key={idx}
+              href={part.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-link underline break-all font-medium"
+            >
+              {part.url}
+            </a>
+          );
+        })}
+      </p>
+
+      {materials.length > 0 && (
+        <div className="space-y-2">
+          {materials.map((mat, i) => (
+            <div key={i} className="message-material-card">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-md bg-[var(--hover)] flex items-center justify-center shrink-0 text-[var(--accent)]">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-[var(--ink)] truncate">
+                    {p.materialCardTitle}
+                  </div>
+                  {mat.page && (
+                    <div className="text-[11px] text-[var(--muted)]">
+                      {p.pageNumber} {mat.page}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <Link
+                href={mat.href}
+                className="button button-secondary button-small text-xs py-1 px-2.5 shrink-0 flex items-center gap-1 font-medium"
+              >
+                {p.openMaterial}
+              </Link>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -547,6 +416,10 @@ function Conversation({
   // Search inside chat
   const [inChatSearch, setInChatSearch] = useState(false);
   const [chatSearchQuery, setChatSearchQuery] = useState("");
+
+  // Share study material modal
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [materialLinkInput, setMaterialLinkInput] = useState("");
 
   // Read receipts preference
   const [readReceipts, setReadReceipts] = useState<boolean>(() => {
@@ -865,13 +738,11 @@ function Conversation({
                     </div>
                   )}
 
-                  <p>
-                    {m.deleted_at
-                      ? v053Copy(locale).deleted
-                      : quoteMatch
-                      ? quoteMatch[2]
-                      : m.body}
-                  </p>
+                  <MessageContent
+                    text={quoteMatch ? quoteMatch[2] : m.body}
+                    deleted={Boolean(m.deleted_at)}
+                    locale={locale}
+                  />
 
                   <div className="message-meta flex items-center justify-between gap-2 mt-1">
                     <time dateTime={m.created_at} className="text-[10px] text-[var(--muted)]">
@@ -965,7 +836,7 @@ function Conversation({
       )}
 
       <form
-        className="message-compose mt-auto p-3 border-t border-[var(--line)] bg-[var(--surface)]"
+        className="message-compose mt-auto"
         onSubmit={(event) => {
           event.preventDefault();
           const cleanText = text.trim();
@@ -1025,11 +896,20 @@ function Conversation({
           </div>
         )}
 
-        <div className="flex items-end gap-2">
-          <label className="min-w-0 flex-1">
+        <div className="message-compose-row">
+          <button
+            type="button"
+            onClick={() => setShowShareModal(true)}
+            className="message-action-btn message-attach-btn"
+            title={p.shareMaterial}
+            aria-label={p.shareMaterial}
+          >
+            <BookOpen className="w-4 h-4" aria-hidden="true" />
+          </button>
+          <label className="min-w-0 flex-1 block">
             <span className="sr-only">{p.message}</span>
             <textarea
-              className="field w-full resize-none"
+              className="message-compose-field"
               rows={2}
               maxLength={2000}
               required
@@ -1049,7 +929,8 @@ function Conversation({
             />
           </label>
           <button
-            className="button flex items-center justify-center p-3 h-10 w-10 shrink-0"
+            type="submit"
+            className="message-action-btn message-send-btn"
             disabled={pending || !text.trim() || thread.blocked}
             aria-label={p.send}
             title={p.send}
@@ -1058,279 +939,90 @@ function Conversation({
           </button>
         </div>
       </form>
-    </section>
-  );
-}
 
-function StudyGroupChat({
-  group,
-  userId,
-  onBack,
-  onChanged,
-  onRemoved,
-}: {
-  group: StudyGroup;
-  userId: string;
-  onBack: () => void;
-  onChanged:()=>Promise<void>;
-  onRemoved:()=>void;
-}) {
-  const { locale } = useI18n(),
-    p = communityCopy(locale);
-  const [messages, setMessages] = useState<StudyGroupMessage[]>([]);
-  const [loading,setLoading]=useState(true);
-  const [sendError,setSendError]=useState("");
-  const [sending,startSending]=useTransition();
-  const [text, setText] = useState("");
-  const [replyTarget, setReplyTarget] = useState<StudyGroupMessage | null>(null);
-  const [searchOpen,setSearchOpen]=useState(false);
-  const [searchQuery,setSearchQuery]=useState("");
-  const listRef = useRef<HTMLOListElement>(null);
-
-  const refresh=useCallback(async(query=searchQuery)=>{
-    const result=await loadStudyGroupMessages(group.id,undefined,query);
-    if("error" in result){setSendError(result.error==="migration"?"Примените миграцию учебных групп.":p.failed);}
-    else {setMessages(result.data);setSendError("");if(!query){await readStudyGroup(group.id);void onChanged();}}
-    setLoading(false);
-  },[group.id,onChanged,p,searchQuery]);
-  useEffect(()=>{
-    const initial=window.setTimeout(()=>void refresh(),0);
-    const timer=window.setInterval(()=>{if(!document.hidden)void refresh();},10000);
-    return()=>{window.clearTimeout(initial);window.clearInterval(timer);};
-  },[refresh]);
-
-  const addReaction = (messageId: string, emoji: number) => {
-    startSending(async()=>{const result=await toggleStudyGroupReaction(messageId,emoji);if("error" in result)setSendError(p.failed);else await refresh();});
-  };
-
-  const handleSend = (e: React.FormEvent) => {
-    e.preventDefault();
-    const clean = text.trim();
-    if (!clean) return;
-
-    startSending(async()=>{
-      const result=await sendStudyGroupMessage(group.id,clean,crypto.randomUUID(),replyTarget?.id);
-      if("error" in result){setSendError(p.failed);return;}
-      setText("");setReplyTarget(null);await refresh();
-      requestAnimationFrame(() => {
-        if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
-      });
-    });
-  };
-
-  return (
-    <section className="surface-card conversation-panel flex flex-col h-full">
-      <header className="conversation-heading flex items-center justify-between pb-3 border-b border-[var(--line)]">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="icon-button conversation-back"
-            onClick={onBack}
-            aria-label={v053Copy(locale).previous}
+      {showShareModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="share-material-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => setShowShareModal(false)}
+        >
+          <div
+            className="surface-card w-full max-w-md p-5 border border-[var(--glass-border)] rounded-2xl shadow-2xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
           >
-            ←
-          </button>
-          <div className="relative"><GroupAvatar group={group}/></div>
-          <div>
-            <h2 className="section-title text-base sm:text-lg font-semibold text-[var(--ink)] leading-snug">
-              {group.name}
-            </h2>
-            <span className="text-xs text-[var(--muted)]">
-              {group.subject} · {group.members_count} участников
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <button type="button" className="icon-button" aria-label="Поиск в группе" onClick={()=>setSearchOpen(value=>!value)}><Search className="w-4 h-4"/></button>
-          <button type="button" className="icon-button" aria-label={group.notifications_muted?"Включить уведомления":"Отключить уведомления"} onClick={()=>startSending(async()=>{const result=await setStudyGroupMuted(group.id,!group.notifications_muted);if("ok" in result)await onChanged();})}>{group.notifications_muted?<BellOff className="w-4 h-4"/>:<Bell className="w-4 h-4"/>}</button>
-          <SafetyMenu group={group.id}/>
-        </div>
-      </header>
-
-      {searchOpen&&<form className="group-chat-search" onSubmit={event=>{event.preventDefault();setLoading(true);void refresh(searchQuery);}}><Search className="w-4 h-4"/><input className="field" type="search" maxLength={100} value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Поиск внутри группы…"/><button className="button button-small">Найти</button><button type="button" className="icon-button" aria-label={p.close} onClick={()=>{setSearchQuery("");setSearchOpen(false);void refresh("");}}><X className="w-4 h-4"/></button></form>}
-
-      <div className="p-3 bg-[var(--hover)] border-b border-[var(--line)] text-xs text-[var(--muted)] flex items-center gap-2">
-        <Users className="w-4 h-4 text-[var(--accent)] shrink-0" />
-        <span>{group.description||"Без описания"}</span>
-      </div>
-      {group.pinned_message_id&&<div className="group-pinned"><Pin className="w-3.5 h-3.5"/><span>{messages.find(message=>message.id===group.pinned_message_id)?.body||"Закреплённое сообщение"}</span>{group.role!=="member"&&<button type="button" onClick={()=>startSending(async()=>{await pinStudyGroupMessage(group.id,null);await onChanged();})}><X className="w-3.5 h-3.5"/></button>}</div>}
-
-      <GroupManagement group={group} userId={userId} busy={sending} run={startSending} onChanged={onChanged} onRemoved={onRemoved}/>
-
-      <ol
-        ref={listRef}
-        className="message-history flex-1 overflow-y-auto px-4 py-2 space-y-3"
-        aria-label={group.name}
-      >
-        {loading ? (
-          <li className="conversation-empty p-8 text-center text-sm text-[var(--muted)]">{p.loading}</li>
-        ) : messages.length === 0 ? (
-          <li className="conversation-empty p-8 text-center text-sm text-[var(--muted)]">
-            {locale === "kk"
-              ? "Әзірге хабарламалар жоқ. Алғашқы болып жазыңыз."
-              : locale === "en"
-              ? "No messages yet. Start the conversation."
-              : "Сообщений пока нет. Начните обсуждение первым."}
-          </li>
-        ) : (
-          messages.map((m) => {
-            const isOwn = m.sender_id === userId;
-            const replied=messages.find(candidate=>candidate.id===m.reply_to);
-
-            return (
-              <li
-                key={m.id}
-                className={`group relative flex flex-col ${
-                  isOwn ? "items-end" : "items-start"
-                }`}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 font-semibold text-sm text-[var(--ink)]">
+                <BookOpen className="w-4 h-4 text-[var(--accent)]" />
+                <span id="share-material-title">{p.shareMaterial}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowShareModal(false)}
+                className="icon-button p-1 text-[var(--muted)] hover:text-[var(--ink)]"
+                aria-label={p.close}
               >
-                <span className="text-[11px] font-semibold text-[var(--muted)] mb-0.5 px-1">
-                  {m.author}
-                </span>
-                <div
-                  className={`message-bubble relative max-w-[85%] ${
-                    isOwn ? "message-own" : ""
-                  }`}
-                >
-                  {replied&&<div className="message-quote"><strong>{replied.author}</strong>: {replied.deleted_at?"Сообщение удалено":replied.body.slice(0,100)}</div>}
-                  <p className={m.deleted_at?"italic text-[var(--muted)]":""}>{m.deleted_at?"Сообщение удалено":m.body}</p>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-                  <div className="message-meta mt-1 text-[10px] text-[var(--muted)]">
-                    <time dateTime={m.created_at}>
-                      {new Intl.DateTimeFormat(locale, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }).format(new Date(m.created_at))}
-                    </time>
-                  </div>
+            <p className="text-xs text-[var(--muted)] leading-relaxed">
+              {p.pasteMaterialLink}
+            </p>
 
-                  {m.reactions && Object.keys(m.reactions).length > 0 && (
-                    <div className="message-reactions">
-                      {Object.entries(m.reactions).map(([emoji, count]) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          className="message-reaction-badge"
-                          onClick={() => addReaction(m.id,Number(emoji))}
-                        >
-                          <span>{EMOJI_REACTIONS[Number(emoji)]??"👍"}</span>
-                          <span className="font-semibold">{count}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+            <div>
+              <input
+                type="text"
+                value={materialLinkInput}
+                onChange={(e) => setMaterialLinkInput(e.target.value)}
+                placeholder={p.materialLinkPlaceholder}
+                className="field text-xs w-full py-2 px-3"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const trimmed = materialLinkInput.trim();
+                    if (!trimmed) return;
+                    setText((prev) => (prev.trim() ? `${prev.trim()} ${trimmed}` : trimmed));
+                    saveDraft(text.trim() ? `${text.trim()} ${trimmed}` : trimmed);
+                    setMaterialLinkInput("");
+                    setShowShareModal(false);
+                  }
+                }}
+              />
+            </div>
 
-                {!m.deleted_at&&<div
-                  className={`message-actions-hover opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1 ${
-                    isOwn ? "mr-1" : "ml-1"
-                  }`}
-                >
-                  {EMOJI_REACTIONS.map((emoji,index) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => addReaction(m.id,index)}
-                      className="p-1 text-xs hover:scale-125 transition-transform"
-                      title={emoji}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => setReplyTarget(m)}
-                    className="p-1 text-xs text-[var(--muted)] hover:text-[var(--accent)] flex items-center gap-0.5"
-                    title={p.reply}
-                  >
-                    <Reply className="w-3.5 h-3.5" />
-                  </button>
-                  {group.role!=="member"&&<button type="button" className="p-1 text-[var(--muted)]" title="Закрепить" onClick={()=>startSending(async()=>{const result=await pinStudyGroupMessage(group.id,m.id);if("ok" in result)await onChanged();})}><Pin className="w-3.5 h-3.5"/></button>}
-                  {(isOwn||group.role!=="member")&&<button type="button" className="p-1 text-[var(--muted)]" title="Удалить" onClick={()=>startSending(async()=>{const result=await deleteStudyGroupMessage(m.id);if("ok" in result)await refresh();})}><Trash2 className="w-3.5 h-3.5"/></button>}
-                  {!isOwn&&<SafetyMenu peer={m.sender_id} groupMessage={m.id}/>}
-                </div>}
-              </li>
-            );
-          })
-        )}
-      </ol>
-
-      <form
-        className="message-compose mt-auto p-3 border-t border-[var(--line)] bg-[var(--surface)]"
-        onSubmit={handleSend}
-      >
-        {sendError&&<p role="alert" className="form-error">{sendError}</p>}
-        {replyTarget && (
-          <div className="message-reply-preview">
-            <span className="truncate">
-              {p.replyingTo} <strong>{replyTarget.author}</strong>: «
-              {replyTarget.body.slice(0, 60)}…»
-            </span>
-            <button
-              type="button"
-              onClick={() => setReplyTarget(null)}
-              className="p-1 hover:text-[var(--accent)]"
-              aria-label={p.cancelReply}
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowShareModal(false);
+                  setMaterialLinkInput("");
+                }}
+                className="button button-secondary text-xs py-1.5 px-3"
+              >
+                {p.close}
+              </button>
+              <button
+                type="button"
+                disabled={!materialLinkInput.trim()}
+                onClick={() => {
+                  const trimmed = materialLinkInput.trim();
+                  if (!trimmed) return;
+                  setText((prev) => (prev.trim() ? `${prev.trim()} ${trimmed}` : trimmed));
+                  saveDraft(text.trim() ? `${text.trim()} ${trimmed}` : trimmed);
+                  setMaterialLinkInput("");
+                  setShowShareModal(false);
+                }}
+                className="button text-xs py-1.5 px-3 flex items-center gap-1.5"
+              >
+                {p.attach}
+              </button>
+            </div>
           </div>
-        )}
-
-        <div className="flex items-end gap-2">
-          <label className="min-w-0 flex-1">
-            <span className="sr-only">{p.message}</span>
-            <textarea
-              className="field w-full resize-none"
-              rows={2}
-              maxLength={2000}
-              required
-              value={text}
-              disabled={sending||(group.admins_only_post&&group.role==="member")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  e.currentTarget.form?.requestSubmit();
-                }
-              }}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={group.admins_only_post&&group.role==="member"?"Писать могут только администраторы":"Написать в учебную группу…"}
-            />
-          </label>
-          <button
-            type="submit"
-            className="button flex items-center justify-center p-3 h-10 w-10 shrink-0"
-            disabled={!text.trim()||sending||(group.admins_only_post&&group.role==="member")}
-            aria-label={p.send}
-            title={p.send}
-          >
-            <PaperPlaneIcon className="w-4 h-4" aria-hidden="true" />
-          </button>
         </div>
-      </form>
+      )}
     </section>
   );
-}
-
-const AUDIT_LABELS=["Группа создана","Отправлены приглашения","Приглашение принято","Приглашение отклонено","Создан код","Вход по коду","Код отозван","Настройки изменены","Роль изменена","Участник удалён","Сообщение удалено","Сообщение закреплено"];
-
-function GroupManagement({group,userId,busy,run,onChanged,onRemoved}:{group:StudyGroup;userId:string;busy:boolean;run:React.TransitionStartFunction;onChanged:()=>Promise<void>;onRemoved:()=>void}){
-  const [members,setMembers]=useState<StudyGroupMember[]>([]),[people,setPeople]=useState<StudyGroupPerson[]>([]),[audit,setAudit]=useState<StudyGroupAudit[]>([]);
-  const [selected,setSelected]=useState<string[]>([]),[peopleQuery,setPeopleQuery]=useState(""),[code,setCode]=useState(""),[hours,setHours]=useState(24),[uses,setUses]=useState(10),[error,setError]=useState("");
-  const [settings,setSettings]=useState({name:group.name,subject:group.subject,description:group.description,icon:group.avatar_icon,color:group.avatar_color,adminsOnly:group.admins_only_post,membersInvite:group.members_can_invite});
-  const canManage=group.role!=="member",canInvite=canManage||group.members_can_invite;
-  const load=useCallback(async()=>{const tasks=[loadStudyGroupMembers(group.id),canInvite?loadStudyGroupFriends(group.id):Promise.resolve({data:[] as StudyGroupPerson[]}),canManage?loadStudyGroupAudit(group.id):Promise.resolve({data:[] as StudyGroupAudit[]})] as const;const [m,f,a]=await Promise.all(tasks);if("data" in m)setMembers(m.data);if("data" in f)setPeople(f.data);if("data" in a)setAudit(a.data);},[canInvite,canManage,group.id]);
-  const act=(work:()=>Promise<unknown>,reload=true)=>run(async()=>{setError("");try{const result=await work();if(result&&typeof result==="object"&&"error" in result){setError("Не удалось выполнить действие.");return;}if(reload)await load();await onChanged();}catch{setError("Не удалось выполнить действие.");}});
-  return <details className="group-management" onToggle={event=>{if(event.currentTarget.open)void load();}}>
-    <summary><Settings className="w-4 h-4"/><span>Управление группой</span><small>{group.role==="owner"?"Владелец":group.role==="admin"?"Администратор":"Участник"}</small></summary>
-    <div className="group-management-body">
-      {canManage&&<section><h3>Настройки</h3><div className="group-settings-grid"><input className="field" maxLength={80} value={settings.name} onChange={e=>setSettings(v=>({...v,name:e.target.value}))}/><input className="field" maxLength={80} value={settings.subject} onChange={e=>setSettings(v=>({...v,subject:e.target.value}))}/><textarea className="field" maxLength={500} rows={2} value={settings.description} onChange={e=>setSettings(v=>({...v,description:e.target.value}))}/></div><div className="group-avatar-options">{GROUP_AVATARS.map((icon,index)=><button key={icon} type="button" aria-pressed={settings.icon===index} onClick={()=>setSettings(v=>({...v,icon:index}))}>{icon}</button>)}</div><div className="group-color-options">{GROUP_COLORS.map((color,index)=><button key={color} type="button" aria-label={`Цвет ${index+1}`} aria-pressed={settings.color===index} style={{background:color}} onClick={()=>setSettings(v=>({...v,color:index}))}/>)}</div><label className="group-check"><input type="checkbox" checked={settings.adminsOnly} onChange={e=>setSettings(v=>({...v,adminsOnly:e.target.checked}))}/>Только администраторы могут писать</label><label className="group-check"><input type="checkbox" checked={settings.membersInvite} onChange={e=>setSettings(v=>({...v,membersInvite:e.target.checked}))}/>Участники могут приглашать друзей</label><button className="button button-small" disabled={busy} onClick={()=>act(()=>updateStudyGroup({group:group.id,...settings}),false)}>Сохранить</button></section>}
-      {canInvite&&<section><h3><UserPlus className="inline w-4 h-4"/> Пригласить людей</h3><form className="group-people-search" onSubmit={e=>{e.preventDefault();run(async()=>{const result=await searchStudyGroupPeople(group.id,peopleQuery);if("data" in result)setPeople(result.data);else setError("Введите не менее 2 символов.");});}}><input className="field" value={peopleQuery} onChange={e=>setPeopleQuery(e.target.value)} minLength={2} maxLength={60} placeholder="Найти любого по имени…"/><button className="button button-secondary button-small">Найти</button></form><div className="group-people-list">{people.length===0?<small>Друзья появятся здесь. Можно также найти любого пользователя.</small>:people.map(person=><label key={person.id}><input type="checkbox" disabled={person.member||person.invited} checked={selected.includes(person.id)} onChange={e=>setSelected(old=>e.target.checked?[...old,person.id]:old.filter(id=>id!==person.id))}/><span>{person.display_name}{person.friend&&<small>друг</small>}</span><em>{person.member?"уже в группе":person.invited?"приглашён":""}</em></label>)}</div><button className="button button-small" disabled={busy||selected.length===0} onClick={()=>act(async()=>{await inviteStudyGroupMembers(group.id,selected);setSelected([]);})}>Отправить приглашения ({selected.length})</button></section>}
-      {canManage&&<section><h3><Link2 className="inline w-4 h-4"/> Ссылка и код приглашения</h3><div className="group-code-controls"><label>Часов<input className="field" type="number" min={1} max={168} value={hours} onChange={e=>setHours(Number(e.target.value))}/></label><label>Входов<input className="field" type="number" min={1} max={100} value={uses} onChange={e=>setUses(Number(e.target.value))}/></label><button className="button button-small" onClick={()=>run(async()=>{const result=await createStudyGroupCode(group.id,hours,uses);if("code" in result)setCode(result.code);else setError("Не удалось создать код.");})}>Создать</button></div>{code&&<div className="group-code"><strong>{code}</strong><button className="button button-secondary button-small" onClick={()=>void navigator.clipboard?.writeText(`${window.location.origin}/messages?groupCode=${code}`)}>Копировать ссылку</button><button className="button button-secondary button-small" onClick={()=>act(async()=>{await revokeStudyGroupCode(group.id);setCode("");})}>Отозвать</button></div>}</section>}
-      <section><h3>Участники</h3><div className="group-member-list">{members.map(member=><div key={member.user_id}><span><strong>{member.display_name}</strong><small>{member.role==="owner"?"владелец":member.role==="admin"?"администратор":"участник"}</small></span>{group.role==="owner"&&member.role!=="owner"&&<button className="button button-secondary button-small" onClick={()=>act(()=>setStudyGroupMemberRole(group.id,member.user_id,member.role==="admin"?"member":"admin"))}>{member.role==="admin"?"Снять админа":"Сделать админом"}</button>}{canManage&&member.user_id!==userId&&member.role!=="owner"&&!(group.role==="admin"&&member.role==="admin")&&<button className="icon-button group-danger" aria-label="Удалить участника" onClick={()=>act(()=>removeStudyGroupMember(group.id,member.user_id))}><Trash2 className="w-4 h-4"/></button>}</div>)}</div></section>
-      {canManage&&<section><h3>Журнал действий</h3><ol className="group-audit">{audit.slice(0,20).map(item=><li key={item.id}><span>{AUDIT_LABELS[item.action]??"Действие"}</span><small>{item.actor_name} · {new Intl.DateTimeFormat("ru",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(item.created_at))}</small></li>)}</ol></section>}
-      {error&&<p className="form-error" role="alert">{error}</p>}
-      <footer className="group-exit-actions">{group.role==="owner"?<button className="button button-secondary group-danger" disabled={busy} onClick={()=>{if(window.confirm("Удалить группу и всю её историю?"))run(async()=>{const result=await deleteStudyGroup(group.id);if("ok" in result)onRemoved();});}}><Trash2 className="w-4 h-4"/> Удалить группу</button>:<button className="button button-secondary group-danger" disabled={busy} onClick={()=>{if(window.confirm("Выйти из группы?"))run(async()=>{const result=await leaveStudyGroup(group.id);if("ok" in result)onRemoved();});}}>Выйти из группы</button>}</footer>
-    </div>
-  </details>;
 }

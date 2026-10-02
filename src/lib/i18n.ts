@@ -366,7 +366,7 @@ const translations = {
     "Reset filters"
   ],
   "noMaterials": [
-    "Материалы не найдены",
+    "Ничего не найдено",
     "Материалдар табылмады",
     "No materials found"
   ],

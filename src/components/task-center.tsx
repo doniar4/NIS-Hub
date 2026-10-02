@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useEffect,useMemo,useState,useTransition} from "react";
-import {Archive,Bell,BellOff,CalendarDays,Check,CheckCircle2,ChevronRight,Clock3,Flag,ListTodo,Pencil,Plus,CheckSquare} from "lucide-react";
+import {Archive,Bell,BellOff,CalendarDays,Check,CheckCircle2,ChevronRight,Clock3,Flag,ListTodo,Pencil,Plus} from "lucide-react";
 import {savePersonalTask,setPersonalTaskStatus,toggleTaskSubtask,type SaveTaskInput} from "@/app/actions/tasks";
 import type {PersonalTask,SubjectRow,TaskPriority,TaskSubtask} from "@/lib/database.types";
 import {tasksCopy} from "@/lib/tasks-copy";
@@ -249,7 +249,6 @@ export function TaskCenter({initialTasks,subjects,variant="full"}:{initialTasks:
   return sortedTasks(rows).slice(0,variant==="compact"?4:200);
  },[active,completed,filter,tasks,today,variant]);
  const replace=(task:PersonalTask)=>{setTasks(rows=>sortedTasks(rows.some(row=>row.id===task.id)?rows.map(row=>row.id===task.id?task:row):[task,...rows]));setEditing(undefined);setMessage(task.status==="completed"?p.completedMessage:task.status==="archived"?p.archived:p.saved);window.dispatchEvent(new Event("nis-task-change"));window.dispatchEvent(new Event("nis-notifications-change"));};
- const denominator=active.length+completed.length,percent=denominator?Math.round(completed.length/denominator*100):0;
  return <section id="tasks" className={`surface-card task-center task-center-${variant}`}>
   <header className="task-center-header">
    <div className="task-center-heading"><span className="task-center-mark" aria-hidden="true"><ListTodo size={21}/></span><div><h2 className="section-title">{p.title}</h2><p>{variant==="compact"?p.quickHint:p.subtitle}</p></div></div>

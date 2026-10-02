@@ -95,8 +95,11 @@ function EditionForm({id,book,subjects,action,edition,variantId,variants=[]}:Edi
       <input type="hidden" name="id" value={stableId}/><input type="hidden" name="variant_id" value={variantId}/>
       <p className="text-sm text-[var(--muted)]">{p.limits}</p>
       <Field label={p.bookTitle} name="title" required maxLength={200} defaultValue={book?.title ?? ""}/>
+      <label className="block"><span className="field-label">{locale === "kk" ? "Сипаттама" : locale === "en" ? "Description" : "Описание"}</span><textarea className="field min-h-28" name="description" maxLength={1000} defaultValue={book?.description ?? ""}/></label>
+      <Field label={locale === "kk" ? "Тегтер (үтір арқылы)" : locale === "en" ? "Tags (comma-separated)" : "Теги (через запятую)"} name="tags" maxLength={500} defaultValue={book?.tags?.join(", ") ?? ""}/>
       <SelectField label={t.subject} name="subject_id" required options={subjects.map(s => ({ id: s.id, name: subjectName(s,locale) }))} defaultValue={book?.subject_id ?? ""}/>
       <SelectField label={v.grade} name="grade" required options={BOOK_GRADES.map(grade=>({id:String(grade),name:String(grade)}))} defaultValue={book?.grade?String(book.grade):""}/>
+      <SelectField label={locale === "kk" ? "Тоқсан" : locale === "en" ? "Quarter" : "Четверть"} name="quarter" options={[1,2,3,4].map(value=>({id:String(value),name:String(value)}))} defaultValue={book?.quarter ? String(book.quarter) : ""}/>
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label={p.author} name="author" maxLength={200} defaultValue={book?.author ?? ""}/>
         <Field label={p.publisher} name="publisher" maxLength={200} defaultValue={book?.publisher ?? ""}/>

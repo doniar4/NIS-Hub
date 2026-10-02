@@ -25,12 +25,28 @@ export const getCatalogOptions = cache(async () => {
 export async function getLibraryBooks() {
   await requireViewer("/library");
   const supabase = await database();
+  let legacyCatalog = false;
   const catalog=await loadLibraryCatalog(async (after, size) => {
-    let query = supabase.from("books").select("id,title,grade,subject_id")
+    const fetchLegacy = async () => {
+      let legacy = supabase.from("books").select("id,title,grade,subject_id")
+        .eq("publication_status", "published").order("id").limit(size);
+      if (after) legacy = legacy.gt("id", after);
+      const result = await legacy;
+      if (result.error) throw Object.assign(new Error("Could not load library catalog"), { cause: result.error });
+      return result.data.map(book => ({ ...book, description: null, tags: [], quarter: null }));
+    };
+    if (legacyCatalog) return fetchLegacy();
+    let query = supabase.from("books").select("id,title,description,tags,quarter,grade,subject_id")
       .eq("publication_status", "published").order("id").limit(size);
     if (after) query = query.gt("id", after);
     const { data, error } = await query;
-    if (error) throw new Error("Could not load library catalog");
+    if (error) {
+      if ((error.code === "42703" || error.code === "PGRST204") && /\b(description|tags|quarter)\b/.test(error.message)) {
+        legacyCatalog = true;
+        return fetchLegacy();
+      }
+      throw Object.assign(new Error("Could not load library catalog"), { cause: error });
+    }
     return data;
   });
   const readable=new Set<string>();

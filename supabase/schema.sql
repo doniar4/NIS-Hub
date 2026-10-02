@@ -37,6 +37,9 @@ create table public.profiles (
 create table public.books (
   id uuid primary key default gen_random_uuid(),
   title text not null,
+  description text check (char_length(description) <= 1000),
+  tags text[] not null default '{}',
+  quarter smallint check (quarter between 1 and 4),
   subject_id uuid not null references public.subjects(id) on delete restrict,
   class_id uuid references public.classes(id) on delete set null,
   author text,

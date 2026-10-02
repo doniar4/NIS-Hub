@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useEffect, useRef, useState, type FormEvent } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { EyeOpenIcon, EyeNoneIcon } from "@radix-ui/react-icons";
 import { cancelSmsLogin, connectSms, continueSmsLogin, disconnectSms, loadSmsSubject, refreshSms, sendSmsLoginCode } from "@/app/actions/sms";
 import { smsCopy } from "@/lib/sms/copy";
@@ -96,12 +96,12 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
       } catch {}
     }
   }, [details]);
-  async function run(action:()=>Promise<SmsResult>) {
-    const id=++requestId.current; setPending(true);
-    try {const value=await action();if(requestId.current===id){setResult(value);setDetails({});}}
-    catch {if(requestId.current===id)setResult({connected:result.connected,error:"sms_unavailable"});}
-    finally {if(requestId.current===id)setPending(false);}
-  }
+  const run = useCallback(async (action: () => Promise<SmsResult>) => {
+    const id = ++requestId.current; setPending(true);
+    try { const value = await action(); if (requestId.current === id) { setResult(value); setDetails({}); } }
+    catch { if (requestId.current === id) setResult((prev) => ({ connected: prev.connected, error: "sms_unavailable" })); }
+    finally { if (requestId.current === id) setPending(false); }
+  }, []);
   function connect(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if(pending)return;
@@ -179,7 +179,7 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
       return new RegExp(`(^|\\s)${expected}([\\s.-]|$)`).test(label) || new RegExp(`(^|\\s)${numeral}([\\s.-]|$)`).test(label);
     }) ?? snapshot.filters.terms[0];
     void run(() => refreshSms({yearId:snapshot.filters!.yearId,termId:preferred.id}));
-  }, [pending, snapshot]);
+  }, [pending, snapshot, run]);
   function matchingSubject(name:string) {
     const normalize=(value:string)=>value.normalize("NFKC").toLocaleLowerCase().trim();
     const matches=subjects.filter(s=>[s.name,s.name_ru,s.name_kz,s.name_en,s.short_name].some(v=>v&&normalize(v)===normalize(name)));

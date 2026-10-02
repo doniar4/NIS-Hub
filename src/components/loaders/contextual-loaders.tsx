@@ -1,9 +1,16 @@
 "use client";
 
 import { useI18n } from "@/components/locale-provider";
+import { MaterialCardSkeleton, Skeleton, SkeletonIntro, SkeletonPanel, SkeletonRegion, SkeletonRows } from "./skeleton";
+import type { ReactNode } from "react";
+
+function LoadingRegion({ children, label }: { children: ReactNode; label?: string }) {
+  const { t } = useI18n();
+  return <SkeletonRegion label={label ?? t.loading}>{children}</SkeletonRegion>;
+}
 
 /* ==========================================================================
-   Clean Minimalist Animated Loader (Zero Fake Skeletons, Zero Pre-load Clutter)
+   Compact activity indicator for operations without a known content layout
    ========================================================================== */
 export function SimpleAnimatedLoader({ label }: { label?: string }) {
   const { t } = useI18n();
@@ -43,39 +50,41 @@ export function SimpleAnimatedLoader({ label }: { label?: string }) {
    Exported loader aliases for app page loading boundaries
    ========================================================================== */
 export function HubSkeletonLoader() {
-  return <SimpleAnimatedLoader />;
+  return <LoadingRegion><SkeletonIntro /><div className="home-study-dashboard mt-8"><div className="dashboard-primary"><SkeletonPanel /><SkeletonPanel><SkeletonRows count={4} /></SkeletonPanel></div><div className="dashboard-secondary"><SkeletonPanel /><SkeletonPanel /><SkeletonPanel /></div></div></LoadingRegion>;
 }
 
 export function ScheduleSkeletonLoader() {
-  return <SimpleAnimatedLoader />;
+  return <LoadingRegion><SkeletonIntro /><div className="nis-skeleton-toolbar"><Skeleton height="3rem" /></div><div className="schedule-day-content"><SkeletonPanel><Skeleton width="55%" height="1.5rem" /><SkeletonRows /></SkeletonPanel><SkeletonPanel /></div></LoadingRegion>;
 }
 
 export function DiarySkeletonLoader() {
-  return <SimpleAnimatedLoader />;
+  return <LoadingRegion><SkeletonIntro /><div className="nis-skeleton-toolbar"><Skeleton height="3rem" /></div><div className="sms-subjects mt-5">{Array.from({ length:4 }, (_, i) => <SkeletonPanel key={i} className="sms-subject" />)}</div></LoadingRegion>;
 }
 
 export function ReaderSkeletonLoader() {
-  return <SimpleAnimatedLoader />;
+  return <LoadingRegion><SkeletonIntro /><div className="nis-skeleton-toolbar"><Skeleton height="2.75rem" /></div><div className="nis-skeleton-reader"><SkeletonPanel className="nis-skeleton-paper"><Skeleton width="65%" height="2rem" /><Skeleton height="65%" /></SkeletonPanel><SkeletonPanel /></div></LoadingRegion>;
 }
 
-export function LibrarySkeletonLoader() {
-  return <SimpleAnimatedLoader />;
+export function LibrarySkeletonLoader({ count = 6 }: { count?: number } = {}) {
+  return <LoadingRegion><SkeletonIntro /><div className="nis-skeleton-library-toggle"><Skeleton height="2.75rem" /></div><div className="nis-skeleton-toolbar nis-skeleton-library-filters"><Skeleton height="3.75rem" /></div><div className="my-5"><Skeleton width="6rem" height="1.25rem" /></div><div className="library-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{Array.from({ length:count }, (_, i) => <MaterialCardSkeleton key={i} />)}</div></LoadingRegion>;
 }
 
 export function ProfileSkeletonLoader() {
-  return <SimpleAnimatedLoader />;
+  return <LoadingRegion><SkeletonPanel className="profile-heading"><Skeleton width="6rem" height="6rem" /><Skeleton width="45%" height="2rem" /></SkeletonPanel><div className="my-5"><Skeleton height="2.75rem" /></div><SkeletonPanel><Skeleton width="40%" height="1.5rem" /><Skeleton height="5rem" /></SkeletonPanel><div className="profile-settings"><SkeletonPanel><Skeleton height="3rem" /><Skeleton height="7rem" /><Skeleton height="3rem" /></SkeletonPanel><SkeletonPanel /></div><div className="profile-reading mt-8 grid gap-6 lg:grid-cols-2"><SkeletonPanel /><SkeletonPanel /></div></LoadingRegion>;
 }
 
 export function ChatSkeletonLoader({ kind, label }: { kind?: string; label?: string } = {}) {
-  return <SimpleAnimatedLoader />;
+  return <LoadingRegion label={label}>{kind === "support" ? <div className="mt-8"><SkeletonPanel><SkeletonRows count={3} /></SkeletonPanel></div> : <div className="messages-layout nis-skeleton-chat"><SkeletonPanel className="messages-index"><Skeleton height="2.75rem" /><SkeletonRows count={5} /></SkeletonPanel><SkeletonPanel className="conversation-panel nis-skeleton-conversation"><Skeleton width="45%" height="2rem" /><Skeleton height="3rem" /></SkeletonPanel></div>}</LoadingRegion>;
 }
 
 export function ContextualSkeletonLoader({
   module,
 }: {
   module?: "hub" | "schedule" | "diary" | "reader" | "library" | "profile" | "chat";
-}) {
-  return <SimpleAnimatedLoader />;
+} = {}) {
+  const loaders = { hub:HubSkeletonLoader, schedule:ScheduleSkeletonLoader, diary:DiarySkeletonLoader, reader:ReaderSkeletonLoader, library:LibrarySkeletonLoader, profile:ProfileSkeletonLoader, chat:ChatSkeletonLoader };
+  const Loader = loaders[module ?? "hub"];
+  return <Loader />;
 }
 
 export function PencilStudyLoader({

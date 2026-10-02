@@ -139,10 +139,19 @@ input:-webkit-autofill:active {
 }
 .button:disabled,.button-secondary:disabled {
   cursor: not-allowed;
-  opacity: .55;
-  background: color-mix(in srgb, white 18%, transparent);
-  border-color: rgba(255, 255, 255, 0.45);
-  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.5);
+  opacity: .5;
+}
+:root:not([data-theme="dark"]) :is(.button, .button-secondary):disabled {
+  background: rgba(0, 20, 50, 0.05) !important;
+  border: 1px solid rgba(0, 20, 50, 0.1) !important;
+  box-shadow: none !important;
+  color: var(--text-secondary) !important;
+}
+:root[data-theme="dark"] :is(.button, .button-secondary):disabled {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+  color: var(--text-secondary) !important;
 }
 
 /* Apple Dark Liquid Glass: calm smoked glass with delicate specular edge and soft atmospheric glow */

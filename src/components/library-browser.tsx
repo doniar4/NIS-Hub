@@ -17,7 +17,6 @@ import { EmptyState, Notice } from "./ui";
 import { subjectName } from "@/lib/i18n";
 
 import {
-  filterBooks,
   initialLibraryFilters,
   libraryFilterUrl,
   type LibraryBook,
@@ -30,6 +29,35 @@ import type {
 } from "@/lib/database.types";
 
 import { SubjectMotif } from "./subject-motif";
+import { createLibrarySearchIndex, searchLibrary } from "@/lib/library-search";
+
+function Highlight({ value, ranges }: { value: string; ranges: readonly [number, number][] }) {
+  if (!ranges.length) return value;
+  const merged = [...ranges].sort((a, b) => a[0] - b[0]).reduce<[number, number][]>((all, range) => {
+    const last = all.at(-1);
+    if (last && range[0] <= last[1] + 1) last[1] = Math.max(last[1], range[1]);
+    else all.push([range[0], range[1]]);
+    return all;
+  }, []);
+  const parts: React.ReactNode[] = [];
+  let cursor = 0;
+  for (const [start, end] of merged) {
+    if (start > cursor) parts.push(value.slice(cursor, start));
+    parts.push(<mark key={`${start}-${end}`}>{value.slice(start, end + 1)}</mark>);
+    cursor = end + 1;
+  }
+  if (cursor < value.length) parts.push(value.slice(cursor));
+  return parts;
+}
+
+function useDebouncedValue<T>(value: T, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delay);
+    return () => window.clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
 
 export function LibraryBrowser({
   books,
@@ -57,6 +85,7 @@ export function LibraryBrowser({
   const [grade, setGrade] = useState(initial.grade);
   const [subject, setSubject] = useState(initial.subject);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const debouncedQ = useDebouncedValue(q, 275);
 
   const [previousInitial, setPreviousInitial] =
     useState(initial);
@@ -70,17 +99,15 @@ export function LibraryBrowser({
     setSubject(initial.subject);
   }
 
-  const filteredBooks = useMemo(
-    () =>
-      filterBooks(books, {
-        q,
-        grade,
-        subject,
-      }).sort((a, b) =>
-        a.title.localeCompare(b.title, locale),
-      ),
-    [books, q, grade, subject, locale],
-  );
+  const searchIndex = useMemo(() => createLibrarySearchIndex(books.map(book => {
+    const row = subjectsById.get(book.subject_id);
+    const subjectLabel = subjectName(row, locale);
+    const subjectNames = row ? [row.name, row.name_ru, row.name_kz, row.name_en, row.short_name].filter((value): value is string => !!value) : [];
+    const quarter = book.quarter ? String(book.quarter) : "";
+    return { ...book, description: book.description ?? null, tags: book.tags ?? [], quarter: book.quarter ?? null, subjectLabel, subjectNames, gradeLabel: book.grade ? `${book.grade} ${locale === "kk" ? "сынып" : locale === "en" ? "grade" : "класс"}` : "", quarterLabels: quarter ? [quarter, `${quarter} ${locale === "kk" ? "тоқсан" : locale === "en" ? "quarter" : "четверть"}`] : [] };
+  })), [books, subjectsById, locale]);
+
+  const { results: filteredBooks, suggestions } = useMemo(() => searchLibrary(searchIndex, debouncedQ, { grade, subject }, locale), [searchIndex, debouncedQ, grade, subject, locale]);
 
   useEffect(() => {
     const restore = () => {
@@ -266,16 +293,17 @@ export function LibraryBrowser({
         aria-atomic="true"
         className="my-5 text-sm text-[var(--muted)]"
       >
-        {t.results}: {filteredBooks.length}
+        {t.results}: {filteredBooks.length}{q !== debouncedQ ? "…" : ""}
       </p>
 
       {!filteredBooks.length ? (
         <EmptyState title={t.noMaterials}>
-          {t.noMaterialsHint}
+          <p>{t.noMaterialsHint}</p>
+          {!!suggestions.length && <div className="search-suggestions"><span>{locale === "kk" ? "Мүмкін, сіз мынаны іздедіңіз:" : locale === "en" ? "Did you mean:" : "Возможно, вы имели в виду:"}</span>{suggestions.map(value => <button type="button" key={value} onClick={() => change({ q: value, grade, subject })}>{value}</button>)}</div>}
         </EmptyState>
       ) : (
         <ul className="library-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredBooks.map((book) => (
+          {filteredBooks.map(({ item: book, titleMatches, subjectMatches, descriptionMatches, tagMatches }) => (
             <li
               key={book.id}
               className="min-w-0"
@@ -284,22 +312,22 @@ export function LibraryBrowser({
               <SubjectMotif subject={subjectsById.get(book.subject_id)} />
 
               <p className="field-label">
-                {subjectName(
-                  subjectsById.get(
-                    book.subject_id,
-                  ),
-                  locale,
-                )}
+                <Highlight value={book.subjectLabel} ranges={subjectMatches} />
               </p>
 
               <h2 className="text-xl font-semibold">
-                {book.title}
+                <Highlight value={book.title} ranges={titleMatches} />
               </h2>
+
+              {book.description && <p className="library-description"><Highlight value={book.description} ranges={descriptionMatches} /></p>}
+
+              {!!book.tags.length && <div className="library-tags" aria-label={locale === "kk" ? "Тегтер" : locale === "en" ? "Tags" : "Теги"}>{book.tags.map(tag => <span key={tag}><Highlight value={tag} ranges={tagMatches.get(tag) ?? []} /></span>)}</div>}
 
               <p className="mt-3 text-sm text-[var(--muted)]">
                 {book.grade
                   ? p.grade + " " + book.grade
                   : ""}
+                {book.quarter ? ` · ${book.quarter} ${locale === "kk" ? "тоқсан" : locale === "en" ? "quarter" : "четверть"}` : ""}
               </p>
 
               <span className="mt-auto pt-5 inline-flex min-h-11 items-center text-sm font-semibold underline">{t.openMaterial}</span>
