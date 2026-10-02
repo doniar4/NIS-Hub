@@ -52,8 +52,8 @@ export async function extractPdfCoverBlob(file: File | ArrayBuffer | Blob): Prom
     return await new Promise<Blob | null>((resolve) => {
       canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.85);
     });
-  } catch (err) {
-    console.error("[extractPdfCoverBlob] Failed to extract page 1 cover:", err);
+  } catch {
+    if (process.env.NODE_ENV === "development") console.error("[extractPdfCoverBlob] cover extraction failed");
     return null;
   }
 }
@@ -108,8 +108,8 @@ export async function extractPdfCoverDataUrlFromUrl(url: string): Promise<string
     await renderTask.promise;
 
     return canvas.toDataURL("image/jpeg", 0.85);
-  } catch (err) {
-    console.error("[extractPdfCoverDataUrlFromUrl] Failed to extract page 1 cover:", err);
+  } catch {
+    if (process.env.NODE_ENV === "development") console.error("[extractPdfCoverDataUrlFromUrl] cover extraction failed");
     return null;
   }
 }

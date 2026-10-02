@@ -16,7 +16,7 @@ export async function saveBook(form:FormData,stage:"prepare"|"finish"):Promise<A
   if(!id.success||!vid.success||!["prepare","finish"].includes(stage))return {error:t.bookInvalid};
   const {data:current,error:readError}=await supabase.from("book_variants").select("*").eq("id",vid.data).maybeSingle();
   if(readError){
-   console.error("[saveBook] Error reading book_variants:", readError);
+   console.error("[saveBook] edition-read-failed", {code: readError.code});
    return {error:t.bookError};
   }
   if(current&&current.book_id!==id.data)return {error:t.bookInvalid};
@@ -45,11 +45,11 @@ export async function saveBook(form:FormData,stage:"prepare"|"finish"):Promise<A
   const coverPath = form.get("cover_path") ? String(form.get("cover_path")) : (uploading ? `books/${vid.data}.jpg` : current?.cover_path ?? null);
   const {error}=await supabase.rpc("save_book_edition",{p_book:{...book,cover_path:coverPath},p_variant:{id:vid.data,language:book.language,storage_path:path,page_count:book.page_count,file_size:size,publication_status:book.variant_status,cover_path:coverPath},p_prepare:stage==="prepare"});
   if(error){
-   console.error("[saveBook] Error in save_book_edition RPC:", error);
+   console.error("[saveBook] edition-save-failed", {code: error.code});
    return {error:t.bookError};
   }
- }catch(err){
-  console.error("[saveBook] Unexpected catch error:", err);
+ }catch{
+  console.error("[saveBook] unexpected-failure");
   return {error:t.bookError};
  }
  if(stage==="finish")revalidatePath("/","layout");
