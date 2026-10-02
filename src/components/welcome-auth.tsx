@@ -3,9 +3,10 @@
 import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useI18n } from "./locale-provider";
+import { AppleSignIn } from "./apple-sign-in";
 import { GoogleSignIn } from "./google-sign-in";
 
-export function WelcomeAuth({ signupForm, loginForm, configured, initialMode = "signup", confirmationFailed = false, callbackFailed = false, googleEnabled = false }: {
+export function WelcomeAuth({ signupForm, loginForm, configured, initialMode = "signup", confirmationFailed = false, callbackFailed = false, googleEnabled = false, appleEnabled = false }: {
   signupForm: ReactNode;
   loginForm: ReactNode;
   configured: boolean;
@@ -13,6 +14,7 @@ export function WelcomeAuth({ signupForm, loginForm, configured, initialMode = "
   confirmationFailed?: boolean;
   callbackFailed?: boolean;
   googleEnabled?: boolean;
+  appleEnabled?: boolean;
 }) {
   const [mode, setMode] = useState<"signup" | "login">(initialMode);
   const id = useId();
@@ -36,8 +38,9 @@ export function WelcomeAuth({ signupForm, loginForm, configured, initialMode = "
     {confirmationFailed && <p className="form-error" role="alert">{t.confirmFailed}</p>}
     {callbackFailed && <p className="form-error" role="alert">{t.authLinkFailed}</p>}
     {!configured && <p className="notice" role="note">{t.authNotConfigured}</p>}
-    {googleEnabled && <div className="welcome-social-auth">
-      <GoogleSignIn />
+    {(googleEnabled || appleEnabled) && <div className="welcome-social-auth">
+      {googleEnabled && <GoogleSignIn />}
+      {appleEnabled && <AppleSignIn />}
       <p className="auth-divider"><span>{t.orEmail}</span></p>
     </div>}
     {(["signup", "login"] as const).map(value => <div key={value} role="tabpanel" id={`${id}-${value}-panel`}

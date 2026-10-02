@@ -770,15 +770,20 @@ const translations = {
     "Google арқылы жалғастыру",
     "Continue with Google"
   ],
+  "continueWithApple": [
+    "Продолжить с Apple",
+    "Apple арқылы жалғастыру",
+    "Continue with Apple"
+  ],
   "orEmail": [
     "или по email",
     "немесе email арқылы",
     "or with email"
   ],
   "oauthError": [
-    "Не удалось начать вход через Google. Повторите попытку позже.",
-    "Google арқылы кіруді бастау мүмкін болмады. Кейінірек қайталаңыз.",
-    "Could not start Google sign-in. Please try again later."
+    "Не удалось начать вход через выбранный сервис. Повторите попытку позже.",
+    "Таңдалған қызмет арқылы кіруді бастау мүмкін болмады. Кейінірек қайталаңыз.",
+    "Could not start social sign-in. Please try again later."
   ],
   "authLinkFailed": [
     "Ссылка входа недействительна или устарела. Начните вход снова.",
