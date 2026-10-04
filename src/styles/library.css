@@ -1,28 +1,6 @@
 .library-workspace {
   margin-top: 2rem;
 }
-.library-tabs {
-  display: flex;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 0.75rem;
-  margin-bottom: 1.75rem;
-}
-.library-tabs button {
-  padding: 0.7rem 1rem;
-  border-radius: 0.5rem;
-  color: var(--muted);
-  min-height: 44px;
-}
-.library-tabs button[aria-current] {
-  background: var(--ink);
-  color: var(--canvas);
-  font-weight: 650;
-}
-.library-tabs button:last-child {
-  margin-left: auto;
-}
 .library-search-fields {
   display: grid;
   grid-template-columns: minmax(12rem, 2fr) minmax(7rem, 0.7fr) minmax(

@@ -179,13 +179,6 @@ test(
       await tab.getByRole("searchbox").fill("Book 61");
       await expect(tab.locator(".library-catalog-card")).toHaveCount(1);
       await expect(tab.getByRole("heading", { name: "Book 61" })).toBeVisible();
-      await tab.getByRole("button", { name: "Activity", exact: true }).click();
-      await expect(
-        tab.getByRole("heading", { name: "Library Activity" }),
-      ).toBeVisible();
-      await expect(tab.getByRole("button", { name: /Book 61/ })).toBeVisible();
-      mkdirSync("/tmp/nis-library-reader", { recursive: true });
-      await tab.screenshot({ path: "/tmp/nis-library-reader/activity.png" });
       await tab.goto(origin + "/reader");
       const canvas = tab.locator('[data-page="1"] canvas');
       await expect(canvas).toBeVisible({ timeout: 20000 });

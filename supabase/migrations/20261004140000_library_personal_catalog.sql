@@ -39,6 +39,8 @@ set search_path = '' as $$
   select string_agg(case when part[1] ~ '^[0-9]+$' then lpad(part[1],20,'0') else part[1] end,'' order by ord)
   from regexp_matches(public.library_fold(value), '([0-9]+|[^0-9]+)', 'g') with ordinality as m(part,ord);
 $$;
+drop function if exists public.library_page(text[],integer,uuid,integer,boolean,uuid,boolean);
+drop function if exists public.library_page(text[],integer,uuid,integer,boolean);
 
 create or replace function public.library_page(p_queries text[] default '{}', p_grade integer default null,
   p_subject uuid default null, p_offset integer default 0, p_secret boolean default false)
@@ -86,4 +88,5 @@ begin
 end $$;
 revoke all on function public.library_page(text[],integer,uuid,integer,boolean) from public,anon;
 grant execute on function public.library_page(text[],integer,uuid,integer,boolean) to authenticated;
+notify pgrst, 'reload schema';
 commit;
