@@ -6,6 +6,8 @@ import type { Database } from "@/lib/database.types";
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   response.headers.set("Cache-Control", "private, no-store");
+  // Bot requests have no browser session. The route validates its own secret/admin ID.
+  if (request.nextUrl.pathname === "/api/telegram/webhook") return response;
   const config = getSupabaseConfig();
   if (!config) return response;
   const supabase = createServerClient<Database>(config.url, config.key, { cookies: {

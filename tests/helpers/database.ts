@@ -7,7 +7,7 @@ export async function phase3Database() {
   try {
     // Models SQL surfaces, NOT GoTrue or the Storage HTTP service.
     await db.exec(`
-      create role anon; create role authenticated; create schema auth; create schema storage;
+      create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create schema storage;
       create table auth.users(id uuid primary key, raw_user_meta_data jsonb default '{}');
       create function auth.uid() returns uuid language sql stable as $$
         select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
