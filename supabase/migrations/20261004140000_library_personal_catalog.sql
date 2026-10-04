@@ -3,30 +3,30 @@ create schema if not exists extensions;
 create extension if not exists pg_trgm with schema extensions;
 grant usage on schema extensions to authenticated;
 
-create table public.library_favorites (
+create table if not exists public.library_favorites (
   user_id uuid not null references auth.users(id) on delete cascade,
   book_id uuid not null references public.books(id) on delete cascade,
   created_at timestamptz not null default now(), primary key(user_id,book_id)
 );
-create table public.library_collections (
+create table if not exists public.library_collections (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null check(char_length(trim(name)) between 1 and 80),
   created_at timestamptz not null default now(), unique(user_id,name), unique(id,user_id)
 );
-create table public.library_collection_books (
+create table if not exists public.library_collection_books (
   user_id uuid not null references auth.users(id) on delete cascade,
   collection_id uuid not null,
   book_id uuid not null references public.books(id) on delete cascade,
   created_at timestamptz not null default now(), primary key(collection_id,book_id),
   foreign key(collection_id,user_id) references public.library_collections(id,user_id) on delete cascade
 );
-create table public.library_search_history (
+create table if not exists public.library_search_history (
   user_id uuid not null references auth.users(id) on delete cascade,
   query text not null check(char_length(trim(query)) between 1 and 100),
   searched_at timestamptz not null default now(), primary key(user_id,query)
 );
-create table public.library_recent_books (
+create table if not exists public.library_recent_books (
   user_id uuid not null references auth.users(id) on delete cascade,
   book_id uuid not null references public.books(id) on delete cascade,
   opened_at timestamptz not null default now(), primary key(user_id,book_id)
@@ -34,13 +34,14 @@ create table public.library_recent_books (
 do $$ declare t text; begin
   foreach t in array array['library_favorites','library_collections','library_collection_books','library_search_history','library_recent_books'] loop
     execute format('alter table public.%I enable row level security',t);
+    execute format('drop policy if exists own_rows on public.%I',t);
     execute format('create policy own_rows on public.%I for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()))',t);
     execute format('grant select,insert,update,delete on public.%I to authenticated',t);
     execute format('revoke all on public.%I from anon',t);
   end loop;
 end $$;
-create index library_history_recent on public.library_search_history(user_id,searched_at desc);
-create index library_recent_opened on public.library_recent_books(user_id,opened_at desc);
+create index if not exists library_history_recent on public.library_search_history(user_id,searched_at desc);
+create index if not exists library_recent_opened on public.library_recent_books(user_id,opened_at desc);
 
 create or replace function public.library_fold(value text) returns text language sql immutable strict parallel safe
 set search_path = '' as $$
