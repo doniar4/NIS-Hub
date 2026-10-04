@@ -3,7 +3,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 
 export type TelegramConfig = {
-  token: string; secret: string; admins: ReadonlySet<number>; authorId: string;
+  token: string; secret: string; authorId: string;
   supabaseUrl: string; serviceKey: string;
 };
 
@@ -12,10 +12,8 @@ export function readTelegramConfig(env: Readonly<Record<string, string | undefin
   const secret = env.TELEGRAM_WEBHOOK_SECRET ?? "";
   const authorId = env.TELEGRAM_HOMEWORK_AUTHOR_ID ?? "";
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-  const rawIds = (env.TELEGRAM_ADMIN_IDS ?? "").split(",").map(s => s.trim());
   if (!/^\d+:[A-Za-z0-9_-]{20,}$/.test(token) || !/^[A-Za-z0-9_-]{32,256}$/.test(secret)
-    || !z.uuid().safeParse(authorId).success || rawIds.length > 100
-    || rawIds.some(s => !/^[1-9]\d*$/.test(s) || !Number.isSafeInteger(Number(s)))) return null;
+    || !z.uuid().safeParse(authorId).success) return null;
   // Reject public/publishable keys. This client must NEVER inherit a browser session.
   let privileged = /^sb_secret_[A-Za-z0-9_-]{20,}$/.test(serviceKey);
   if (!privileged && serviceKey.split(".").length === 3) {
@@ -27,7 +25,7 @@ export function readTelegramConfig(env: Readonly<Record<string, string | undefin
     const url = new URL(env.NEXT_PUBLIC_SUPABASE_URL ?? "");
     const local = url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
     if ((!local && url.protocol !== "https:") || url.username || url.password || url.search || url.hash || url.pathname !== "/") return null;
-    return { token, secret, authorId, serviceKey, supabaseUrl: url.origin, admins: new Set(rawIds.map(Number)) };
+    return { token, secret, authorId, serviceKey, supabaseUrl: url.origin };
   } catch { return null; }
 }
 

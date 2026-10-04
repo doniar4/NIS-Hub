@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   catch { return response(400); }
   if (!input) return response(200);
   // Service-role client is server-only and has no access to browser cookies/tokens.
-  const outcome = await handleHomework(input, config, homeworkStore(config), telegramApi(config.token));
+  const outcome = await handleHomework(input, homeworkStore(config), telegramApi(config.token));
   if (outcome === "retry") console.warn("telegram_homework", { category: "delivery", code: "retry_required" });
   return response(outcome === "ok" ? 200 : 503);
 }

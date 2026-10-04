@@ -1,5 +1,4 @@
 import "server-only";
-import type { TelegramConfig } from "./security";
 import { parseAction, type HomeworkStore, type Incoming, type Reply } from "./types";
 
 export const expiredMessage = "Сессия устарела. Начните снова через /addhomework.";
@@ -23,6 +22,7 @@ export async function homeworkReply(outcome: string, userId: number, store: Home
   if (outcome === "welcome") return { text: "NIS Hub · Домашние задания", reply_markup: { keyboard: [[{ text: addLabel }]], resize_keyboard: true } };
   if (outcome === "published") return { text: "✅ Домашнее задание добавлено в NIS Hub." };
   if (outcome === "cancelled") return { text: "❌ Добавление ДЗ отменено." };
+  if (outcome === "rate_limited") return { text: "⏳ Слишком много добавлений за сегодня. Попробуйте позже." };
   if (outcome === "invalid") return { text: expiredMessage };
   const s = await store.session(userId);
   if (!s || Date.parse(s.expires_at) <= Date.now()) return { text: expiredMessage };
@@ -60,11 +60,11 @@ export async function homeworkReply(outcome: string, userId: number, store: Home
 }
 
 export type BotApi = { answer(id: string): Promise<boolean>; send(chatId: number, reply: Reply): Promise<boolean> };
-export async function handleHomework(input: Incoming, config: TelegramConfig, store: HomeworkStore, api: BotApi): Promise<"ok" | "retry"> {
-  // Do this before any database IO, including unauthorized/expired callbacks.
+export async function handleHomework(input: Incoming, store: HomeworkStore, api: BotApi): Promise<"ok" | "retry"> {
+  // Do this before any database IO, including non-private/expired callbacks.
   if (input.callbackId) await api.answer(input.callbackId);
-  if (!config.admins.has(input.userId) || !input.privateChat) {
-    return await api.send(input.chatId, { text: "⛔ У вас нет доступа." }) ? "ok" : "retry";
+  if (!input.privateChat) {
+    return await api.send(input.chatId, { text: "Используйте бота в личном чате." }) ? "ok" : "retry";
   }
   const action = parseAction(input);
   if (!action) return await api.send(input.chatId, { text: expiredMessage }) ? "ok" : "retry";
