@@ -68,11 +68,11 @@ test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, co
  for(const [engineName,engine]of (process.env.NIS_BROWSER_ENGINE==="chromium"?[["chromium",chromium]]as const:[["chromium",chromium],["webkit",webkit]]as const)){
  const browser=await engine.launch({headless:true,...(engineName==="chromium"&&process.env.NIS_CHROMIUM_PATH?{executablePath:process.env.NIS_CHROMIUM_PATH}:{})});
  try{const page=await browser.newPage({viewport:{width:1280,height:900}}),errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
- await page.goto(origin+"/library");await expect(page.locator(".library-card")).toHaveCount(125);await page.waitForLoadState("networkidle");
+ await page.goto(origin+"/library");await expect(page.locator(".library-material-link")).toHaveCount(24);await page.waitForLoadState("networkidle");
  const network:string[]=[];const track=(r:{url():string})=>network.push(r.url());page.on("request",track);
  await page.locator('input[type="search"]').last().fill("Physics");await page.getByRole("combobox",{name:"Grade",exact:true}).selectOption("8");await page.getByRole("combobox",{name:"Subject",exact:true}).selectOption(id(21));
  assert.ok(page.url().includes("subject="+id(21)));await page.getByRole("button",{name:"Reset filters"}).click();assert.deepEqual(network,[]);page.off("request",track);
- const card=page.locator(".library-card").first(),box=await card.boundingBox();assert.ok(box);await card.click({position:{x:box.width-5,y:box.height-5}});await page.waitForURL(/\/books\//);
+ const card=page.locator(".library-material-link").first(),box=await card.boundingBox();assert.ok(box);await card.click({position:{x:box.width-5,y:box.height-5}});await page.waitForURL(/\/books\//);
  await page.goto(origin+"/schedule");assert.equal(await page.getByText("NEVER_VISIBLE_TEACHER").count(),0);
  const tab=page.getByRole("tab").nth(1),tabBox=await tab.boundingBox();assert.ok(tabBox);await tab.click({position:{x:tabBox.width-10,y:tabBox.height-10}});await expect(tab).toHaveAttribute("aria-selected","true");await tab.press("ArrowRight");await expect(page.getByRole("tab").nth(2)).toHaveAttribute("aria-selected","true");
  const material=page.locator(".timetable-materials").first();await expect(material).toHaveAttribute("href","/library?subject="+id(20)+"&grade=7");

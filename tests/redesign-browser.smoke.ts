@@ -1,3 +1,4 @@
+import {readerActionBoundary} from "./browser/reader-action-boundary";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
@@ -79,7 +80,7 @@ test("reference redesign: welcome, signup and dashboard themes remain responsive
     platform: "browser",
     jsx: "automatic",
     define: { "process.env": JSON.stringify({ NODE_ENV: "production" }) },
-    plugins: [isolatedBoundaries()],
+    plugins: [readerActionBoundary,isolatedBoundaries()],
   });
   const css = readdirSync(".next/static/css")
     .filter((name) => name.endsWith(".css"))
@@ -233,7 +234,7 @@ test("reference redesign: welcome, signup and dashboard themes remain responsive
     }
     await dashboardPage.setViewportSize({ width: 390, height: 844 });
     await dashboardPage.goto(`${dashboardOrigin}/library?locale=ru`);
-    await expect(dashboardPage.locator(".library-grid li")).toHaveCount(125);
+    await expect(dashboardPage.locator(".library-grid li")).toHaveCount(24);
     await expect(dashboardPage.locator(".library-filter-toggle")).toBeVisible();
     await expect(dashboardPage.locator("#library-filter-fields")).toBeHidden();
     await dashboardPage.locator(".library-filter-toggle").click();

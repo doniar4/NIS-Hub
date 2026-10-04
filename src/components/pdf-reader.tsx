@@ -3,46 +3,42 @@
 import { PdfThumbnails } from "./pdf-thumbnails";
 import { designCopy } from "@/lib/design-copy";
 import { saveReading } from "@/app/actions/reading";
+import {
+  getHighlights,
+  saveHighlight,
+  deleteHighlight as removeHighlight,
+} from "@/app/actions/highlights";
+import { changeLibrary } from "@/app/actions/library";
+import {
+  HIGHLIGHT_COLORS,
+  parseHighlights,
+  type Highlight,
+  type HighlightColor,
+} from "@/lib/pdf-highlights";
 import { useI18n } from "@/components/locale-provider";
 import { BookmarkIcon } from "@/components/icons";
 import { ReloadButton } from "@/components/reload-button";
 import { extractPageText } from "@/lib/pdf-page-text";
-import {
-  isRenderCancellation,
-  reportPdfError,
-} from "@/lib/pdf-reader-errors";
+import { isRenderCancellation, reportPdfError } from "@/lib/pdf-reader-errors";
 import { readerKeyDelta, readerScale } from "@/lib/reader-controls";
 import { v051Copy } from "@/lib/v051-copy";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import type {
   PDFDocumentLoadingTask,
   PDFDocumentProxy,
   RenderTask,
 } from "pdfjs-dist/legacy/build/pdf.mjs";
-import { Maximize2, Minimize2, Share2, Highlighter, Eraser, Check } from "lucide-react";
+import {
+  Maximize2,
+  Minimize2,
+  Share2,
+  Highlighter,
+  Eraser,
+  Check,
+} from "lucide-react";
 
-export const HIGHLIGHT_COLORS = {
-  yellow: "rgba(250, 204, 21, 0.45)",
-  green: "rgba(34, 197, 94, 0.4)",
-  blue: "rgba(59, 130, 246, 0.4)",
-  black: "rgba(15, 23, 42, 0.85)",
-} as const;
-export type HighlightColor = keyof typeof HIGHLIGHT_COLORS;
-export type Highlight = {
-  id: string;
-  page: number;
-  color: HighlightColor;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-};
+export { HIGHLIGHT_COLORS } from "@/lib/pdf-highlights";
+export type { Highlight, HighlightColor } from "@/lib/pdf-highlights";
 
 function PdfPage({
   pdf,
@@ -71,7 +67,10 @@ function PdfPage({
 }) {
   const element = useRef<HTMLDivElement>(null);
   const canvasHost = useRef<HTMLDivElement>(null);
-  const renderedSize = useRef<{ width: number; height: number } | null>(null);
+  const [renderedSize, setRenderedSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const { locale } = useI18n();
 
@@ -123,19 +122,14 @@ function PdfPage({
         });
 
         const viewport = source.getViewport({
-          scale: readerScale(
-            width,
-            height,
-            base.width,
-            base.height,
-            fit,
-            zoom,
-          ),
+          scale: readerScale(width, height, base.width, base.height, fit, zoom),
         });
 
         setPageHeight(viewport.height);
+        setRenderedSize({ width: viewport.width, height: viewport.height });
 
-        const existing = canvasHost.current?.firstElementChild as HTMLCanvasElement | null;
+        const existing = canvasHost.current
+          ?.firstElementChild as HTMLCanvasElement | null;
         if (existing) {
           existing.style.width = `${viewport.width}px`;
           existing.style.height = `${viewport.height}px`;
@@ -157,17 +151,13 @@ function PdfPage({
         task = source.render({
           canvas,
           viewport,
-          transform:
-            ratio === 1
-              ? undefined
-              : [ratio, 0, 0, ratio, 0, 0],
+          transform: ratio === 1 ? undefined : [ratio, 0, 0, ratio, 0, 0],
         });
 
         await task.promise;
 
         if (!cancelled) {
           canvasHost.current?.replaceChildren(canvas);
-          renderedSize.current = { width: viewport.width, height: viewport.height };
         }
       } catch (reason) {
         if (!cancelled && !isRenderCancellation(reason)) {
@@ -191,17 +181,37 @@ function PdfPage({
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!activeTool || activeTool === "eraser") return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
-    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    const x = Math.max(
+      0,
+      Math.min(100, ((e.clientX - rect.left) / rect.width) * 100),
+    );
+    const y = Math.max(
+      0,
+      Math.min(100, ((e.clientY - rect.top) / rect.height) * 100),
+    );
     dragStart.current = { x, y };
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!activeTool || activeTool === "eraser" || !dragStart.current || !onAddHighlight) return;
+    if (
+      !activeTool ||
+      activeTool === "eraser" ||
+      !dragStart.current ||
+      !onAddHighlight
+    )
+      return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const curX = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
-    const curY = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    const curX = Math.max(
+      0,
+      Math.min(100, ((e.clientX - rect.left) / rect.width) * 100),
+    );
+    const curY = Math.max(
+      0,
+      Math.min(100, ((e.clientY - rect.top) / rect.height) * 100),
+    );
     const start = dragStart.current;
     dragStart.current = null;
 
@@ -220,14 +230,16 @@ function PdfPage({
       h = Math.max(1.5, h);
     }
 
+    x = Math.min(x, 98);
+    y = Math.min(y, 98.5);
     onAddHighlight({
       id: crypto.randomUUID(),
       page: number,
       color: activeTool,
       x: Number(x.toFixed(2)),
       y: Number(y.toFixed(2)),
-      w: Number(w.toFixed(2)),
-      h: Number(h.toFixed(2)),
+      w: Number(Math.min(w, 100 - x).toFixed(2)),
+      h: Number(Math.min(h, 100 - y).toFixed(2)),
     });
   };
 
@@ -241,38 +253,63 @@ function PdfPage({
       className="relative flex justify-center border-b border-[var(--line)] bg-[var(--surface)] py-3 last:border-b-0"
     >
       <div
-        ref={canvasHost}
         className="w-fit self-start relative"
+        style={
+          renderedSize
+            ? { width: renderedSize.width, height: renderedSize.height }
+            : undefined
+        }
       >
+        <div ref={canvasHost} className="pdf-canvas-host" />
         <div
           className="pdf-highlight-layer"
           style={{
-            cursor: activeTool ? (activeTool === "eraser" ? "pointer" : "crosshair") : "default",
+            pointerEvents: activeTool ? "auto" : "none",
+            touchAction: activeTool ? "none" : "auto",
+            cursor: activeTool
+              ? activeTool === "eraser"
+                ? "pointer"
+                : "crosshair"
+              : "default",
           }}
           onPointerDown={handlePointerDown}
           onPointerUp={handlePointerUp}
+          onPointerCancel={() => {
+            dragStart.current = null;
+          }}
         >
-          {highlights.filter(h => h.page === number).map(h => (
-            <div
-              key={h.id}
-              className="pdf-highlight-item"
-              style={{
-                left: `${h.x}%`,
-                top: `${h.y}%`,
-                width: `${h.w}%`,
-                height: `${h.h}%`,
-                backgroundColor: HIGHLIGHT_COLORS[h.color],
-                mixBlendMode: h.color === "black" ? "normal" : "multiply",
-              }}
-              title={activeTool === "eraser" ? (locale === "kk" ? "Өшіру" : locale === "en" ? "Delete" : "Удалить маркер") : undefined}
-              onClick={(e) => {
-                if (activeTool === "eraser" && onDeleteHighlight) {
-                  e.stopPropagation();
-                  onDeleteHighlight(h.id);
+          {highlights
+            .filter((h) => h.page === number)
+            .map((h) => (
+              <div
+                key={h.id}
+                className="pdf-highlight-item"
+                style={{
+                  left: `${h.x}%`,
+                  top: `${h.y}%`,
+                  width: `${h.w}%`,
+                  height: `${h.h}%`,
+                  backgroundColor: HIGHLIGHT_COLORS[h.color],
+                  mixBlendMode: h.color === "black" ? "normal" : "multiply",
+                  pointerEvents: activeTool === "eraser" ? "auto" : "none",
+                }}
+                title={
+                  activeTool === "eraser"
+                    ? locale === "kk"
+                      ? "Өшіру"
+                      : locale === "en"
+                        ? "Delete"
+                        : "Удалить маркер"
+                    : undefined
                 }
-              }}
-            />
-          ))}
+                onClick={(e) => {
+                  if (activeTool === "eraser" && onDeleteHighlight) {
+                    e.stopPropagation();
+                    onDeleteHighlight(h.id);
+                  }
+                }}
+              />
+            ))}
         </div>
       </div>
 
@@ -281,8 +318,8 @@ function PdfPage({
           {locale === "kk"
             ? `${number}-бет жүктелуде…`
             : locale === "en"
-            ? `Loading page ${number}…`
-            : `Загрузка страницы ${number}…`}
+              ? `Loading page ${number}…`
+              : `Загрузка страницы ${number}…`}
         </p>
       )}
 
@@ -291,8 +328,8 @@ function PdfPage({
           {locale === "kk"
             ? `${number}-бетті көрсету мүмкін болмады.`
             : locale === "en"
-            ? `Could not display page ${number}.`
-            : `Не удалось отобразить страницу ${number}.`}
+              ? `Could not display page ${number}.`
+              : `Не удалось отобразить страницу ${number}.`}
         </p>
       )}
     </div>
@@ -313,7 +350,7 @@ export function PdfReader({
   const { t, locale } = useI18n();
   const v = v051Copy(locale);
   const c = designCopy(locale);
-  const [thumbnails,setThumbnails]=useState(false);
+  const [thumbnails, setThumbnails] = useState(false);
 
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
   const [page, setPage] = useState(initialPage);
@@ -324,7 +361,11 @@ export function PdfReader({
   const [width, setWidth] = useState(() => {
     if (typeof window !== "undefined") {
       const isDesktop = window.innerWidth >= 1280;
-      const approx = isDesktop ? window.innerWidth - 420 : window.innerWidth >= 768 ? window.innerWidth - 260 : window.innerWidth - 32;
+      const approx = isDesktop
+        ? window.innerWidth - 420
+        : window.innerWidth >= 768
+          ? window.innerWidth - 260
+          : window.innerWidth - 32;
       return Math.max(180, Math.floor(approx));
     }
     return 800;
@@ -352,24 +393,77 @@ export function PdfReader({
   const readerRef = useRef<HTMLElement>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
-  const [activeTool, setActiveTool] = useState<HighlightColor | "eraser" | null>(null);
-  const [highlights, setHighlights] = useState<Highlight[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(`nis-highlights-${variantId}`);
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    return [];
-  });
+  const [activeTool, setActiveTool] = useState<
+    HighlightColor | "eraser" | null
+  >(null);
+  const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const highlightKey = useRef<string | null>(null);
+  const highlightsReady = useRef(false);
+  const [highlightMessage, setHighlightMessage] = useState("");
+  const [legacyHighlights, setLegacyHighlights] = useState<Highlight[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    highlightsReady.current = false;
+    highlightKey.current = null;
+    startTransition(async () => {
+      const result = await getHighlights(variantId).catch(()=>({ok:false as const}));
+      if (cancelled) return;
+      if (result.ok) {
+        highlightKey.current = `nis-highlights-${result.userId}-${variantId}`;
+        let local: Highlight[] = [];
+        try {
+          local = parseHighlights(
+            JSON.parse(localStorage.getItem(highlightKey.current) ?? "[]"),
+          );
+        } catch {}
+        try {
+          setLegacyHighlights(
+            parseHighlights(
+              JSON.parse(
+                localStorage.getItem(`nis-highlights-${variantId}`) ?? "[]",
+              ),
+            ),
+          );
+        } catch {}
+        const merged = [
+          ...result.highlights,
+          ...local.filter((h) => !result.highlights.some((s) => s.id === h.id)),
+        ];
+        setHighlights(merged);
+        const unsynced: Highlight[] = [];
+        for (const h of local.filter(
+          (h) => !result.highlights.some((s) => s.id === h.id),
+        )) {
+          const saved = await saveHighlight(variantId, h).catch(()=>({ok:false}));
+          if (!saved.ok) unsynced.push(h);
+        }
+        try {
+          localStorage.setItem(highlightKey.current, JSON.stringify(unsynced));
+        } catch {}
+      } else
+        setHighlightMessage(
+          locale === "ru"
+            ? "Не удалось загрузить маркеры. Новые отметки останутся в этой вкладке до перезагрузки."
+            : locale === "kk"
+              ? "Маркерлер жүктелмеді. Жаңа белгілер осы қойындыда ғана сақталады."
+              : "Could not load highlights. New marks will remain in this tab until reload.",
+        );
+      highlightsReady.current = true;
+      await changeLibrary({ kind: "recent", bookId }).catch(()=>undefined);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [variantId, bookId, locale]);
 
-  const [scrollRoot, setScrollRoot] =
-    useState<HTMLDivElement | null>(null);
+  const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const onFullscreenChange = () => setFullscreen(Boolean(document.fullscreenElement));
+    const onFullscreenChange = () =>
+      setFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
   }, []);
 
   useEffect(() => {
@@ -378,7 +472,8 @@ export function PdfReader({
     const onWheel = (e: WheelEvent) => {
       e.stopPropagation();
       const atTop = el.scrollTop <= 0 && e.deltaY < 0;
-      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1 && e.deltaY > 0;
+      const atBottom =
+        el.scrollTop + el.clientHeight >= el.scrollHeight - 1 && e.deltaY > 0;
       if (atTop || atBottom) {
         e.preventDefault();
       }
@@ -387,36 +482,109 @@ export function PdfReader({
     return () => el.removeEventListener("wheel", onWheel);
   }, [scrollRoot]);
 
-  const addHighlight = useCallback((hl: Highlight) => {
-    setHighlights(prev => {
-      const next = [...prev, hl];
-      try { localStorage.setItem(`nis-highlights-${variantId}`, JSON.stringify(next)); } catch {}
-      return next;
-    });
-  }, [variantId]);
+  const addHighlight = useCallback(
+    (hl: Highlight) => {
+      if (!highlightsReady.current) return;
+      const key = highlightKey.current;
+      try {
+        if (key)
+          localStorage.setItem(
+            key,
+            JSON.stringify([
+              ...parseHighlights(JSON.parse(localStorage.getItem(key) ?? "[]")),
+              hl,
+            ]),
+          );
+      } catch {}
+      setHighlights((prev) => {
+        const next = [...prev, hl];
+        return next;
+      });
+      startTransition(async () => {
+        const result = await saveHighlight(variantId, hl).catch(()=>({ok:false}));
+        if (result.ok) {
+          try {
+            if (key)
+              localStorage.setItem(
+                key,
+                JSON.stringify(
+                  parseHighlights(
+                    JSON.parse(localStorage.getItem(key) ?? "[]"),
+                  ).filter((h) => h.id !== hl.id),
+                ),
+              );
+          } catch {}
+        } else
+          setHighlightMessage(
+            locale === "ru"
+              ? "Маркер не синхронизирован. Локальная копия сохранена, если хранилище браузера доступно."
+              : locale === "kk"
+                ? "Маркер синхрондалмады. Браузер қоймасы қолжетімді болса, жергілікті көшірме сақталды."
+                : "Highlight not synced. A local copy was saved if browser storage is available.",
+          );
+      });
+    },
+    [variantId, locale],
+  );
 
-  const deleteHighlight = useCallback((id: string) => {
-    setHighlights(prev => {
-      const next = prev.filter(h => h.id !== id);
-      try { localStorage.setItem(`nis-highlights-${variantId}`, JSON.stringify(next)); } catch {}
-      return next;
-    });
-  }, [variantId]);
+  const deleteHighlight = useCallback(
+    (id: string) => {
+      const removed = highlights.find((h) => h.id === id);
+      try {
+        if (highlightKey.current)
+          localStorage.setItem(
+            highlightKey.current,
+            JSON.stringify(
+              parseHighlights(
+                JSON.parse(localStorage.getItem(highlightKey.current) ?? "[]"),
+              ).filter((h) => h.id !== id),
+            ),
+          );
+      } catch {}
+      setHighlights((prev) => {
+        const next = prev.filter((h) => h.id !== id);
+        return next;
+      });
+      startTransition(async () => {
+        const result = await removeHighlight(variantId, id).catch(()=>({ok:false}));
+        if (!result.ok && removed) {
+          setHighlights((prev) => [...prev, removed]);
+          setHighlightMessage(
+            locale === "ru"
+              ? "Не удалось удалить маркер с сервера. Повторите попытку."
+              : locale === "kk"
+                ? "Маркер серверден жойылмады. Қайталап көріңіз."
+                : "Could not delete the highlight from the server. Please retry.",
+          );
+        }
+      });
+    },
+    [variantId, highlights, locale],
+  );
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      readerRef.current?.requestFullscreen?.().then(() => setFullscreen(true)).catch(() => {
-        setFullscreen(prev => !prev);
-      });
+      readerRef.current
+        ?.requestFullscreen?.()
+        .then(() => setFullscreen(true))
+        .catch(() => {
+          setFullscreen((prev) => !prev);
+        });
     } else {
-      document.exitFullscreen?.().then(() => setFullscreen(false)).catch(() => {
-        setFullscreen(false);
-      });
+      document
+        .exitFullscreen?.()
+        .then(() => setFullscreen(false))
+        .catch(() => {
+          setFullscreen(false);
+        });
     }
   };
 
   const handleShare = async () => {
-    const url = typeof window !== "undefined" ? `${window.location.origin}/books/${bookId}/read?variant=${variantId}&page=${page}` : "";
+    const url =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/books/${bookId}/read?variant=${variantId}&page=${page}`
+        : "";
     if (navigator.clipboard) {
       await navigator.clipboard.writeText(url);
       setShareCopied(true);
@@ -426,8 +594,10 @@ export function PdfReader({
 
   const positioned = useRef(false);
   const currentPage = useRef(initialPage);
-  const navigationAnchor = useRef<number|null>(initialPage);
-  useEffect(()=>{currentPage.current=page;},[page]);
+  const navigationAnchor = useRef<number | null>(initialPage);
+  useEffect(() => {
+    currentPage.current = page;
+  }, [page]);
 
   const savedPage = useRef<number | null>(null);
 
@@ -440,8 +610,8 @@ export function PdfReader({
   }, [t]);
 
   const visiblePage = useCallback((next: number) => {
-    if(currentPage.current===next)return;
-    currentPage.current=next;
+    if (currentPage.current === next) return;
+    currentPage.current = next;
     setText("");
     setTextFailed(false);
     setPage(next);
@@ -464,16 +634,22 @@ export function PdfReader({
   useEffect(() => {
     if (!viewportRef.current) return;
 
-    const containerWidth = scrollRoot ? scrollRoot.clientWidth : viewportRef.current.clientWidth;
+    const containerWidth = scrollRoot
+      ? scrollRoot.clientWidth
+      : viewportRef.current.clientWidth;
     if (containerWidth > 0) {
       const initialWidth = Math.max(180, Math.floor(containerWidth) - 24);
-      setWidth((current) => (Math.abs(current - initialWidth) >= 8 ? initialWidth : current));
+      setWidth((current) =>
+        Math.abs(current - initialWidth) >= 8 ? initialWidth : current,
+      );
     }
 
     let timer: number | undefined;
     const observer = new ResizeObserver(([entry]) => {
       if (!entry) return;
-      const currentContainerWidth = scrollRoot ? scrollRoot.clientWidth : entry.contentRect.width;
+      const currentContainerWidth = scrollRoot
+        ? scrollRoot.clientWidth
+        : entry.contentRect.width;
       const newWidth = Math.max(180, Math.floor(currentContainerWidth) - 24);
 
       window.clearTimeout(timer);
@@ -495,79 +671,125 @@ export function PdfReader({
 
   const goTo = useCallback(
     (next: number) => {
-      if (
-        !pdf ||
-        !Number.isInteger(next) ||
-        next < 1 ||
-        next > pdf.numPages
-      ) {
+      if (!pdf || !Number.isInteger(next) || next < 1 || next > pdf.numPages) {
         return;
       }
 
       setMessage("");
-      if(currentPage.current!==next){setText("");setTextFailed(false);}
-      currentPage.current=next;
+      if (currentPage.current !== next) {
+        setText("");
+        setTextFailed(false);
+      }
+      currentPage.current = next;
       setPage(next);
 
-      navigationAnchor.current=next;
-      const target=scrollRoot?.querySelector<HTMLElement>(`[data-page="${next}"]`);
-      if(scrollRoot&&target)scrollRoot.scrollTo({
-        top:scrollRoot.scrollTop+target.getBoundingClientRect().top-scrollRoot.getBoundingClientRect().top-scrollRoot.clientTop,
-        behavior:"instant",
-      });
+      navigationAnchor.current = next;
+      const target = scrollRoot?.querySelector<HTMLElement>(
+        `[data-page="${next}"]`,
+      );
+      if (scrollRoot && target)
+        scrollRoot.scrollTo({
+          top:
+            scrollRoot.scrollTop +
+            target.getBoundingClientRect().top -
+            scrollRoot.getBoundingClientRect().top -
+            scrollRoot.clientTop,
+          behavior: "instant",
+        });
     },
     [pdf, scrollRoot],
   );
 
   useEffect(() => {
-    if(!scrollRoot)return;
-    let frame=0;
-    const update=()=>{
-      frame=0;
-      if(navigationAnchor.current!==null)return;
-      const bounds=scrollRoot.getBoundingClientRect(),marker=bounds.top+Math.min(80,bounds.height*.2);
+    if (!scrollRoot) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (navigationAnchor.current !== null) return;
+      const bounds = scrollRoot.getBoundingClientRect(),
+        marker = bounds.top + Math.min(80, bounds.height * 0.2);
       // Preload margins are never evidence of the current reading page.
       const children = scrollRoot.children;
-      for(let i=0; i<children.length; i++){
+      for (let i = 0; i < children.length; i++) {
         const element = children[i] as HTMLElement;
-        if(!element.dataset?.page) continue;
-        const rect=element.getBoundingClientRect();
-        if(rect.bottom>marker&&rect.top<bounds.bottom){visiblePage(Number(element.dataset.page));break;}
+        if (!element.dataset?.page) continue;
+        const rect = element.getBoundingClientRect();
+        if (rect.bottom > marker && rect.top < bounds.bottom) {
+          visiblePage(Number(element.dataset.page));
+          break;
+        }
       }
     };
-    const onScroll=()=>{if(!frame)frame=requestAnimationFrame(update);};
-    const manual=()=>{navigationAnchor.current=null;};
-    scrollRoot.addEventListener("scroll",onScroll,{passive:true});
-    scrollRoot.addEventListener("wheel",manual,{passive:true});
-    scrollRoot.addEventListener("touchstart",manual,{passive:true});
-    scrollRoot.addEventListener("pointerdown",manual);
-    return ()=>{scrollRoot.removeEventListener("scroll",onScroll);scrollRoot.removeEventListener("wheel",manual);scrollRoot.removeEventListener("touchstart",manual);scrollRoot.removeEventListener("pointerdown",manual);cancelAnimationFrame(frame);};
-  },[scrollRoot,visiblePage]);
-
-  useEffect(()=>{
-    if(!scrollRoot||!pdf)return;
-    let frame=0;
-    const anchor=()=>{
-      frame=0;
-      const number=navigationAnchor.current;
-      if(number===null)return;
-      const element=scrollRoot.querySelector<HTMLElement>(`[data-page="${number}"]`);
-      if(element)scrollRoot.scrollTo({top:scrollRoot.scrollTop+element.getBoundingClientRect().top-scrollRoot.getBoundingClientRect().top-scrollRoot.clientTop,behavior:"instant"});
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
     };
-    const observer=new ResizeObserver(()=>{if(!frame)frame=requestAnimationFrame(anchor);});
-    const number=navigationAnchor.current??currentPage.current;
-    const activeEl=scrollRoot.querySelector<HTMLElement>(`[data-page="${number}"]`);
-    if(activeEl)observer.observe(activeEl);
-    return ()=>{observer.disconnect();cancelAnimationFrame(frame);};
-  },[scrollRoot,pdf,page]);
+    const manual = () => {
+      navigationAnchor.current = null;
+    };
+    scrollRoot.addEventListener("scroll", onScroll, { passive: true });
+    scrollRoot.addEventListener("wheel", manual, { passive: true });
+    scrollRoot.addEventListener("touchstart", manual, { passive: true });
+    scrollRoot.addEventListener("pointerdown", manual);
+    return () => {
+      scrollRoot.removeEventListener("scroll", onScroll);
+      scrollRoot.removeEventListener("wheel", manual);
+      scrollRoot.removeEventListener("touchstart", manual);
+      scrollRoot.removeEventListener("pointerdown", manual);
+      cancelAnimationFrame(frame);
+    };
+  }, [scrollRoot, visiblePage]);
 
-  useEffect(()=>{
-    navigationAnchor.current=currentPage.current;
-    if(!scrollRoot)return;
-    const number=currentPage.current;
-    const element=scrollRoot.querySelector<HTMLElement>(`[data-page="${number}"]`);
-    if(element)scrollRoot.scrollTo({top:scrollRoot.scrollTop+element.getBoundingClientRect().top-scrollRoot.getBoundingClientRect().top-scrollRoot.clientTop,behavior:"instant"});
-  },[width,height,fit,zoom,scrollRoot]);
+  useEffect(() => {
+    if (!scrollRoot || !pdf) return;
+    let frame = 0;
+    const anchor = () => {
+      frame = 0;
+      const number = navigationAnchor.current;
+      if (number === null) return;
+      const element = scrollRoot.querySelector<HTMLElement>(
+        `[data-page="${number}"]`,
+      );
+      if (element)
+        scrollRoot.scrollTo({
+          top:
+            scrollRoot.scrollTop +
+            element.getBoundingClientRect().top -
+            scrollRoot.getBoundingClientRect().top -
+            scrollRoot.clientTop,
+          behavior: "instant",
+        });
+    };
+    const observer = new ResizeObserver(() => {
+      if (!frame) frame = requestAnimationFrame(anchor);
+    });
+    const number = navigationAnchor.current ?? currentPage.current;
+    const activeEl = scrollRoot.querySelector<HTMLElement>(
+      `[data-page="${number}"]`,
+    );
+    if (activeEl) observer.observe(activeEl);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [scrollRoot, pdf, page]);
+
+  useEffect(() => {
+    navigationAnchor.current = currentPage.current;
+    if (!scrollRoot) return;
+    const number = currentPage.current;
+    const element = scrollRoot.querySelector<HTMLElement>(
+      `[data-page="${number}"]`,
+    );
+    if (element)
+      scrollRoot.scrollTo({
+        top:
+          scrollRoot.scrollTop +
+          element.getBoundingClientRect().top -
+          scrollRoot.getBoundingClientRect().top -
+          scrollRoot.clientTop,
+        behavior: "instant",
+      });
+  }, [width, height, fit, zoom, scrollRoot]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -577,12 +799,7 @@ export function PdfReader({
 
       event.preventDefault();
 
-      goTo(
-        Math.max(
-          1,
-          Math.min(pdf.numPages, page + delta),
-        ),
-      );
+      goTo(Math.max(1, Math.min(pdf.numPages, page + delta)));
     };
 
     window.addEventListener("keydown", onKey);
@@ -620,9 +837,7 @@ export function PdfReader({
           url: string;
         };
 
-        const pdfjs = await import(
-          "pdfjs-dist/legacy/build/pdf.mjs"
-        );
+        const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
         if (cancelled) return;
 
@@ -638,8 +853,7 @@ export function PdfReader({
           rangeChunkSize: 262144,
           useSystemFonts: true,
           cMapUrl: "/pdfjs/cmaps/",
-          standardFontDataUrl:
-            "/pdfjs/standard_fonts/",
+          standardFontDataUrl: "/pdfjs/standard_fonts/",
           wasmUrl: "/pdfjs/wasm/",
           iccUrl: "/pdfjs/iccs/",
         });
@@ -650,19 +864,13 @@ export function PdfReader({
 
         positioned.current = false;
 
-        setPage((current) =>
-          Math.min(
-            Math.max(1, current),
-            document.numPages,
-          ),
-        );
+        setPage((current) => Math.min(Math.max(1, current), document.numPages));
 
         setPdf(document);
         setBusy(false);
       } catch (reason) {
         if (!cancelled) {
-          const detail =
-            reportPdfError("load", reason) || "";
+          const detail = reportPdfError("load", reason) || "";
 
           setError({
             key: "loadPdfError",
@@ -683,9 +891,7 @@ export function PdfReader({
       if (task) {
         void task
           .destroy()
-          .catch((reason) =>
-            reportPdfError("cleanup", reason),
-          );
+          .catch((reason) => reportPdfError("cleanup", reason));
       }
     };
   }, [attempt, bookId, variantId, locale]);
@@ -712,12 +918,7 @@ export function PdfReader({
 
     void pdf
       .getPage(page)
-      .then((source) =>
-        extractPageText(
-          source,
-          abort.signal,
-        ),
-      )
+      .then((source) => extractPageText(source, abort.signal))
       .then((value) => {
         if (!abort.signal.aborted) {
           setText(value);
@@ -743,25 +944,16 @@ export function PdfReader({
     const timer = window.setTimeout(() => {
       saveQueue.current = saveQueue.current
         .then(async () => {
-          const result = await saveReading(
-            bookId,
-            page,
-            "progress",
-            variantId,
-          );
+          const result = await saveReading(bookId, page, "progress", variantId);
 
           if (result.success) {
             savedPage.current = page;
           }
 
-          setMessage(
-            result.error ?? result.success ?? "",
-          );
+          setMessage(result.error ?? result.success ?? "");
         })
         .catch(() => {
-          setMessage(
-            messages.current.saveError,
-          );
+          setMessage(messages.current.saveError);
         });
     }, 500);
 
@@ -783,28 +975,17 @@ export function PdfReader({
           variantId,
         );
 
-        setMessage(
-          result.error ?? result.success ?? "",
-        );
+        setMessage(result.error ?? result.success ?? "");
 
         if (result.success) {
           setBookmarks((values) =>
             removing
-              ? values.filter(
-                  (value) => value !== current,
-                )
-              : [
-                  ...values,
-                  current,
-                ].sort(
-                  (a, b) => a - b,
-                ),
+              ? values.filter((value) => value !== current)
+              : [...values, current].sort((a, b) => a - b),
           );
         }
       } catch {
-        setMessage(
-          messages.current.saveError,
-        );
+        setMessage(messages.current.saveError);
       }
     });
   }
@@ -816,14 +997,59 @@ export function PdfReader({
       className="pdf-reader"
       data-fullscreen={fullscreen}
     >
-      {error ? (
-        <div
-          className="form-error"
-          role="alert"
+      {highlightMessage && (
+        <p role="status" className="form-error">
+          {highlightMessage}
+        </p>
+      )}
+      {!!legacyHighlights.length && (
+        <button
+          type="button"
+          className="button button-secondary"
+          disabled={pending}
+          onClick={() =>
+            startTransition(async () => {
+              const failed: Highlight[] = [];
+              for (const h of legacyHighlights) {
+                const result = await saveHighlight(variantId, h).catch(()=>({ok:false}));
+                if (result.ok)
+                  setHighlights((prev) =>
+                    prev.some((p) => p.id === h.id) ? prev : [...prev, h],
+                  );
+                else failed.push(h);
+              }
+              setLegacyHighlights(failed);
+              try {
+                if (failed.length)
+                  localStorage.setItem(
+                    `nis-highlights-${variantId}`,
+                    JSON.stringify(failed),
+                  );
+                else localStorage.removeItem(`nis-highlights-${variantId}`);
+              } catch {}
+              if (failed.length)
+                setHighlightMessage(
+                  locale === "ru"
+                    ? "Часть маркеров не импортирована. Повторите попытку."
+                    : locale === "kk"
+                      ? "Кейбір маркерлер импортталмады. Қайталап көріңіз."
+                      : "Some highlights could not be imported. Please retry.",
+                );
+            })
+          }
         >
+          {locale === "ru"
+            ? "Импортировать прежние маркеры из этого браузера"
+            : locale === "kk"
+              ? "Осы браузердегі бұрынғы маркерлерді импорттау"
+              : "Import previous highlights from this browser"}{" "}
+          ({legacyHighlights.length})
+        </button>
+      )}
+      {error ? (
+        <div className="form-error" role="alert">
           <p>
-            {t[error.key]}{" "}
-            {error.detail}
+            {t[error.key]} {error.detail}
           </p>
 
           <ReloadButton
@@ -832,66 +1058,56 @@ export function PdfReader({
               setPdf(null);
               setError(null);
               setBusy(true);
-              setAttempt(
-                (value) => value + 1,
-              );
+              setAttempt((value) => value + 1);
             }}
           >
             {t.reloadPdf}
           </ReloadButton>
         </div>
       ) : (
-        <p
-          className="min-h-6 text-sm text-[var(--muted)]"
-          role="status"
-        >
+        <p className="min-h-6 text-sm text-[var(--muted)]" role="status">
           {busy
             ? t.loadingPage
-            : message ||
-              `${t.page} ${page} ${t.of} ${
-                pdf?.numPages ?? "…"
-              }`}
+            : message || `${t.page} ${page} ${t.of} ${pdf?.numPages ?? "…"}`}
         </p>
       )}
 
       <div className="reader-stage" data-thumbnails={thumbnails}>
-        {pdf&&thumbnails&&<PdfThumbnails pdf={pdf} page={page} onSelect={goTo}/>}
-      <div
-        ref={viewportRef}
-        className="w-full min-w-0"
-      >
-        <div
-          ref={setScrollRoot}
-          className="pdf-scroll-viewport"
-          aria-busy={busy}
-          tabIndex={0}
-          aria-label={t.reader}
-        >
-          {pdf &&
-            Array.from(
-              {
-                length: pdf.numPages,
-              },
-              (_, index) => (
-                <PdfPage
-                  key={index + 1}
-                  pdf={pdf}
-                  number={index + 1}
-                  width={width}
-                  height={height}
-                  fit={fit}
-                  zoom={zoom}
-                  root={scrollRoot}
-                  highlights={highlights}
-                  activeTool={activeTool}
-                  onAddHighlight={addHighlight}
-                  onDeleteHighlight={deleteHighlight}
-                />
-              ),
-            )}
+        {pdf && thumbnails && (
+          <PdfThumbnails pdf={pdf} page={page} onSelect={goTo} />
+        )}
+        <div ref={viewportRef} className="w-full min-w-0">
+          <div
+            ref={setScrollRoot}
+            className="pdf-scroll-viewport"
+            aria-busy={busy}
+            tabIndex={0}
+            aria-label={t.reader}
+          >
+            {pdf &&
+              Array.from(
+                {
+                  length: pdf.numPages,
+                },
+                (_, index) => (
+                  <PdfPage
+                    key={index + 1}
+                    pdf={pdf}
+                    number={index + 1}
+                    width={width}
+                    height={height}
+                    fit={fit}
+                    zoom={zoom}
+                    root={scrollRoot}
+                    highlights={highlights}
+                    activeTool={activeTool}
+                    onAddHighlight={addHighlight}
+                    onDeleteHighlight={deleteHighlight}
+                  />
+                ),
+              )}
+          </div>
         </div>
-      </div>
-
       </div>
       {!busy && !error && (
         <details className="border border-[var(--line)] p-4">
@@ -900,9 +1116,7 @@ export function PdfReader({
           </summary>
 
           <p className="mt-4 whitespace-pre-wrap leading-7">
-            {textFailed
-              ? t.textPdfError
-              : text || t.noText}
+            {textFailed ? t.textPdfError : text || t.noText}
           </p>
         </details>
       )}
@@ -912,17 +1126,12 @@ export function PdfReader({
           aria-label={t.bookBookmarks}
           className="flex flex-wrap items-center gap-2"
         >
-          <span className="mr-2 text-sm">
-            {t.bookmarks}
-          </span>
+          <span className="mr-2 text-sm">{t.bookmarks}</span>
 
           {bookmarks.map((value) => (
             <button
               className="button button-secondary button-small"
-              disabled={
-                !pdf ||
-                value > pdf.numPages
-              }
+              disabled={!pdf || value > pdf.numPages}
               key={value}
               onClick={() => goTo(value)}
             >
@@ -936,41 +1145,35 @@ export function PdfReader({
         <div
           className="reader-controls"
           style={{
-            paddingBottom:
-              "max(0.75rem, env(safe-area-inset-bottom))",
+            paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
           }}
         >
-          <button type="button" className="button button-secondary thumbnail-toggle" disabled={!pdf} aria-pressed={thumbnails} onClick={()=>setThumbnails(value=>!value)} aria-label={c.thumbnails}>▤</button>
+          <button
+            type="button"
+            className="button button-secondary thumbnail-toggle"
+            disabled={!pdf}
+            aria-pressed={thumbnails}
+            onClick={() => setThumbnails((value) => !value)}
+            aria-label={c.thumbnails}
+          >
+            ▤
+          </button>
           <button
             className="button button-secondary"
-            disabled={
-              !pdf ||
-              page <= 1
-            }
-            onClick={() =>
-              goTo(page - 1)
-            }
+            disabled={!pdf || page <= 1}
+            onClick={() => goTo(page - 1)}
           >
             {t.previous}
           </button>
 
-          <span
-            className="self-center tabular-nums"
-            aria-live="polite"
-          >
-            {page} /{" "}
-            {pdf?.numPages ?? "…"}
+          <span className="self-center tabular-nums" aria-live="polite">
+            {page} / {pdf?.numPages ?? "…"}
           </span>
 
           <button
             className="button button-secondary"
-            disabled={
-              !pdf ||
-              page >= pdf.numPages
-            }
-            onClick={() =>
-              goTo(page + 1)
-            }
+            disabled={!pdf || page >= pdf.numPages}
+            onClick={() => goTo(page + 1)}
           >
             {t.next}
           </button>
@@ -984,33 +1187,22 @@ export function PdfReader({
             }}
           >
             <label className="w-24">
-              <span className="field-label">
-                {t.page}
-              </span>
+              <span className="field-label">{t.page}</span>
 
               <input
                 className="field"
                 aria-label={t.pageNumber}
                 type="number"
                 min={1}
-                max={
-                  pdf?.numPages ?? 1
-                }
+                max={pdf?.numPages ?? 1}
                 placeholder={String(page)}
                 value={jump}
                 disabled={!pdf}
-                onChange={(event) =>
-                  setJump(
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => setJump(event.target.value)}
               />
             </label>
 
-            <button
-              className="button button-secondary"
-              disabled={!pdf}
-            >
+            <button className="button button-secondary" disabled={!pdf}>
               {v.jump}
             </button>
           </form>
@@ -1019,46 +1211,21 @@ export function PdfReader({
             <button
               className="button button-secondary"
               aria-label={v.zoomOut}
-              disabled={
-                !pdf ||
-                zoom <= 0.5
-              }
-              onClick={() =>
-                setZoom(
-                  (value) =>
-                    Math.max(
-                      0.5,
-                      value - 0.25,
-                    ),
-                )
-              }
+              disabled={!pdf || zoom <= 0.5}
+              onClick={() => setZoom((value) => Math.max(0.5, value - 0.25))}
             >
               −
             </button>
 
             <span className="text-sm tabular-nums">
-              {Math.round(
-                zoom * 100,
-              )}
-              %
+              {Math.round(zoom * 100)}%
             </span>
 
             <button
               className="button button-secondary"
               aria-label={v.zoomIn}
-              disabled={
-                !pdf ||
-                zoom >= 3
-              }
-              onClick={() =>
-                setZoom(
-                  (value) =>
-                    Math.min(
-                      3,
-                      value + 0.25,
-                    ),
-                )
-              }
+              disabled={!pdf || zoom >= 3}
+              onClick={() => setZoom((value) => Math.min(3, value + 0.25))}
             >
               +
             </button>
@@ -1067,10 +1234,7 @@ export function PdfReader({
           <button
             className="button button-secondary"
             disabled={!pdf}
-            aria-pressed={
-              fit === "width" &&
-              zoom === 1
-            }
+            aria-pressed={fit === "width" && zoom === 1}
             onClick={() => {
               setFit("width");
               setZoom(1);
@@ -1082,10 +1246,7 @@ export function PdfReader({
           <button
             className="button button-secondary"
             disabled={!pdf}
-            aria-pressed={
-              fit === "page" &&
-              zoom === 1
-            }
+            aria-pressed={fit === "page" && zoom === 1}
             onClick={() => {
               setFit("page");
               setZoom(1);
@@ -1102,31 +1263,75 @@ export function PdfReader({
               style={{ padding: "0.25rem 0.5rem", minHeight: "32px" }}
               aria-pressed={activeTool !== null}
               onClick={() => setActiveTool(activeTool ? null : "yellow")}
-              title={locale === "kk" ? "Мәтінді белгілеу (маркер)" : locale === "en" ? "Highlight text" : "Выделение маркером"}
+              title={
+                locale === "kk"
+                  ? "Мәтінді белгілеу (маркер)"
+                  : locale === "en"
+                    ? "Highlight text"
+                    : "Выделение маркером"
+              }
             >
-              <Highlighter size={15} style={{ color: activeTool && activeTool !== "eraser" ? (activeTool === "yellow" ? "#eab308" : activeTool === "green" ? "#22c55e" : activeTool === "blue" ? "#3b82f6" : "#000") : "inherit" }} />
+              <Highlighter
+                size={15}
+                style={{
+                  color:
+                    activeTool && activeTool !== "eraser"
+                      ? activeTool === "yellow"
+                        ? "#eab308"
+                        : activeTool === "green"
+                          ? "#22c55e"
+                          : activeTool === "blue"
+                            ? "#3b82f6"
+                            : "#000"
+                      : "inherit",
+                }}
+              />
             </button>
             {activeTool && (
               <>
-                {(["yellow", "green", "blue", "black"] as HighlightColor[]).map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className="pdf-color-dot"
-                    data-selected={activeTool === c}
-                    style={{
-                      backgroundColor: c === "yellow" ? "#facc15" : c === "green" ? "#22c55e" : c === "blue" ? "#3b82f6" : "#0f172a",
-                    }}
-                    onClick={() => setActiveTool(c)}
-                    title={c}
-                  />
-                ))}
+                {(["yellow", "green", "blue", "black"] as HighlightColor[]).map(
+                  (c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className="pdf-color-dot"
+                      data-selected={activeTool === c}
+                      style={{
+                        backgroundColor:
+                          c === "yellow"
+                            ? "#facc15"
+                            : c === "green"
+                              ? "#22c55e"
+                              : c === "blue"
+                                ? "#3b82f6"
+                                : "#0f172a",
+                      }}
+                      onClick={() => setActiveTool(c)}
+                      title={c}
+                    />
+                  ),
+                )}
                 <button
                   type="button"
                   className="button button-secondary button-small"
-                  style={{ padding: "0.2rem", minHeight: "26px", border: activeTool === "eraser" ? "1.5px solid var(--accent)" : "none" }}
-                  onClick={() => setActiveTool(activeTool === "eraser" ? "yellow" : "eraser")}
-                  title={locale === "kk" ? "Өшіргіш" : locale === "en" ? "Eraser" : "Ластик"}
+                  style={{
+                    padding: "0.2rem",
+                    minHeight: "26px",
+                    border:
+                      activeTool === "eraser"
+                        ? "1.5px solid var(--accent)"
+                        : "none",
+                  }}
+                  onClick={() =>
+                    setActiveTool(activeTool === "eraser" ? "yellow" : "eraser")
+                  }
+                  title={
+                    locale === "kk"
+                      ? "Өшіргіш"
+                      : locale === "en"
+                        ? "Eraser"
+                        : "Ластик"
+                  }
                 >
                   <Eraser size={13} />
                 </button>
@@ -1138,10 +1343,28 @@ export function PdfReader({
             type="button"
             className="button button-secondary"
             onClick={() => void handleShare()}
-            title={locale === "kk" ? "Бөлісу" : locale === "en" ? "Share" : "Поделиться"}
+            title={
+              locale === "kk"
+                ? "Бөлісу"
+                : locale === "en"
+                  ? "Share"
+                  : "Поделиться"
+            }
           >
             {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
-            <span>{shareCopied ? (locale === "kk" ? "Көшірілді!" : locale === "en" ? "Copied!" : "Скопировано!") : (locale === "kk" ? "Бөлісу" : locale === "en" ? "Share" : "Поделиться")}</span>
+            <span>
+              {shareCopied
+                ? locale === "kk"
+                  ? "Көшірілді!"
+                  : locale === "en"
+                    ? "Copied!"
+                    : "Скопировано!"
+                : locale === "kk"
+                  ? "Бөлісу"
+                  : locale === "en"
+                    ? "Share"
+                    : "Поделиться"}
+            </span>
           </button>
 
           <button
@@ -1149,19 +1372,27 @@ export function PdfReader({
             className="button button-secondary"
             onClick={toggleFullscreen}
             aria-pressed={fullscreen}
-            title={fullscreen ? (locale === "kk" ? "Толық экраннан шығу" : locale === "en" ? "Exit full screen" : "Выйти из полноэкранного режима") : (locale === "kk" ? "Толық экран" : locale === "en" ? "Full screen" : "На весь экран")}
+            title={
+              fullscreen
+                ? locale === "kk"
+                  ? "Толық экраннан шығу"
+                  : locale === "en"
+                    ? "Exit full screen"
+                    : "Выйти из полноэкранного режима"
+                : locale === "kk"
+                  ? "Толық экран"
+                  : locale === "en"
+                    ? "Full screen"
+                    : "На весь экран"
+            }
           >
             {fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </button>
 
           <button
             className="button bookmark-action"
-            disabled={
-              !pdf || pending
-            }
-            aria-pressed={bookmarks.includes(
-              page,
-            )}
+            disabled={!pdf || pending}
+            aria-pressed={bookmarks.includes(page)}
             onClick={toggleBookmark}
           >
             <BookmarkIcon />
@@ -1169,9 +1400,7 @@ export function PdfReader({
             <span>
               {pending
                 ? t.saving
-                : bookmarks.includes(
-                      page,
-                    )
+                : bookmarks.includes(page)
                   ? t.removeBookmark
                   : t.addBookmark}
             </span>

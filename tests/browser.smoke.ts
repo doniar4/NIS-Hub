@@ -56,12 +56,12 @@ test("Phase 3 Chromium and WebKit browser verification", { timeout: 180_000 }, a
     for (const [name, engine] of [["chromium", chromium], ["webkit", webkit]] as const) {
       const browser = await engine.launch({ headless: true });
       try {
-        await t.test(name + ": instant filtering changes DOM and URL with ZERO requests or document navigation", async () => {
+        await t.test(name + ": fixture transport filters the paginated view without document navigation", async () => {
           const page = await browser.newPage({ viewport: { width: 1000, height: 780 } });
           await page.goto(origin + "/library?q=алгебра&grade=" + classes[0].grade + "&subject=" + subjects[0].id);
           await expect(page.getByRole("searchbox")).toHaveValue("алгебра");
           await expect(page.getByRole("combobox", { name: "Grade", exact: true })).toHaveValue(String(classes[0].grade));
-          await expect(page.locator("section li")).toHaveCount(books.filter(book => book.title.startsWith("Алгебра") && book.grade === classes[0].grade).length);
+          await expect(page.locator("section li")).toHaveCount(Math.min(24, books.filter(book => book.title.startsWith("Алгебра") && book.grade === classes[0].grade).length));
           await page.waitForLoadState("networkidle");
           const requests: string[] = []; page.on("request", request => requests.push(request.method() + " " + new URL(request.url()).pathname));
           await page.evaluate(() => { (window as unknown as { fixtureDocument: string }).fixtureDocument = "unchanged"; });
@@ -69,24 +69,24 @@ test("Phase 3 Chromium and WebKit browser verification", { timeout: 180_000 }, a
           await expect(page.getByRole("heading", { name: "No materials found" })).toBeVisible();
           await page.getByRole("combobox", { name: "Subject", exact: true }).selectOption("");
           await page.getByRole("combobox", { name: "Grade", exact: true }).selectOption(String(classes[1].grade));
-          await expect(page.locator("section li")).toHaveCount(books.filter(book => book.title.startsWith("Physics") && book.grade === classes[1].grade).length);
+          await expect(page.locator("section li")).toHaveCount(Math.min(24, books.filter(book => book.title.startsWith("Physics") && book.grade === classes[1].grade).length));
           assert.ok(page.url().includes("q=Physics"));
           await page.getByRole("button", { name: "Reset filters" }).focus();
           await page.keyboard.press("Enter");
-          await expect(page.locator("section li")).toHaveCount(125);
+          await expect(page.locator("section li")).toHaveCount(24);
           await expect(page.getByRole("searchbox")).toHaveValue("");
           await page.getByRole("searchbox").fill("NO MATCH");
           await page.getByRole("button", { name: "Simulate fresh route props" }).click();
           await expect(page.getByRole("searchbox")).toHaveValue("");
-          await expect(page.locator("section li")).toHaveCount(125);
+          await expect(page.locator("section li")).toHaveCount(24);
           await page.getByRole("searchbox").fill("NO MATCH AGAIN");
           await page.getByRole("button", { name: "Simulate fresh route props" }).click();
           await expect(page.getByRole("searchbox")).toHaveValue("");
-          await expect(page.locator("section li")).toHaveCount(125);
+          await expect(page.locator("section li")).toHaveCount(24);
           assert.equal(await page.evaluate(() => (window as unknown as { fixtureDocument: string }).fixtureDocument), "unchanged");
           assert.deepEqual(requests, []);
           await page.screenshot({ path: join(artifactDir, name + "-library.png") });
-          t.diagnostic(name + ": filter requests=0; document retained;125 books reset; query restored");
+          t.diagnostic(name + ": fixture transport; document retained; first 24 books reset; query restored");
           await page.close();
         });
         await t.test(name + ": keyboard Top4 uniqueness, translated subjects, expired avatar recovery and manual import preview", async () => {

@@ -1,14 +1,17 @@
+html {
+  background-color:var(--bg);
+}
 body {
   background-color:var(--bg);
   background-image:none;
-  background-attachment:fixed;
+  background-attachment:scroll;
   color:var(--text);
   line-height:1.55;
 }
 :root[data-theme="dark"] body {
   background-color:var(--bg);
   background-image:none;
-  background-attachment:fixed;
+  background-attachment:scroll;
 }
 :where(h1,h2,h3,h4,h5,h6) { font-family:var(--font-display); font-weight:600; }
 :focus-visible { outline:3px solid var(--focus-ring); outline-offset:3px; }

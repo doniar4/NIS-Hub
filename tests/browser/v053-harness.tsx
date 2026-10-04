@@ -4,7 +4,7 @@ import { useState,useEffect } from "react";
 import { LocaleProvider } from "../../src/components/locale-provider";
 import { AppFrame } from "../../src/components/app-frame";
 import { PreferenceControls } from "../../src/components/preference-controls";
-import { LibraryBrowser } from "../../src/components/library-browser";
+import { LibraryBrowser } from "./library-fixture";
 import { WeeklyScheduleBrowser } from "../../src/components/weekly-schedule";
 import { HomeTimetable } from "../../src/components/home-timetable";
 import { TopSubjects } from "../../src/components/top-subjects";

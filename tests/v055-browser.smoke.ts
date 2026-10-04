@@ -92,10 +92,10 @@ test("v055 Chromium/WebKit: live UI states, no credential persistence, no pollin
  await page.emulateMedia({reducedMotion:"reduce"});
  assert.equal(await day.evaluate(el=>getComputedStyle(el).animationName),"none");
  await page.emulateMedia({reducedMotion:"no-preference"});
-	 await page.goto(origin+"/library");await expect(page.locator(".library-card")).toHaveCount(1);
+	 await page.goto(origin+"/library");await expect(page.locator(".library-material-link")).toHaveCount(1);
  const search=page.locator('input[type="search"]').last(),requests:string[]=[];const track=(r:{url():string;resourceType():string})=>{if(r.resourceType()!=="font")requests.push(r.url());};await page.waitForLoadState("networkidle");page.on("request",track);
- await search.fill("Проза о Tamerlane Esentaeve третем");await expect(page.locator(".library-card")).toHaveCount(0);
- await search.fill(" НИШ  ХАБЧИК ");await expect(page.locator(".library-card")).toHaveCount(1);await expect(page.locator(".library-card")).toContainText("Tamerlane");assert.deepEqual(requests,[]);page.off("request",track);
+ await search.fill("Проза о Tamerlane Esentaeve третем");await expect(page.locator(".library-material-link")).toHaveCount(0);
+ await search.fill(" НИШ  ХАБЧИК ");await expect(page.locator(".library-material-link")).toHaveCount(1);await expect(page.locator(".library-material-link")).toContainText("Tamerlane");assert.deepEqual(requests,[]);page.off("request",track);
  await page.goto(origin+"/privacy?locale=ru");await expect(page.getByRole("heading",{name:"Школьный SMS-дневник · v0.5.5"})).toBeVisible();
  assert.deepEqual(errors,[]);t.diagnostic(engineName+": fixture UI, 320/390/1280, RU/KK/EN, dark/light, 100/125/150/200% CSS zoom; no live-grade claim.");
  }finally{await browser.close();}

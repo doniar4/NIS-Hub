@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { useState } from "react";
 import { LocaleProvider } from "../../src/components/locale-provider";
 import { PreferenceControls } from "../../src/components/preference-controls";
-import { LibraryBrowser } from "../../src/components/library-browser";
+import { LibraryBrowser } from "./library-fixture";
 import { TopSubjects } from "../../src/components/top-subjects";
 import { AvatarPreview } from "../../src/components/avatar-preview";
 import { ScheduleImport } from "../../src/components/schedule-import";

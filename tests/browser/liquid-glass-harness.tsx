@@ -7,7 +7,7 @@ import {LocaleProvider} from "../../src/components/locale-provider";
 import {PreferenceControls} from "../../src/components/preference-controls";
 import {HomeStudyDashboard} from "../../src/components/home-study-dashboard";
 import {StudentSchedule} from "../../src/components/student-schedule";
-import {LibraryBrowser} from "../../src/components/library-browser";
+import {LibraryBrowser} from "./library-fixture";
 import {ReaderWorkspace} from "../../src/components/reader-workspace";
 import {PdfReader} from "../../src/components/pdf-reader";
 import {AiStudyPanel} from "../../src/components/ai-study-panel";

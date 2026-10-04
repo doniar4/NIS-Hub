@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import { PGlite } from "@electric-sql/pglite";
 export const fixtureId = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 export async function phase3Database() {
-  const db = new PGlite({ extensions: { btree_gist } });
+  const db = new PGlite({ extensions: { btree_gist, pg_trgm } });
   try {
     // Models SQL surfaces, NOT GoTrue or the Storage HTTP service.
     await db.exec(`

@@ -1,3 +1,4 @@
+import {readerActionBoundary} from "./browser/reader-action-boundary";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync,readdirSync,mkdirSync} from "node:fs";
@@ -14,7 +15,7 @@ import {samplePdf} from "./browser/sample-pdf";
 const id="00000000-0000-4000-8000-000000000030";
 test("Liquid Glass: real components, isolated transport, Chromium/WebKit responsive and functional QA",{timeout:480000},async t=>{
   const pdf=process.env.NIS_READER_TEST_PDF?readFileSync(process.env.NIS_READER_TEST_PDF):samplePdf();
-  const bundle=await build({entryPoints:["tests/browser/liquid-glass-harness.tsx"],bundle:true,write:false,format:"esm",platform:"browser",jsx:"automatic",define:{"process.env":JSON.stringify({NODE_ENV:"production"})},plugins:[{name:"isolated-boundaries",setup(api){
+  const bundle=await build({entryPoints:["tests/browser/liquid-glass-harness.tsx"],bundle:true,write:false,format:"esm",platform:"browser",jsx:"automatic",define:{"process.env":JSON.stringify({NODE_ENV:"production"})},plugins: [readerActionBoundary,{name:"isolated-boundaries",setup(api){
     api.onResolve({filter:/^next\/navigation$/},()=>({path:"navigation",namespace:"fixture"}));
     api.onResolve({filter:/^@\/lib\/(supabase\/client|community-client)$/},a=>({path:a.path,namespace:"fixture"}));
     api.onResolve({filter:/^@\/app\/actions\//},a=>({path:a.path,namespace:"fixture"}));
@@ -103,14 +104,14 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         await expect(page.locator(".selected-lesson-actions a").last()).toHaveAttribute("href","/books/"+id+"/read?variant="+id+"#ai-study");
 
         await page.goto(origin+"/library?subject="+subjects[0].id+"&grade=7&study=1");
-        await expect(page.locator(".library-card").first()).toHaveAttribute("href",/#ai-study$/);
+        await expect(page.locator(".library-material-link").first()).toHaveAttribute("href",/#ai-study$/);
         await page.waitForLoadState("networkidle");
         const requests:string[]=[];const track=(r:{url():string;resourceType():string})=>{if(r.resourceType()!=="image")requests.push(r.url());};page.on("request",track);
         await page.locator(".library-filters input").fill("NO MATCH");
         await expect(page.getByRole("heading",{name:"No materials found"})).toBeVisible();
         await page.locator(".library-filters select").first().selectOption("8");
         await page.locator(".library-filters select").last().selectOption(subjects[1].id);
-        await page.getByRole("button",{name:"Reset filters"}).click();await expect(page.locator(".library-card")).toHaveCount(125);
+        await page.getByRole("button",{name:"Reset filters"}).click();await expect(page.locator(".library-material-link")).toHaveCount(24);
         assert.deepEqual(requests,[]);page.off("request",track);
 
         await page.goto(origin+"/schedule");

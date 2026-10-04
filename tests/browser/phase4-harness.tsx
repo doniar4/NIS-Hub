@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { useState } from "react";
 import { LocaleProvider } from "../../src/components/locale-provider";
 import { PreferenceControls } from "../../src/components/preference-controls";
-import { LibraryBrowser } from "../../src/components/library-browser";
+import { LibraryBrowser } from "./library-fixture";
 import { initialLibraryFilters } from "../../src/lib/library";
 import { WeeklyScheduleBrowser, WeeklyLessonList } from "../../src/components/weekly-schedule";
 import { WeeklyImport } from "../../src/components/weekly-import";

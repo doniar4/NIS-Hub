@@ -1,3 +1,4 @@
+import {readerActionBoundary} from "./browser/reader-action-boundary";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
@@ -21,7 +22,7 @@ test("mobile Reader renders real test PDF in Chromium and WebKit", { skip: !fixt
     format: "esm",
     jsx: "automatic",
     define: { "process.env": JSON.stringify({ NODE_ENV: "production" }) },
-    plugins: [{
+    plugins: [readerActionBoundary,{
       name: "reading-fixture-boundary",
       setup(api) {
         api.onResolve({ filter: /^@\/app\/actions\/reading$/ }, () => ({ path: "reading", namespace: "fixture" }));

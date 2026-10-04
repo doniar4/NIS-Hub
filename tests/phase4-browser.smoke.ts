@@ -1,3 +1,4 @@
+import {readerActionBoundary} from "./browser/reader-action-boundary";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, mkdirSync } from "node:fs";
@@ -19,7 +20,7 @@ test("Phase 4 Chromium/WebKit production components with isolated transport", {t
   assert.ok(pdfPath,"Set NIS_READER_TEST_PDF to the existing reader test PDF.");
   const pdf=readFileSync(pdfPath);
   const bundle=await build({entryPoints:[resolve("tests/browser/phase4-harness.tsx")],bundle:true,write:false,format:"esm",platform:"browser",jsx:"automatic",logLevel:"silent",
-    define:{"process.env":JSON.stringify({NODE_ENV:"production"})},plugins:[{name:"test-only-boundaries",setup(api){
+    define:{"process.env":JSON.stringify({NODE_ENV:"production"})},plugins: [readerActionBoundary,{name:"test-only-boundaries",setup(api){
       api.onResolve({filter:/^next\/navigation$/},()=>({path:"navigation",namespace:"fixture"}));
       api.onResolve({filter:/^@\/lib\/supabase\/client$/},()=>({path:"storage",namespace:"fixture"}));
       api.onResolve({filter:/^@\/app\/actions\/reading$/},()=>({path:"reading",namespace:"fixture"}));
