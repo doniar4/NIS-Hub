@@ -13,8 +13,6 @@ export async function GET(request: Request) {
         : await getLibraryPage(
             initialLibraryFilters(Object.fromEntries(p)),
             Number(p.get("offset") ?? 0),
-            p.get("favorites") === "1",
-            p.get("collection") ?? "",
           );
     return Response.json(data, {
       headers: { "Cache-Control": "private, no-store" },

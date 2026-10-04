@@ -1,5 +1,5 @@
 import type { Book } from "./database.types";
-export type LibraryBook = Pick<Book, "id" | "title" | "grade" | "subject_id"> & Partial<Pick<Book, "description" | "tags" | "quarter" | "author" | "publisher" | "language">> & { languages?: string[]; favorite?: boolean; collection_ids?: string[] };
+export type LibraryBook = Pick<Book, "id" | "title" | "grade" | "subject_id"> & Partial<Pick<Book, "description" | "tags" | "quarter" | "author" | "publisher" | "language">> & { languages?: string[] };
 export type LibraryPage = { books: LibraryBook[]; total: number; nextOffset: number | null; suggestions: string[] };
 export type LibraryFilters = { q: string; grade: string; subject: string };
 export const LIBRARY_PAGE_SIZE = 200;

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { once } from "node:events";
-import { readFileSync, readdirSync, mkdirSync } from "node:fs";
+import { readFileSync, readdirSync, mkdirSync, existsSync } from "node:fs";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
 import { samplePdf } from "./browser/sample-pdf";
@@ -60,10 +60,12 @@ test(
       };
     };
     const css =
-      readdirSync(".next/static/css")
-        .filter((f) => f.endsWith(".css"))
-        .map((f) => readFileSync(".next/static/css/" + f, "utf8"))
-        .join("\n") + readFileSync("src/styles/library.css", "utf8");
+      (existsSync(".next/static/css")
+        ? readdirSync(".next/static/css")
+            .filter((f) => f.endsWith(".css"))
+            .map((f) => readFileSync(".next/static/css/" + f, "utf8"))
+            .join("\n")
+        : "") + readFileSync("src/styles/library.css", "utf8");
     let highlights: Highlight[] = [];
     const requests: number[] = [];
     const server = createServer(async (req, res) => {
@@ -83,7 +85,6 @@ test(
           JSON.stringify(
             url.searchParams.has("personal")
               ? {
-                  collections: [],
                   history: [
                     { query: "Book 61", searched_at: new Date().toISOString() },
                   ],
@@ -178,10 +179,6 @@ test(
       await tab.getByRole("searchbox").fill("Book 61");
       await expect(tab.locator(".library-catalog-card")).toHaveCount(1);
       await expect(tab.getByRole("heading", { name: "Book 61" })).toBeVisible();
-      await tab.getByRole("button", { name: "Favorite: Book 61" }).click();
-      await expect(
-        tab.getByRole("button", { name: "Favorite: Book 61" }),
-      ).toHaveAttribute("aria-pressed", "true");
       await tab.getByRole("button", { name: "Activity", exact: true }).click();
       await expect(
         tab.getByRole("heading", { name: "Library Activity" }),

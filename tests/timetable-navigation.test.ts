@@ -40,7 +40,7 @@ test("A timetable subject with no published catalog matches uses the normal loca
   const initial=initialLibraryFilters({subject:subjects[2].id,grade:String(classes[0].grade)});
   assert.deepEqual(filterBooks(books,initial),[]);
   for(const locale of ["ru","kk","en"] as const){
-    const html=render(locale,createElement(LibraryBrowser,{mutateAction:async()=>({ok:true as const}),initial,page:{books:[],total:0,nextOffset:null,suggestions:[]},personal:{collections:[],history:[],recent:[]},subjects}));
+    const html=render(locale,createElement(LibraryBrowser,{mutateAction:async()=>({ok:true as const}),initial,page:{books:[],total:0,nextOffset:null,suggestions:[]},personal:{history:[],recent:[]},subjects}));
     assert.ok(html.includes(dictionaries[locale].noMaterials));assert.ok(html.includes(dictionaries[locale].noMaterialsHint));
     assert.doesNotMatch(html,/role="alert"/);
   }

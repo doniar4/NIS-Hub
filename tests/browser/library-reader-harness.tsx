@@ -19,7 +19,7 @@ createRoot(document.getElementById("root")!).render(
           mutateAction={changeLibrary}
           initial={{ q: "", grade: "", subject: "" }}
           page={page}
-          personal={{ collections: [], history: [], recent: [] }}
+          personal={{ history: [], recent: [] }}
           subjects={[]}
         />
       )}

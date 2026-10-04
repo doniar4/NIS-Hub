@@ -54,7 +54,7 @@ export function LibraryBrowser(props: {
         nextOffset: filtered.length > 24 ? 24 : null,
         suggestions: [],
       }}
-      personal={{ collections: [], history: [], recent: [] }}
+      personal={{ history: [], recent: [] }}
     />
   );
 }

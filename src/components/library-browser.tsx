@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Heart, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { BOOK_GRADES } from "@/lib/book-model";
 import { subjectName } from "@/lib/i18n";
 import {
@@ -15,7 +15,6 @@ import { useI18n } from "./locale-provider";
 import { SubjectMotif } from "./subject-motif";
 
 type Personal = {
-  collections: { id: string; name: string }[];
   history: { query: string; searched_at: string }[];
   recent: { id: string; title: string; opened_at: string }[];
 };
@@ -41,9 +40,7 @@ export function LibraryBrowser({
     [query, setQuery] = useState(initial.q);
   const [result, setResult] = useState(page),
     [personal, setPersonal] = useState(seedPersonal);
-  const [tab, setTab] = useState("catalog"),
-    [collection, setCollection] = useState(""),
-    [name, setName] = useState("");
+  const [tab, setTab] = useState("catalog");
   const [loading, setLoading] = useState(false),
     [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -53,8 +50,6 @@ export function LibraryBrowser({
   const [revision, setRevision] = useState(0);
   const copy = {
     catalog: label("Каталог", "Каталог", "Catalog"),
-    favorites: label("Избранное", "Таңдаулылар", "Favorites"),
-    collections: label("Коллекции", "Жинақтар", "Collections"),
     activity: label("Активность", "Белсенділік", "Activity"),
   };
   useEffect(() => {
@@ -95,8 +90,6 @@ export function LibraryBrowser({
     setError("");
     const params = new URLSearchParams({
       ...filters,
-      favorites: tab === "favorites" ? "1" : "0",
-      collection: tab === "collections" ? collection : "",
     });
     // Clear the previous query at the async request boundary; never append it
     // to a response for different filters.
@@ -132,7 +125,7 @@ export function LibraryBrowser({
     return () => controller.abort();
     // The response is language-neutral; locale changes only affect labels.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, tab, collection, revision]);
+  }, [filters, tab, revision]);
   useEffect(() => {
     if (!filters.q.trim()) return;
     const timer = setTimeout(
@@ -154,8 +147,6 @@ export function LibraryBrowser({
     const params = new URLSearchParams({
       ...filters,
       offset: String(result.nextOffset),
-      favorites: tab === "favorites" ? "1" : "0",
-      collection: tab === "collections" ? collection : "",
     });
     try {
       const response = await fetch(`/api/library?${params}`, {
@@ -194,31 +185,11 @@ export function LibraryBrowser({
         return;
       }
       setError("");
-      if (input.kind === "favorite" || input.kind === "collection")
-        setResult((prev) => ({
-          ...prev,
-          books: prev.books.map((b) =>
-            b.id !== input.bookId
-              ? b
-              : input.kind === "favorite"
-                ? { ...b, favorite: input.enabled }
-                : {
-                    ...b,
-                    collection_ids: input.enabled
-                      ? [...new Set([...(b.collection_ids ?? []), input.id!])]
-                      : (b.collection_ids ?? []).filter(
-                          (id) => id !== input.id,
-                        ),
-                  },
-          ),
-        }));
-      if (["create", "rename", "delete", "clear"].includes(input.kind)) {
+      if (input.kind === "clear") {
         try {
           const r = await fetch("/api/library?personal=1");
           if (!r.ok) throw Error();
           setPersonal(await r.json());
-          setName("");
-          if (input.kind === "delete") setCollection("");
           setRevision((v) => v + 1);
         } catch {
           setError(
@@ -230,11 +201,6 @@ export function LibraryBrowser({
           );
         }
       }
-      if (
-        (tab === "favorites" && input.kind === "favorite") ||
-        (tab === "collections" && input.kind === "collection")
-      )
-        setRevision((v) => v + 1);
     });
   }
   return (
@@ -337,97 +303,6 @@ export function LibraryBrowser({
         </div>
       ) : (
         <>
-          {tab === "collections" && (
-            <div className="library-collection-bar">
-              <label>
-                <span className="field-label">{copy.collections}</span>
-                <select
-                  className="field"
-                  value={collection}
-                  onChange={(e) => setCollection(e.target.value)}
-                >
-                  <option value="">
-                    {label(
-                      "Все материалы",
-                      "Барлық материалдар",
-                      "All materials",
-                    )}
-                  </option>
-                  {personal.collections.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  mutate({ kind: "create", name });
-                }}
-              >
-                <label className="sr-only" htmlFor="collection-name">
-                  {label(
-                    "Название коллекции",
-                    "Жинақ атауы",
-                    "Collection name",
-                  )}
-                </label>
-                <input
-                  id="collection-name"
-                  className="field"
-                  maxLength={80}
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={label(
-                    "Новая коллекция / новое имя",
-                    "Жаңа жинақ / жаңа атау",
-                    "New collection / new name",
-                  )}
-                />
-                <button
-                  className="button button-secondary"
-                  disabled={pending || !name.trim()}
-                >
-                  {label("Создать", "Құру", "Create")}
-                </button>
-              </form>
-              {collection && (
-                <>
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    disabled={pending || !name.trim()}
-                    onClick={() =>
-                      mutate({ kind: "rename", id: collection, name })
-                    }
-                  >
-                    {label("Переименовать", "Атын өзгерту", "Rename")}
-                  </button>
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    disabled={pending}
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          label(
-                            "Удалить коллекцию? Материалы останутся в библиотеке.",
-                            "Жинақты жою керек пе? Материалдар кітапханада қалады.",
-                            "Delete this collection? Materials will remain in the library.",
-                          ),
-                        )
-                      )
-                        mutate({ kind: "delete", id: collection });
-                    }}
-                  >
-                    {label("Удалить", "Жою", "Delete")}
-                  </button>
-                </>
-              )}
-            </div>
-          )}
           <div className="library-search-fields" role="search">
             <label>
               <span className="field-label">
@@ -501,24 +376,8 @@ export function LibraryBrowser({
           </p>
           {!loading && !result.books.length && (
             <div className="library-empty">
-              <h2>
-                {tab === "favorites"
-                  ? label(
-                      "Сохраните первый материал",
-                      "Алғашқы материалды сақтаңыз",
-                      "Save your first material",
-                    )
-                  : t.noMaterials}
-              </h2>
-              <p>
-                {tab === "favorites"
-                  ? label(
-                      "Нажмите на сердце в карточке каталога.",
-                      "Каталог карточкасындағы жүрекшені басыңыз.",
-                      "Select the heart on a catalog card.",
-                    )
-                  : t.noMaterialsHint}
-              </p>
+              <h2>{t.noMaterials}</h2>
+              <p>{t.noMaterialsHint}</p>
               {!!result.suggestions.length && (
                 <div className="search-suggestions">
                   {label(
@@ -609,72 +468,6 @@ export function LibraryBrowser({
                     <ArrowUpRight size={17} />
                   </span>
                 </Link>
-                <div className="library-card-actions">
-                  <button
-                    type="button"
-                    disabled={pending}
-                    aria-pressed={!!book.favorite}
-                    aria-label={
-                      label("В избранное: ", "Таңдаулыларға: ", "Favorite: ") +
-                      book.title
-                    }
-                    onClick={() =>
-                      mutate({
-                        kind: "favorite",
-                        bookId: book.id,
-                        enabled: !book.favorite,
-                      })
-                    }
-                  >
-                    <Heart
-                      size={18}
-                      fill={book.favorite ? "currentColor" : "none"}
-                    />
-                    {book.favorite
-                      ? label("Сохранено", "Сақталды", "Saved")
-                      : label("Сохранить", "Сақтау", "Save")}
-                  </button>
-                  <details>
-                    <summary>
-                      {label("В коллекцию", "Жинаққа", "Add to collection")}
-                    </summary>
-                    <div className="library-collection-picker">
-                      {personal.collections.length ? (
-                        personal.collections.map((c) => (
-                          <label key={c.id}>
-                            <input
-                              type="checkbox"
-                              disabled={pending}
-                              checked={
-                                book.collection_ids?.includes(c.id) ?? false
-                              }
-                              onChange={(e) =>
-                                mutate({
-                                  kind: "collection",
-                                  bookId: book.id,
-                                  id: c.id,
-                                  enabled: e.target.checked,
-                                })
-                              }
-                            />
-                            {c.name}
-                          </label>
-                        ))
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setTab("collections")}
-                        >
-                          {label(
-                            "Создать коллекцию",
-                            "Жинақ құру",
-                            "Create a collection",
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </details>
-                </div>
               </li>
             ))}
           </ul>

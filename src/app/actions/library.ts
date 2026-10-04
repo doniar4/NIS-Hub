@@ -3,58 +3,21 @@ import { actionContext } from "@/lib/auth";
 import { uuid } from "@/lib/validation";
 
 export async function changeLibrary(input: {
-  kind:
-    | "favorite"
-    | "collection"
-    | "create"
-    | "rename"
-    | "delete"
-    | "search"
-    | "recent"
-    | "clear";
-  id?: string;
+  kind: "search" | "recent" | "clear";
   bookId?: string;
   name?: string;
-  enabled?: boolean;
 }) {
   try {
     const { supabase: db, user } = await actionContext();
-    const { kind, id, bookId } = input;
-    if (
-      ![
-        "favorite",
-        "collection",
-        "create",
-        "rename",
-        "delete",
-        "search",
-        "recent",
-        "clear",
-      ].includes(kind)
-    )
+    const { kind, bookId } = input;
+    if (!["search", "recent", "clear"].includes(kind))
       throw new Error("Invalid action");
-    if (
-      ["favorite", "collection", "recent"].includes(kind) &&
-      !uuid.safeParse(bookId).success
-    )
+    if (kind === "recent" && !uuid.safeParse(bookId).success)
       throw new Error("Invalid book");
-    if (
-      ["collection", "rename", "delete"].includes(kind) &&
-      !uuid.safeParse(id).success
-    )
-      throw new Error("Invalid collection");
-    if (
-      ["favorite", "collection"].includes(kind) &&
-      typeof input.enabled !== "boolean"
-    )
-      throw new Error("Invalid state");
     const name = input.name?.trim() ?? "";
-    if (
-      ["create", "rename", "search"].includes(kind) &&
-      (!name || name.length > (kind === "search" ? 100 : 80))
-    )
+    if (kind === "search" && (!name || name.length > 100))
       throw new Error("Invalid name");
-    if (bookId && (input.enabled || kind === "recent")) {
+    if (bookId && kind === "recent") {
       const { data, error } = await db
         .from("book_variants")
         .select("id")
@@ -64,49 +27,6 @@ export async function changeLibrary(input: {
       if (error || !data?.length) throw new Error("Book unavailable");
     }
     let error: unknown;
-    if (kind === "favorite")
-      ({ error } = input.enabled
-        ? await db
-            .from("library_favorites")
-            .upsert(
-              { user_id: user.id, book_id: bookId! },
-              { onConflict: "user_id,book_id" },
-            )
-        : await db
-            .from("library_favorites")
-            .delete()
-            .eq("user_id", user.id)
-            .eq("book_id", bookId!));
-    if (kind === "collection")
-      ({ error } = input.enabled
-        ? await db
-            .from("library_collection_books")
-            .upsert(
-              { user_id: user.id, book_id: bookId!, collection_id: id! },
-              { onConflict: "collection_id,book_id" },
-            )
-        : await db
-            .from("library_collection_books")
-            .delete()
-            .eq("user_id", user.id)
-            .eq("collection_id", id!)
-            .eq("book_id", bookId!));
-    if (kind === "create")
-      ({ error } = await db
-        .from("library_collections")
-        .insert({ user_id: user.id, name }));
-    if (kind === "rename")
-      ({ error } = await db
-        .from("library_collections")
-        .update({ name })
-        .eq("user_id", user.id)
-        .eq("id", id!));
-    if (kind === "delete")
-      ({ error } = await db
-        .from("library_collections")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("id", id!));
     if (kind === "search")
       ({ error } = await db
         .from("library_search_history")

@@ -1,4 +1,4 @@
-# NIS Hub - v1.7
+# NIS Hub - v2.0
 
 NIS Hub is a student learning workspace built with Next.js 16 and Supabase. It provides a private library and PDF reader, schedules, SMS Diary sessions, support tickets, profile management, community features, and administrator-controlled timetable tools.
 

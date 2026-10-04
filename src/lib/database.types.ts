@@ -77,9 +77,6 @@ export type Database = { public: {
     variant_bookmarks: Table<VariantBookmark,"profile_id"|"book_variant_id"|"page_number">;
     variant_reading_progress: Table<VariantProgress,"profile_id"|"book_variant_id"|"page_number">;
     books: Table<Book, "title" | "subject_id" | "file_path">;
-    library_favorites: Table<{user_id:string;book_id:string;created_at:string},"user_id"|"book_id">;
-    library_collections: Table<{id:string;user_id:string;name:string;created_at:string},"user_id"|"name">;
-    library_collection_books: Table<{user_id:string;collection_id:string;book_id:string;created_at:string},"user_id"|"collection_id"|"book_id">;
     library_search_history: Table<{user_id:string;query:string;searched_at:string},"user_id"|"query">;
     library_recent_books: Table<{user_id:string;book_id:string;opened_at:string},"user_id"|"book_id">;
     bookmarks: Table<Bookmark, "profile_id" | "book_id" | "page_number">;
@@ -93,7 +90,7 @@ export type Database = { public: {
   };
   Views: Record<string, never>;
   Functions: {
-    library_page:{Args:{p_queries:string[];p_grade:number|null;p_subject:string|null;p_offset:number;p_favorites:boolean;p_collection:string|null;p_secret:boolean};Returns:Json};
+    library_page:{Args:{p_queries:string[];p_grade:number|null;p_subject:string|null;p_offset:number;p_secret:boolean};Returns:Json};
     sync_edupage_schedule:{Args:{p_lessons:Json;p_classes:string[];p_expected_active:string;p_note:string;p_aliases:Json};Returns:string};
     save_sms_session:{Args:{p_ciphertext:string;p_expires:string};Returns:string};
     save_class_homework:{Args:{p_subject:string;p_due:string;p_body:string;p_id?:string|null};Returns:string};

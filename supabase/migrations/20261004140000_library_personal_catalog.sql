@@ -3,24 +3,10 @@ create schema if not exists extensions;
 create extension if not exists pg_trgm with schema extensions;
 grant usage on schema extensions to authenticated;
 
-create table if not exists public.library_favorites (
-  user_id uuid not null references auth.users(id) on delete cascade,
-  book_id uuid not null references public.books(id) on delete cascade,
-  created_at timestamptz not null default now(), primary key(user_id,book_id)
-);
-create table if not exists public.library_collections (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  name text not null check(char_length(trim(name)) between 1 and 80),
-  created_at timestamptz not null default now(), unique(user_id,name), unique(id,user_id)
-);
-create table if not exists public.library_collection_books (
-  user_id uuid not null references auth.users(id) on delete cascade,
-  collection_id uuid not null,
-  book_id uuid not null references public.books(id) on delete cascade,
-  created_at timestamptz not null default now(), primary key(collection_id,book_id),
-  foreign key(collection_id,user_id) references public.library_collections(id,user_id) on delete cascade
-);
+drop table if exists public.library_collection_books cascade;
+drop table if exists public.library_collections cascade;
+drop table if exists public.library_favorites cascade;
+
 create table if not exists public.library_search_history (
   user_id uuid not null references auth.users(id) on delete cascade,
   query text not null check(char_length(trim(query)) between 1 and 100),
@@ -32,7 +18,7 @@ create table if not exists public.library_recent_books (
   opened_at timestamptz not null default now(), primary key(user_id,book_id)
 );
 do $$ declare t text; begin
-  foreach t in array array['library_favorites','library_collections','library_collection_books','library_search_history','library_recent_books'] loop
+  foreach t in array array['library_search_history','library_recent_books'] loop
     execute format('alter table public.%I enable row level security',t);
     execute format('drop policy if exists own_rows on public.%I',t);
     execute format('create policy own_rows on public.%I for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()))',t);
@@ -55,8 +41,7 @@ set search_path = '' as $$
 $$;
 
 create or replace function public.library_page(p_queries text[] default '{}', p_grade integer default null,
-  p_subject uuid default null, p_offset integer default 0, p_favorites boolean default false,
-  p_collection uuid default null, p_secret boolean default false)
+  p_subject uuid default null, p_offset integer default 0, p_secret boolean default false)
 returns jsonb language plpgsql stable security invoker set search_path = public,extensions as $$
 declare answer jsonb;
 begin
@@ -65,8 +50,6 @@ begin
   with catalog as (
     select b.id,b.title,b.description,b.tags,b.quarter,b.grade,b.subject_id,b.author,b.publisher,
       array(select distinct v.language from public.book_variants v where v.book_id=b.id and v.publication_status='published' order by v.language) languages,
-      exists(select 1 from public.library_favorites f where f.book_id=b.id and f.user_id=auth.uid()) favorite,
-      array(select cb.collection_id from public.library_collection_books cb where cb.book_id=b.id and cb.user_id=auth.uid()) collection_ids,
       public.library_fold(b.title) title_search,
       public.library_fold(concat_ws(' ',b.title,b.author,b.publisher,array_to_string(b.tags,' '),s.name,s.name_ru,s.name_kz,s.name_en)) metadata_search
     from public.books b join public.subjects s on s.id=b.subject_id
@@ -75,8 +58,6 @@ begin
       and (p_grade is null or b.grade=p_grade) and (p_subject is null or b.subject_id=p_subject)
       and ((p_secret and public.library_fold(b.title)=public.library_fold('Проза о Tamerlane Esentaeve третем'))
         or (not p_secret and public.library_fold(b.title)<>public.library_fold('Проза о Tamerlane Esentaeve третем')))
-      and (not p_favorites or exists(select 1 from public.library_favorites f where f.book_id=b.id and f.user_id=auth.uid()))
-      and (p_collection is null or exists(select 1 from public.library_collection_books cb where cb.book_id=b.id and cb.collection_id=p_collection and cb.user_id=auth.uid()))
   ), scored as (
     select c.*, coalesce(r.rank,9) rank,coalesce(r.sim,0) sim from catalog c
     left join lateral (
@@ -103,6 +84,6 @@ begin
   into answer;
   return answer;
 end $$;
-revoke all on function public.library_page(text[],integer,uuid,integer,boolean,uuid,boolean) from public,anon;
-grant execute on function public.library_page(text[],integer,uuid,integer,boolean,uuid,boolean) to authenticated;
+revoke all on function public.library_page(text[],integer,uuid,integer,boolean) from public,anon;
+grant execute on function public.library_page(text[],integer,uuid,integer,boolean) to authenticated;
 commit;

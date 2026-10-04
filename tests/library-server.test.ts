@@ -52,8 +52,7 @@ test("real SQL catalog pages, ranked search, metadata, private collections and a
   const db = new PGlite({ extensions: { pg_trgm } }),
     owner = fixtureId(1),
     other = fixtureId(2),
-    subject = fixtureId(3),
-    collection = fixtureId(4);
+    subject = fixtureId(3);
   try {
     await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);
    create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
@@ -107,13 +106,11 @@ test("real SQL catalog pages, ranked search, metadata, private collections and a
     const page = async (
       q = "",
       offset = 0,
-      fav = false,
-      col: string | null = null,
     ) =>
       (
         await db.query<{ value: LibraryPage }>(
-          "select public.library_page($1::text[],null,null,$2,$3,$4) value",
-          [libraryQueryVariants(q), offset, fav, col],
+          "select public.library_page($1::text[],null,null,$2) value",
+          [libraryQueryVariants(q), offset],
         )
       ).rows[0].value;
     const first = await page();
@@ -142,18 +139,6 @@ test("real SQL catalog pages, ranked search, metadata, private collections and a
     assert.equal((await page("zzzxxyyqqq")).total, 0);
     assert.deepEqual((await page("zzzxxyyqqq")).suggestions, []);
     await db.query(
-      "insert into library_collections(id,user_id,name) values($1,$2,'Exam')",
-      [collection, owner],
-    );
-    await db.query(
-      "insert into library_collection_books(user_id,collection_id,book_id) values($1,$2,$3)",
-      [owner, collection, fixtureId(100)],
-    );
-    await db.query(
-      "insert into library_favorites(user_id,book_id) values($1,$2)",
-      [owner, fixtureId(100)],
-    );
-    await db.query(
       "insert into library_search_history(user_id,query) values($1,'private search')",
       [owner],
     );
@@ -161,13 +146,8 @@ test("real SQL catalog pages, ranked search, metadata, private collections and a
       "insert into library_recent_books(user_id,book_id) values($1,$2)",
       [owner, fixtureId(100)],
     );
-    assert.equal((await page("", 0, true)).total, 1);
-    assert.equal((await page("", 0, false, collection)).total, 1);
     await asUser(db, other);
     for (const table of [
-      "library_collections",
-      "library_collection_books",
-      "library_favorites",
       "library_search_history",
       "library_recent_books",
     ])
@@ -176,20 +156,12 @@ test("real SQL catalog pages, ranked search, metadata, private collections and a
         0,
         table,
       );
-    assert.equal((await page("", 0, false, collection)).total, 0);
     await assert.rejects(
-      db.query("insert into library_favorites(user_id,book_id) values($1,$2)", [
+      db.query("insert into library_recent_books(user_id,book_id) values($1,$2)", [
         owner,
         fixtureId(101),
       ]),
       /row-level security/,
-    );
-    await assert.rejects(
-      db.query(
-        "insert into library_collection_books(user_id,collection_id,book_id) values($1,$2,$3)",
-        [other, collection, fixtureId(101)],
-      ),
-      /foreign key/,
     );
     await asUser(db, null);
     await assert.rejects(page(), /permission denied/);
