@@ -32,6 +32,7 @@ export type SupportTicket = {id:string;owner_id:string;category:TicketCategory;t
 export type SupportMessage = {id:string;ticket_id:string;author_id:string|null;author_role:"student"|"admin";body:string;created_at:string};
 export type SupportStatusEvent = {id:string;ticket_id:string;actor_id:string|null;previous_status:TicketStatus;status:TicketStatus;created_at:string};
 export type ClassHomework={id:string;class_id:string;subject_id:string;due_date:string;body:string;created_by:string;created_at:string;updated_at:string;deleted_at:string|null;moderation_status:"visible"|"hidden"};
+export type TelegramHomeworkSession={telegram_user_id:number;step:"grade"|"class"|"subject"|"date"|"body"|"confirm";grade:number|null;class_id:string|null;subject_id:string|null;due_date:string|null;body:string|null;token:string;last_update_id:number;updated_at:string;expires_at:string};
 export type CommunityReport={id:string;reporter_id:string;target_kind:"profile"|"message"|"homework"|"group"|"group_message";target_id:string;reason:"spam"|"harassment"|"privacy"|"other";detail:string;status:"open"|"resolved";created_at:string;resolved_at:string|null;resolved_by:string|null};
 export type TaskPriority="low"|"medium"|"high"|"urgent";
 export type TaskStatus="active"|"completed"|"archived";
@@ -49,6 +50,8 @@ export type Database = { public: {
     edupage_sync_state: Table<EduPageState, "id">;
     sms_sessions: Table<{user_id:string;id:string;ciphertext:string;expires_at:string;created_at:string},"user_id"|"ciphertext"|"expires_at">;
     class_homework:Table<ClassHomework,"class_id"|"subject_id"|"due_date"|"body"|"created_by">;
+    telegram_homework_sessions:Table<TelegramHomeworkSession,"telegram_user_id"|"step"|"token"|"last_update_id">;
+    telegram_homework_updates:Table<{update_id:number;telegram_user_id:number;outcome:string;homework_id:string|null;created_at:string},"update_id"|"telegram_user_id"|"outcome">;
     personal_tasks:Table<PersonalTask,"owner_id"|"title">;
     community_reports:Table<CommunityReport,"reporter_id"|"target_kind"|"target_id"|"reason">;
     direct_messages: Table<DirectMessage,"thread_id"|"sender_id"|"body"|"client_id">;
@@ -88,6 +91,7 @@ export type Database = { public: {
     sync_edupage_schedule:{Args:{p_lessons:Json;p_classes:string[];p_expected_active:string;p_note:string;p_aliases:Json};Returns:string};
     save_sms_session:{Args:{p_ciphertext:string;p_expires:string};Returns:string};
     save_class_homework:{Args:{p_subject:string;p_due:string;p_body:string;p_id?:string|null};Returns:string};
+    telegram_homework_apply_update:{Args:{p_update_id:number;p_user_id:number;p_action:string;p_value:string|null;p_token:string|null;p_author:string};Returns:string};
     delete_class_homework:{Args:{p_id:string};Returns:undefined};
     moderate_class_homework:{Args:{p_id:string};Returns:undefined};
     set_user_block:{Args:{p_peer:string;p_blocked:boolean};Returns:undefined};
