@@ -11,6 +11,7 @@ import { subjectName } from "@/lib/i18n";
 import { v053Copy } from "@/lib/v053-copy";
 import { useI18n } from "./locale-provider";
 import { SafetyMenu } from "./safety-menu";
+import { TelegramHomeworkCta, TelegramHomeworkLink } from "./telegram-homework-cta";
 export function ClassHomeworkPanel({
   userId,
   date: initialDate,
@@ -62,8 +63,12 @@ export function ClassHomeworkPanel({
   }
   return (
     <section className="surface-card space-y-5 mt-8 homework-panel">
-      <h2 className="section-title">{p.homework}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="section-title">{p.homework}</h2>
+        <TelegramHomeworkLink locale={locale} compact />
+      </div>
       <p>{p.homeworkHint}</p>
+      <TelegramHomeworkCta locale={locale} />
       {!hasClass ? (
         <p>{t.chooseProfileClass}</p>
       ) : (
