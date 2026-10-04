@@ -14,7 +14,7 @@ const userId = 123456789;
 const environment = {
   TELEGRAM_BOT_TOKEN: "123456789:fixture_token_not_a_real_secret",
   TELEGRAM_WEBHOOK_SECRET: "fixture_webhook_secret_not_real_12345",
-  TELEGRAM_ADMIN_IDS: String(userId), TELEGRAM_HOMEWORK_AUTHOR_ID: id(1),
+  TELEGRAM_HOMEWORK_AUTHOR_ID: id(1),
   SUPABASE_SERVICE_ROLE_KEY: "sb_secret_fixture_not_real_1234567890",
   NEXT_PUBLIC_SUPABASE_URL: "https://fixture.supabase.co",
 };
@@ -36,10 +36,9 @@ const incoming = (updateId: number, text: string): Incoming => ({ updateId, user
 test("Telegram configuration fails closed, never accepts public keys and supports service-role/secret keys", async () => {
   const { readTelegramConfig } = await bundle<typeof import("../src/lib/telegram/security")>("src/lib/telegram/security.ts");
   assert.ok(readTelegramConfig(environment));
-  for (const key of ["TELEGRAM_BOT_TOKEN", "TELEGRAM_WEBHOOK_SECRET", "TELEGRAM_ADMIN_IDS", "TELEGRAM_HOMEWORK_AUTHOR_ID", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"]) {
+  for (const key of ["TELEGRAM_BOT_TOKEN", "TELEGRAM_WEBHOOK_SECRET", "TELEGRAM_HOMEWORK_AUTHOR_ID", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"]) {
     assert.equal(readTelegramConfig({ ...environment, [key]: "" }), null, key);
   }
-  for (const ids of ["name", "0", "-1", "1,,2", "9007199254740992", "1.5"]) assert.equal(readTelegramConfig({ ...environment, TELEGRAM_ADMIN_IDS: ids }), null);
   for (const key of ["public", "sb_publishable_fixture_not_real", `x.${Buffer.from('{"role":"anon"}').toString("base64url")}.x`]) {
     assert.equal(readTelegramConfig({ ...environment, SUPABASE_SERVICE_ROLE_KEY: key }), null);
   }
@@ -85,7 +84,7 @@ test("Oral Today/Tomorrow/Day-after use local date across UTC midnight, month an
   assert.equal(oralDate(2, new Date("2026-12-30T20:00:00Z")), "2027-01-02");
 });
 
-test("Actual webhook rejects invalid secret/config/payload, accepts /start, and checks admin on every command/callback", async () => {
+test("Actual webhook accepts arbitrary private users and rejects groups while preserving secret/config checks", async () => {
   const replies: Reply[] = [], calls: string[] = [], events: string[] = [], logs: unknown[] = [];
   const store = { apply: async (_input: Incoming, action: { action: string }) => { calls.push(action.action); events.push("database"); return "welcome"; } };
   const api = { send: async (_id: number, reply: Reply) => { replies.push(reply); return true; }, answer: async () => { events.push("answer"); return true; } };
@@ -106,20 +105,27 @@ test("Actual webhook rejects invalid secret/config/payload, accepts /start, and 
   assert.equal((await route.POST(request(message("/start")))).status, 200);
   assert.deepEqual(calls, ["start"]);
   assert.match(JSON.stringify(replies.at(-1)), /📚 Добавить ДЗ/);
-  for (const text of ["/start", "/addhomework", "/cancel", "new text"]) {
-    assert.equal((await route.POST(request(message(text, userId + 1)))).status, 200);
-    assert.equal(replies.at(-1)?.text, "⛔ У вас нет доступа.");
+  for (const uid of [userId + 1, userId + 200]) {
+    assert.equal((await route.POST(request(message("/start", uid)))).status, 200);
+    assert.match(JSON.stringify(replies.at(-1)), /📚 Добавить ДЗ/);
+    assert.equal((await route.POST(request(message("/addhomework", uid)))).status, 200);
+    assert.equal(calls.at(-1), "add");
   }
   for (const data of ["grade:9", "class:" + id(10), "subject:" + id(20), "date:today", "confirm:publish", "confirm:edit", "confirm:cancel"]) {
     const payload = { update_id: 2, callback_query: { id: "cb", from: { id: userId + 1 }, message: { chat: { id: userId + 1, type: "private" } }, data: data + ":123456abcdef" } };
     events.length = 0;
     assert.equal((await route.POST(request(payload))).status, 200);
     assert.equal(events[0], "answer");
-    assert.equal(replies.at(-1)?.text, "⛔ У вас нет доступа.");
+    assert.equal(events[1], "database", "callback answered before database IO");
   }
-  assert.deepEqual(calls, ["start"], "non-admin cannot continue a pre-existing session");
+  const count = calls.length;
   const group = message("/addhomework"); group.message.chat = { id: -1, type: "group" };
-  await route.POST(request(group)); assert.deepEqual(calls, ["start"]);
+  await route.POST(request(group)); assert.equal(calls.length, count);
+  assert.equal(replies.at(-1)?.text, "Используйте бота в личном чате.");
+  const groupCallback = { update_id: 3, callback_query: { id: "cb", from: { id: userId }, message: { chat: { id: -1, type: "supergroup" } }, data: "confirm:publish:123456abcdef" } };
+  events.length = 0;
+  await route.POST(request(groupCallback)); assert.equal(events[0], "answer"); assert.equal(calls.length, count);
+  assert.equal(replies.at(-1)?.text, "Используйте бота в личном чате.");
   assert.equal((await (await load({ ...environment, SUPABASE_SERVICE_ROLE_KEY: "" })).POST(request(message("/start")))).status, 503);
   assert.match(JSON.stringify(logs), /missing_or_invalid/);
   for (const secret of [environment.TELEGRAM_BOT_TOKEN, environment.TELEGRAM_WEBHOOK_SECRET, environment.SUPABASE_SERVICE_ROLE_KEY]) assert.ok(!JSON.stringify(logs).includes(secret));
@@ -138,7 +144,7 @@ test("Actual migration + bot flow publish into existing homework exactly once, p
       grant usage on schema public to service_role;
       grant all on public.classes,public.subjects,public.weekly_schedule,public.profiles,public.class_homework to service_role;`);
     const homework = await bundle<typeof import("../src/lib/telegram/homework")>("src/lib/telegram/homework.ts");
-    const config: TelegramConfig = { token: "fixture", secret: "fixture", admins: new Set([userId]), authorId: id(1), supabaseUrl: "https://fixture.supabase.co", serviceKey: "fixture" };
+    const config: TelegramConfig = { token: "fixture", secret: "fixture", authorId: id(1), supabaseUrl: "https://fixture.supabase.co", serviceKey: "fixture" };
     await db.exec("set role service_role");
     const store: HomeworkStore = {
       apply: async (input, action) => (await db.query<{ outcome: string }>("select telegram_homework_apply_update($1,$2,$3,$4,$5,$6) outcome", [input.updateId, input.userId, action.action, action.value, action.token, config.authorId])).rows[0].outcome,
@@ -149,10 +155,10 @@ test("Actual migration + bot flow publish into existing homework exactly once, p
     const replies: Reply[] = [], events: string[] = [];
     const api = { answer: async () => { events.push("answer"); return true; }, send: async (_cid: number, reply: Reply) => { replies.push(reply); return true; } };
     let n = 10;
-    const send = (text: string) => homework.handleHomework(incoming(n++, text), config, store, api);
+    const send = (text: string) => homework.handleHomework(incoming(n++, text), store, api);
     const callback = async (action: string, value: string, token?: string, updateId?: number) => {
       const s = await store.session(userId);
-      return homework.handleHomework({ ...incoming(updateId ?? n++, ""), callbackId: "cb", data: `${action}:${value}:${token ?? s?.token}` }, config, store, api);
+      return homework.handleHomework({ ...incoming(updateId ?? n++, ""), callbackId: "cb", data: `${action}:${value}:${token ?? s?.token}` }, store, api);
     };
     await send("/start"); assert.match(JSON.stringify(replies.at(-1)), /📚 Добавить ДЗ/);
     await send("/addhomework"); assert.equal((await store.session(userId))?.step, "grade");
@@ -203,12 +209,6 @@ test("Actual migration + bot flow publish into existing homework exactly once, p
       await callback("confirm", "cancel"); assert.equal(await store.session(userId), null); assert.equal(replies.at(-1)?.text, "❌ Добавление ДЗ отменено.");
     }
     await send("/addhomework"); await send("/cancel"); assert.equal(await store.session(userId), null);
-    await send("/addhomework");
-    const untouched = (await store.session(userId))!.token;
-    config.admins = new Set();
-    await send("/cancel"); await callback("grade", "9"); await send("non-admin body");
-    assert.equal((await store.session(userId))?.token, untouched, "removed admin cannot mutate even their existing session");
-    config.admins = new Set([userId]);
     await send("/addhomework"); await callback("grade", "9"); await callback("class", id(10)); await callback("subject", id(20)); await callback("date", "today"); await send("Future check");
     config.authorId = id(999); await callback("confirm", "publish"); assert.equal((await db.query("select * from class_homework")).rows.length, 1, "author must exist");
     config.authorId = id(1);
@@ -216,8 +216,28 @@ test("Actual migration + bot flow publish into existing homework exactly once, p
     await callback("confirm", "publish"); assert.equal((await db.query("select * from class_homework")).rows.length, 1, "membership rechecked at publication");
     await db.query("update telegram_homework_sessions set expires_at=now()-interval '1 second' where telegram_user_id=$1", [userId]);
     await send("new body"); assert.equal(await store.session(userId), null); assert.equal(replies.at(-1)?.text, homework.expiredMessage);
+    // No NIS Hub profile maps to this second Telegram ID; it can still publish.
+    await send("/addhomework");
+    const untouched = (await store.session(userId))!.token;
+    const second = userId + 1;
+    const secondSend = (text: string) => homework.handleHomework({ ...incoming(n++, text), userId: second, chatId: second }, store, api);
+    const secondCallback = async (kind: string, value: string, token?: string) => {
+      const s = await store.session(second);
+      return homework.handleHomework({ ...incoming(n++, ""), userId: second, chatId: second, callbackId: "other", data: `${kind}:${value}:${token ?? s?.token}` }, store, api);
+    };
+    await secondSend("/start"); await secondSend("/addhomework");
+    assert.equal((await store.session(second))?.step, "grade");
+    assert.notEqual((await store.session(second))?.token, untouched);
+    await secondCallback("grade", "9", untouched);
+    assert.equal((await store.session(second))?.step, "grade", "another user's callback token is rejected");
+    await secondCallback("grade", "9"); await secondCallback("class", id(10)); await secondCallback("subject", id(21));
+    await secondCallback("date", "today"); await secondSend("Second user's homework"); await secondCallback("confirm", "publish");
+    assert.equal(await store.session(second), null);
+    assert.equal((await store.session(userId))?.token, untouched, "second flow cannot change the first draft");
+    assert.equal((await db.query("select * from class_homework")).rows.length, 2);
+    assert.equal((await db.query<{ created_by: string }>("select created_by from class_homework where subject_id=$1", [id(21)])).rows[0].created_by, config.authorId);
     assert.ok(events.includes("answer"));
-    await asUser(db, id(2)); assert.equal((await db.query("select * from class_homework")).rows.length, 1, "website own-class query sees Telegram row");
+    await asUser(db, id(2)); assert.equal((await db.query("select * from class_homework")).rows.length, 2, "website own-class query sees Telegram rows");
     for (const table of ["telegram_homework_sessions", "telegram_homework_updates"]) {
       for (const command of [`select * from ${table}`, `delete from ${table}`, `update ${table} set telegram_user_id=1`]) await assert.rejects(db.query(command), /permission denied/);
     }
@@ -233,16 +253,85 @@ test("Actual migration + bot flow publish into existing homework exactly once, p
   } finally { await db.close(); }
 });
 
+test("Database publication quota is 10 per Telegram user in rolling 24h, ignores other outcomes and remains idempotent", async () => {
+  const db = await v051Database();
+  try {
+    await db.exec(`insert into auth.users(id) values('${id(1)}');
+      insert into classes(id,name,grade,section) values('${id(10)}','9H',9,'H');
+      insert into subjects(id,name,name_ru) values('${id(20)}','Math','Математика');
+      insert into weekly_schedule(class_id,subject_id,weekday,lesson_start,lesson_end) values('${id(10)}','${id(20)}',1,1,1);
+      grant usage on schema public to service_role;
+      grant all on public.classes,public.subjects,public.weekly_schedule,public.profiles,public.class_homework to service_role;
+      set role service_role;`);
+    let nextId = 10000;
+    const token = "123456abcdef";
+    const apply = async (uid: number, action: string, updateId = nextId++, value: string | null = null) => (await db.query<{ outcome: string }>(
+      "select telegram_homework_apply_update($1,$2,$3,$4,$5,$6) outcome", [updateId, uid, action, value, token, id(1)],
+    )).rows[0].outcome;
+    const prepare = (uid: number) => db.query(`insert into telegram_homework_sessions(telegram_user_id,step,grade,class_id,subject_id,due_date,body,token,last_update_id)
+      values($1,'confirm',9,$2,$3,(now() at time zone 'Asia/Oral')::date,'Valid public homework',$4,0)
+      on conflict(telegram_user_id) do update set step='confirm',body=excluded.body,token=excluded.token,last_update_id=0,expires_at=now()+interval '30 minutes'`, [uid, id(10), id(20), token]);
+    for (let i = 0; i < 15; i++) {
+      assert.equal(await apply(userId, "cancel"), "cancelled");
+      assert.equal(await apply(userId, "body", undefined, "   "), "invalid");
+    }
+    await prepare(userId);
+    await db.query("update telegram_homework_sessions set step='body',body=null where telegram_user_id=$1", [userId]);
+    assert.equal(await apply(userId, "body", undefined, "   "), "body_invalid");
+    assert.equal(await apply(userId, "cancel"), "cancelled");
+    const publishedUpdates: number[] = [];
+    for (let i = 0; i < 10; i++) {
+      await prepare(userId);
+      const updateId = nextId++;
+      publishedUpdates.push(updateId);
+      assert.equal(await apply(userId, "publish", updateId), "published");
+      assert.equal(await apply(userId, "publish", updateId), "published", "retry returns recorded success without consuming another slot");
+    }
+    assert.equal((await db.query("select * from class_homework")).rows.length, 10);
+    await prepare(userId);
+    const blocked = nextId++;
+    assert.equal(await apply(userId, "publish", blocked), "rate_limited");
+    assert.equal(await apply(userId, "publish", blocked), "rate_limited");
+    assert.equal((await db.query("select * from class_homework")).rows.length, 10);
+    assert.equal((await db.query<{ step: string }>("select step from telegram_homework_sessions where telegram_user_id=$1", [userId])).rows[0].step, "confirm", "quota does not delete an unsubmitted draft");
+    const { homeworkReply } = await bundle<typeof import("../src/lib/telegram/homework")>("src/lib/telegram/homework.ts");
+    const reply = await homeworkReply("rate_limited", userId, {} as HomeworkStore);
+    assert.equal(reply.text, "⏳ Слишком много добавлений за сегодня. Попробуйте позже.");
+
+    const otherUser = userId + 42;
+    await prepare(otherUser);
+    assert.equal(await apply(otherUser, "publish"), "published", "quota is per sender, not shared technical author");
+    // Deletion/moderation cannot refund a publication; count the protected ledger.
+    await db.exec("update class_homework set deleted_at=now()");
+    assert.equal(await apply(userId, "publish"), "rate_limited");
+    // Move exactly one success outside the rolling window; 23h-old successes still count.
+    await db.query("update telegram_homework_updates set created_at=now()-interval '23 hours' where update_id=$1", [publishedUpdates[1]]);
+    assert.equal(await apply(userId, "publish"), "rate_limited");
+    await db.query("update telegram_homework_updates set created_at=now()-interval '25 hours' where update_id=$1", [publishedUpdates[0]]);
+    assert.equal(await apply(userId, "publish"), "published");
+    assert.equal((await db.query("select * from class_homework")).rows.length, 12);
+    const counts = (await db.query<{ count: number }>("select count(*)::int count from telegram_homework_updates where telegram_user_id=$1 and outcome='published' and created_at>now()-interval '24 hours'", [userId])).rows[0];
+    assert.equal(counts.count, 10);
+    await prepare(userId);
+    assert.equal(await apply(userId, "publish"), "rate_limited");
+    assert.equal((await db.query("select * from pg_indexes where indexname='telegram_homework_published_user_time'")).rows.length, 1);
+    await db.exec("reset role");
+    const definition = (await db.query<{ definition: string }>("select pg_get_functiondef(oid) definition from pg_proc where proname='telegram_homework_apply_update'")).rows[0].definition;
+    assert.ok(definition.indexOf("pg_advisory_xact_lock") < definition.indexOf("select count(*)"), "quota is inside the per-user transaction lock");
+    const author = (await db.query<{ created_by: string }>("select distinct created_by from class_homework")).rows;
+    assert.deepEqual(author, [{ created_by: id(1) }]);
+  } finally { await db.close(); }
+});
+
 test("Telegram failures never expose raw Supabase exceptions; delivery retry is explicit", async () => {
   const logs: unknown[] = [], replies: Reply[] = [];
   const { handleHomework } = await bundle<typeof import("../src/lib/telegram/homework")>("src/lib/telegram/homework.ts", {}, { console: { warn: (...args: unknown[]) => logs.push(args) } });
-  const config = { ...environment, admins: new Set([userId]) } as unknown as TelegramConfig;
   const store = { apply: async () => { throw new Error("private_token DATABASE_PASSWORD raw Telegram payload"); } } as unknown as HomeworkStore;
   const api = { answer: async () => true, send: async (_id: number, reply: Reply) => { replies.push(reply); return true; } };
-  assert.equal(await handleHomework(incoming(1, "/start"), config, store, api), "retry");
+  assert.equal(await handleHomework(incoming(1, "/start"), store, api), "retry");
   assert.equal(replies[0].text, "⚠️ Не удалось добавить ДЗ. Попробуйте ещё раз.");
   assert.ok(!JSON.stringify([logs, replies]).includes("private_token"));
-  assert.equal(await handleHomework(incoming(1, "/start"), config, { apply: async () => "welcome" } as unknown as HomeworkStore, { ...api, send: async () => false }), "retry");
+  assert.equal(await handleHomework(incoming(1, "/start"), { apply: async () => "welcome" } as unknown as HomeworkStore, { ...api, send: async () => false }), "retry");
 });
 
 test("Bot API uses bounded no-store direct fetch, answers callbacks and never enables formatting for homework", async () => {
