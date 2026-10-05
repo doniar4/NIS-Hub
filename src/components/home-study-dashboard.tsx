@@ -11,6 +11,7 @@ import {CurrentLessonHero} from "./current-lesson-hero";
 import {HomeworkPreview} from "./homework-preview";
 import {SectionLink} from "./ui";
 import {TaskCenter} from "./task-center";
+import {DayHomeworkProvider} from "./day-homework-provider";
 
 export function HomeStudyDashboard({lessons,subjects,tasks=[],classId,today,nonSchoolDays,grade,materials,time,reading,activity}:{
   lessons:WeeklyLesson[]; subjects:SubjectRow[]; tasks?:PersonalTask[]; classId:string; today:string; nonSchoolDays:CalendarDay[];
@@ -20,7 +21,7 @@ export function HomeStudyDashboard({lessons,subjects,tasks=[],classId,today,nonS
   const [date,setDate]=useState(today),[selection,setSelection]=useState<{date:string;id:string}|null>(null);
   const rows=dayReasons(date,nonSchoolDays,locale).length?[]:weeklyDay(lessons,classId,schoolWeek(date).weekday,date);
   const selected=rows.find(row=>selection?.date===date&&selection.id===row.id)??defaultLesson(rows,date,today,time);
-  return <div className="home-study-dashboard">
+  return <DayHomeworkProvider date={date} classId={classId}><div className="home-study-dashboard">
     <div className="dashboard-primary">
       <CurrentLessonHero lessons={lessons} subjects={subjects} classId={classId} today={today} grade={grade} materials={materials} />
       <TaskCenter initialTasks={tasks} subjects={subjects} variant="compact"/>
@@ -35,5 +36,5 @@ export function HomeStudyDashboard({lessons,subjects,tasks=[],classId,today,nonS
       {activity}
       <section className="surface-card"><h2 className="section-title">{t.continueReading}</h2>{reading}<SectionLink href="/library">{t.openLibrary}</SectionLink></section>
     </div>
-  </div>;
+  </div></DayHomeworkProvider>;
 }

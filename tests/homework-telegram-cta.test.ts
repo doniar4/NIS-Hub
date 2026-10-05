@@ -21,7 +21,7 @@ test("Home and Schedule homework expose localized, safe Telegram CTAs without ch
       api.onResolve({ filter: /^\.\/safety-menu$/ }, () => ({ path: "safety", namespace: "fixture" }));
       api.onLoad({ filter: /.*/, namespace: "fixture" }, ({ path }) => ({
         contents: path === "actions"
-          ? 'export function loadHomework(){throw new Error("Unexpected load")} export function saveHomework(){throw new Error("Unexpected save")} export function deleteHomework(){throw new Error("Unexpected delete")}'
+          ? 'export function loadHomework(){throw new Error("Unexpected load")} export function loadDailyHomework(){throw new Error("Unexpected load")} export function saveHomework(){throw new Error("Unexpected save")} export function deleteHomework(){throw new Error("Unexpected delete")}'
           : path === "safety"
             ? 'export function SafetyMenu(){return null}'
             : 'import React from "react";export default function Link({href,children,className}){return React.createElement("a",{href,className},children)}',

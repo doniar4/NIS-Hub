@@ -25,7 +25,7 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
         a.path.endsWith("community-client")?'export const loadNotifications=async()=>({data:[],unread:0});export const dismissNotification=async()=>({success:true});export const blockPerson=async()=>({success:true});export const reportContent=async()=>({success:true});':
         a.path.endsWith("supabase/client")?'export const createClient=()=>({storage:{from:()=>({upload:async()=>({error:null})})}});':
         a.path.endsWith("reading")?call+'export const saveReading=(...args)=>rpc("reading",args);':
-        a.path.endsWith("homework")?call+'export const loadHomework=(...args)=>rpc("homework",args);export const saveHomework=async()=>({success:true});export const deleteHomework=async()=>({success:true});':
+        a.path.endsWith("homework")?call+'export const loadHomework=(...args)=>rpc("homework",args);export const loadDailyHomework=(...args)=>rpc("homework",args);export const saveHomework=async()=>({success:true});export const deleteHomework=async()=>({success:true});':
         a.path.endsWith("sms")?call+'export const refreshSms=()=>rpc("sms",[]);export const connectSms=()=>rpc("sms",[]);export const disconnectSms=async()=>({connected:false});export const loadSmsSubject=async()=>({assessments:[]});':
         a.path.endsWith("ai-study")?call+'export const generateStudy=(args)=>rpc("study",args);':
         a.path.endsWith("study-answers")?'export const reviewStudyAnswers=async()=>({error:"failed"});':
