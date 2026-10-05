@@ -31,7 +31,7 @@ function isolatedBoundaries() {
               : args.path.endsWith("reading")
                 ? rpc + 'export const saveReading=(...args)=>rpc("reading",args);'
                 : args.path.endsWith("homework")
-                  ? rpc + 'export const loadHomework=(...args)=>rpc("homework",args);export const saveHomework=async()=>({success:true});export const deleteHomework=async()=>({success:true});'
+                  ? rpc + 'export const loadHomework=(...args)=>rpc("homework",args);export const loadDailyHomework=(...args)=>rpc("homework",args);export const saveHomework=async()=>({success:true});export const deleteHomework=async()=>({success:true});'
                   : args.path.endsWith("sms")
                     ? 'export const refreshSms=async()=>({connected:false});export const connectSms=async()=>({connected:false});export const continueSmsLogin=async()=>({connected:false});export const sendSmsLoginCode=async()=>({connected:false});export const cancelSmsLogin=async()=>({connected:false});export const disconnectSms=async()=>({connected:false});export const loadSmsSubject=async()=>({assessments:[]});'
                     : args.path.endsWith("ai-study")

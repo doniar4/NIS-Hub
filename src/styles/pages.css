@@ -77,6 +77,25 @@
 .lesson-info .lesson-room { display:block; margin-top:.15rem; font-size:.73rem; }
 .lesson-row .lesson-actions { flex:0 0 auto; gap:.2rem; }
 .lesson-row .lesson-material { font-size:.75rem; }
+.lesson-list > .timetable-row.lesson-row.has-homework {
+ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,.8fr) auto; gap:.5rem 1rem;
+}
+.lesson-inline-homework { min-width:0; max-width:24rem; color:var(--text-secondary); font-size:.78rem; }
+.lesson-inline-homework > summary { cursor:pointer; min-height:44px; padding:.35rem; border-radius:6px; list-style:none; }
+.lesson-inline-homework > summary::-webkit-details-marker { display:none; }
+.lesson-homework-label { display:flex; justify-content:space-between; gap:.5rem; font-size:.68rem; font-weight:600; color:var(--muted); }
+.lesson-inline-homework[open] .lesson-homework-toggle { transform:rotate(180deg); }
+.lesson-homework-preview { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; white-space:pre-wrap; }
+.lesson-homework-full { max-height:14rem; overflow:auto; overscroll-behavior:contain; padding:.35rem .5rem; }
+.lesson-homework-full > li { white-space:pre-wrap; overflow-wrap:anywhere; padding:.4rem 0; border-bottom:1px solid var(--line); }
+.lesson-homework-full > li:last-child { border-bottom:0; }
+.lesson-inline-homework[open] .lesson-homework-preview { display:none; }
+@container (max-width:760px) {
+ .lesson-list > .timetable-row.lesson-row.has-homework { grid-template-columns:minmax(0,1fr) auto; }
+ .has-homework > .lesson-select { grid-column:1; grid-row:1; }
+ .has-homework > .lesson-actions { grid-column:2; grid-row:1; }
+ .has-homework > .lesson-inline-homework { grid-column:1 / -1; grid-row:2; max-width:none; padding-inline:.55rem; }
+}
 @container (max-width:560px) {
  .lesson-list .lesson-select { display:grid; grid-template-columns:minmax(0,1fr); align-items:start; gap:.35rem; }
  .lesson-list .lesson-clock { flex:0 0 auto; flex-direction:row; align-items:center; gap:.5rem; }

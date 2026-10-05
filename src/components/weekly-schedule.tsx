@@ -17,12 +17,15 @@ import {LessonActions} from "./lesson-actions";
 import {EmptyState} from "./ui";
 import {SubjectMotif} from "./subject-motif";
 import {SelectedLesson} from "./selected-lesson";
+import {DayHomeworkProvider, useProvidedHomeworkDay} from "./day-homework-provider";
+import {InlineLessonHomework} from "./inline-lesson-homework";
 
 export function WeeklyLessonList({lessons,subjects,grade=null,materials={},date,canAddHomework=false,selectedId,onSelect}:{
   lessons:WeeklyLesson[]; subjects:SubjectRow[]; grade?:number|null; materials?:MaterialMap; date?:string; canAddHomework?:boolean;
   selectedId?:string; onSelect?:(id:string)=>void;
 }) {
   const {locale,t}=useI18n(),subjectsById=useMemo(()=>subjectMap(subjects),[subjects]);
+  const homework=useProvidedHomeworkDay();
   return <>
     {lessons.some(row=>row.subgroup_label)&&<p className="my-3 text-sm text-[var(--muted)]">{eduPageCopy(locale).groupHint}</p>}
     <ol className="lesson-list">{lessons.map(row=>{
@@ -32,8 +35,10 @@ export function WeeklyLessonList({lessons,subjects,grade=null,materials={},date,
           {row.subgroup_label&&<span className="lesson-room">{eduPageCopy(locale).subgroup}: {row.subgroup_label}</span>}
           {row.room&&<span className="lesson-room">{t.room}: {normalizeRoom(row.room)}</span>}
         </span></>;
-      return <li key={row.id} className={"timetable-row lesson-row"+(selectedId===row.id?" is-selected":"")}>
+      const assignments=homework&&homework.date===date?(homework.bySubject.get(row.subject_id)??[]).filter(item=>item.class_id===row.class_id):[];
+      return <li key={row.id} className={"timetable-row lesson-row"+(selectedId===row.id?" is-selected":"")+(assignments.length?" has-homework":"")}>
         {onSelect?<button type="button" className="lesson-select" aria-pressed={selectedId===row.id} onClick={()=>onSelect(row.id)}>{content}</button>:<div className="lesson-select lesson-static">{content}</div>}
+        <InlineLessonHomework key={row.id+(date??"")} rows={assignments} subject={subjectName(subjectsById.get(row.subject_id),locale)}/>
         <LessonActions key={row.id+(date??"")} subjectId={row.subject_id} subject={subjectName(subjectsById.get(row.subject_id),locale)}
           href={materials[materialKey(row.subject_id,grade)]??librarySubjectHref(row.subject_id,grade)} date={date} canAddHomework={canAddHomework}/>
       </li>;
@@ -52,7 +57,7 @@ export function WeeklyScheduleBrowser({lessons,classes,subjects,initialClassId,d
   const filtered=useMemo(()=>weeklyDay(lessons,classId,weekday,schoolWeek(date).dates[weekday-1]),[lessons,classId,weekday,date]);
   const grade=classGrade(classes.find(c=>c.id===classId));
   const selected=filtered.find(row=>row.id===selectedId)??filtered[0];
-  return <section className="schedule-browser mt-8">
+  return <DayHomeworkProvider date={selectedDate} classId={initialClassId}><section className="schedule-browser mt-8">
     <div className="schedule-controls surface-card">
       <div className="schedule-class-picker">
         <label htmlFor="schedule-class-select" className="schedule-class-badge">
@@ -96,5 +101,5 @@ export function WeeklyScheduleBrowser({lessons,classes,subjects,initialClassId,d
       </div>
     </section>
     {homeworkEditor?.(selectedDate)}
-  </section>;
+  </section></DayHomeworkProvider>;
 }

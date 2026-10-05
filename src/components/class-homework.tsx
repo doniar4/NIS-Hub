@@ -1,7 +1,6 @@
 "use client";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import {
-  loadHomework,
   saveHomework,
   deleteHomework,
 } from "@/app/actions/homework";
@@ -12,6 +11,7 @@ import { v053Copy } from "@/lib/v053-copy";
 import { useI18n } from "./locale-provider";
 import { SafetyMenu } from "./safety-menu";
 import { TelegramHomeworkCta, TelegramHomeworkLink } from "./telegram-homework-cta";
+import { useHomeworkDay } from "./day-homework-provider";
 export function ClassHomeworkPanel({
   userId,
   date: initialDate,
@@ -26,40 +26,17 @@ export function ClassHomeworkPanel({
   const { locale, t } = useI18n(),
     p = v053Copy(locale);
   const [date, setDate] = useState(initialDate),
-    [rows, setRows] = useState<ClassHomework[]>([]),
     [error, setError] = useState<CommunityError | null>(null),
     [offset, setOffset] = useState(0),
     [revision, setRevision] = useState(0),
     [pending, start] = useTransition(),
-    [loading, setLoading] = useState(hasClass),
     [edit, setEdit] = useState<ClassHomework | null>(null);
-  useEffect(() => {
-    if(!hasClass)return;
-    let active = true;
-    void loadHomework(date, offset).then((r) => {
-      if (!active) return;
-      if ("error" in r) {setError(r.error);setRows([]);}
-      else {
-        setRows(r.data);
-        setError(null);
-      }
-      setLoading(false);
-    }).catch(()=>{if(active){setRows([]);setError("failed");setLoading(false);}});
-    return () => {
-      active = false;
-    };
-  }, [date, offset, revision, hasClass]);
-  useEffect(() => {
-    const refresh = () => {
-      setLoading(true);
-      setRevision((v) => v + 1);
-    };
-    window.addEventListener("nis-homework-change", refresh);
-    return () => window.removeEventListener("nis-homework-change", refresh);
-  }, []);
+  const day=useHomeworkDay(date,hasClass),loading=day.loading,rows=day.rows.slice(offset,offset+20);
+  const displayedError=error??day.error;
   function reload() {
-    setLoading(true);
+    setError(null);
     setRevision((v) => v + 1);
+    window.dispatchEvent(new Event("nis-homework-change"));
   }
   return (
     <section className="surface-card space-y-5 mt-8 homework-panel">
@@ -82,7 +59,7 @@ export function ClassHomeworkPanel({
               value={date}
               onChange={(e) => {
                 if (e.target.value) {
-                  setLoading(true);
+                  setError(null);
                   setDate(e.target.value);
                   setOffset(0);
                   setEdit(null);
@@ -90,7 +67,7 @@ export function ClassHomeworkPanel({
               }}
             />
           </label>
-          {error && <p role="alert">{p[error]}</p>}
+          {displayedError && <p role="alert">{p[displayedError]}</p>}
           <div aria-busy={loading}>
             {rows.map((row) => (
               <article key={row.id} className="homework-entry">
@@ -116,7 +93,7 @@ export function ClassHomeworkPanel({
                         onClick={() =>
                           start(async () => {
                             const r = await deleteHomework(row.id);
-                            if ("error" in r) {setError(r.error);setRows([]);}
+                            if ("error" in r) setError(r.error);
                             else reload();
                           })
                         }
@@ -130,7 +107,7 @@ export function ClassHomeworkPanel({
                 </div>
               </article>
             ))}
-            {!loading && !rows.length && !error && <p>{p.none}</p>}
+            {!loading && !rows.length && !displayedError && <p>{p.none}</p>}
           </div>
           {(offset > 0 || rows.length >= 20) && (
             <div className="flex flex-wrap gap-2">
@@ -138,7 +115,6 @@ export function ClassHomeworkPanel({
                 className="button button-secondary"
                 disabled={!offset || loading}
                 onClick={() => {
-                  setLoading(true);
                   setOffset((v) => v - 20);
                 }}
               >
@@ -146,9 +122,8 @@ export function ClassHomeworkPanel({
               </button>
               <button
                 className="button button-secondary"
-                disabled={rows.length < 20 || loading || offset >= 10000}
+                disabled={offset+20>=day.rows.length || loading || offset >= 10000}
                 onClick={() => {
-                  setLoading(true);
                   setOffset((v) => v + 20);
                 }}
               >
@@ -169,7 +144,7 @@ export function ClassHomeworkPanel({
                   date,
                   body: f.get("body"),
                 });
-                if ("error" in r) {setError(r.error);setRows([]);}
+                if ("error" in r) setError(r.error);
                 else {
                   setEdit(null);
                   reload();

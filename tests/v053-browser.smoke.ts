@@ -13,7 +13,7 @@ import { v053Copy } from "../src/lib/v053-copy";
 const expect=baseExpect.configure({timeout:15000});
 const artifacts=join(process.cwd(),"test-results","community-ui");
 test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, community safety, homework, answer UI and responsive locales", {timeout:240000},async t=>{
- const methods=["findPeople","changeFriend","safetyAction","loadHomework","saveHomework","deleteHomework","loadInbox","startConversation","loadMessages","sendMessage","markConversationRead","loadNotifications","dismissNotification","reviewStudyAnswers"];
+ const methods=["findPeople","changeFriend","safetyAction","loadHomework","loadDailyHomework","saveHomework","deleteHomework","loadInbox","startConversation","loadMessages","sendMessage","markConversationRead","loadNotifications","dismissNotification","reviewStudyAnswers"];
  const bundle=await build({entryPoints:["tests/browser/v053-harness.tsx"],bundle:true,write:false,platform:"browser",format:"esm",jsx:"automatic",define:{"process.env":JSON.stringify({NODE_ENV:"production"})},plugins:[{name:"isolated-boundaries",setup(api){
  api.onResolve({filter:/^(?:@\/app\/actions\/(people|community-safety|homework|study-answers)|\.\.\/\.\.\/src\/app\/actions\/people|@\/lib\/community-client)$/},()=>({path:"rpc",namespace:"fixture"}));
  api.onResolve({filter:/^next\/navigation$/},()=>({path:"navigation",namespace:"fixture"}));
@@ -52,6 +52,7 @@ test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, co
  case "dismissNotification":await rpc("dismiss_notification",a);result={ok:true};break;
  case "loadNotifications":result={data:(await db.query("select * from notification_feed_v053()")).rows,unread:Number((await rpc("notification_unread_v053")).rows[0].value)};break;
  case "loadHomework":result={data:(await db.query("select * from class_homework where due_date=$1 order by created_at,id limit 20 offset $2",[a[0],a[1]??0])).rows};break;
+ case "loadDailyHomework":result={data:(await db.query("select * from class_homework where due_date=$1 order by created_at,id",[a[0]])).rows};break;
  case "saveHomework":await rpc("save_class_homework",[a[0].subject,a[0].date,a[0].body,a[0].id]);result={ok:true};break;
  case "deleteHomework":await rpc("delete_class_homework",a);result={ok:true};break;
  case "reviewStudyAnswers":result={response:{feedback:[{index:0,status:"correct",feedback:"Supported by the source.",evidence:[{page:1,quote:"Chlorophyll absorbs light."}]}],topicsToReview:[]},source:{start:1,end:1,variantId:id(30),hash:"fixture"}};break;

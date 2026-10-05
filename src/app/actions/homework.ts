@@ -5,11 +5,28 @@ import { communityError, type CommunityError } from "@/lib/people";
 import { revalidatePath } from "next/cache";
 import type { ClassHomework } from "@/lib/database.types";
 type Failure={error:CommunityError};
+async function readHomework(date:string,offset:number,wholeDay:boolean):Promise<{data:ClassHomework[]}|Failure>{
+ try{const {supabase,user}=await actionContext();const profile=await supabase.from("profiles").select("class_id").eq("id",user.id).single();if(profile.error)return {error:"failed"};if(!profile.data.class_id)return {data:[]};
+ const rows:ClassHomework[]=[],size=wholeDay?1000:20;
+ // Usually one day query. Bounded pagination handles unusually large days,
+ // rather than losing assignments beyond the editor's first 20 records.
+ for(let start=offset;start<=10000;start+=size){
+  const {data,error}=await supabase.from("class_homework").select("*").eq("class_id",profile.data.class_id).eq("due_date",date).eq("moderation_status","visible").is("deleted_at",null).order("created_at").order("id").range(start,wholeDay&&start===10000?start:start+size-1);
+  if(error)return communityError(error);
+  if(wholeDay&&start===10000)return data.length?{error:"failed"}:{data:rows};
+  rows.push(...data);
+  if(!wholeDay||data.length<size)return {data:rows};
+ }
+ return {error:"failed"};
+ }catch{return {error:"failed"};}
+}
 export async function loadHomework(date:string,offset=0):Promise<{data:ClassHomework[]}|Failure>{
  if(!z.iso.date().safeParse(date).success||!Number.isInteger(offset)||offset<0||offset>10000)return {error:"failed"};
- try{const {supabase,user}=await actionContext();const profile=await supabase.from("profiles").select("class_id").eq("id",user.id).single();if(profile.error)return {error:"failed"};if(!profile.data.class_id)return {data:[]};
- const {data,error}=await supabase.from("class_homework").select("*").eq("class_id",profile.data.class_id).eq("due_date",date).eq("moderation_status","visible").is("deleted_at",null).order("created_at").order("id").range(offset,offset+19);return error?communityError(error):{data};
- }catch{return {error:"failed"};}
+ return readHomework(date,offset,false);
+}
+export async function loadDailyHomework(date:string):Promise<{data:ClassHomework[]}|Failure>{
+ if(!z.iso.date().safeParse(date).success)return {error:"failed"};
+ return readHomework(date,0,true);
 }
 export async function saveHomework(input:unknown):Promise<{ok:true}|Failure>{
  const parsed=z.object({id:z.uuid().nullable(),subject:z.uuid(),date:z.iso.date(),body:z.string().trim().min(1).max(1000)}).strict().safeParse(input);
