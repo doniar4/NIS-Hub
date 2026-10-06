@@ -1,3 +1,5 @@
+import { createRequire } from "node:module";
+const nodeRequire = createRequire(import.meta.url);
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync,readdirSync} from "node:fs";
@@ -29,7 +31,7 @@ test("activity tracker absorbs a cancelled navigation action without retries and
  const component=await isolated<{ActivityTracker:()=>null}>("src/components/activity-tracker.tsx",{
   "next/navigation":'export const usePathname=()=>globalThis.path;',
   "@/app/actions/activity":'export async function recordUserActivity(...args){globalThis.calls.push(args);throw new Error("fixture-cancelled-transport");}',
- },{...context,require:(name:string)=>name==="react"?{useEffect:(fn:()=>void)=>effects.push(fn),useRef:()=>ref}:require(name),navigator:{userAgent:"fixture coarse agent"}});
+ },{...context,require:(name:string)=>name==="react"?{useEffect:(fn:()=>void)=>effects.push(fn),useRef:()=>ref}:nodeRequire(name),navigator:{userAgent:"fixture coarse agent"}});
  component.ActivityTracker();effects[0]();effects[0]();await new Promise(resolve=>setTimeout(resolve,0));
  assert.equal(calls.length,1,"same route is throttled and a failed transport does not loop");
  assert.equal(ref.current.path,"/admin/users");
