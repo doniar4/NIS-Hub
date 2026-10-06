@@ -90,6 +90,8 @@ export type Database = { public: {
   };
   Views: Record<string, never>;
   Functions: {
+    admin_control_read:{Args:{p_section:string;p_filters?:Json};Returns:Json};
+    admin_update_user:{Args:{p_user:string;p_class:string|null;p_role:string;p_expected_role:string;p_confirm:boolean};Returns:undefined};
     library_page:{Args:{p_queries:string[];p_grade:number|null;p_subject:string|null;p_offset:number;p_secret:boolean};Returns:Json};
     sync_edupage_schedule:{Args:{p_lessons:Json;p_classes:string[];p_expected_active:string;p_note:string;p_aliases:Json};Returns:string};
     save_sms_session:{Args:{p_ciphertext:string;p_expires:string};Returns:string};

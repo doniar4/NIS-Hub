@@ -19,7 +19,10 @@ export function ActivityTracker() {
 
     lastRecorded.current = { path: pathname, time: now };
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-    void recordUserActivity(pathname, ua);
+    // Navigation can cancel this best-effort Server Action (notably WebKit).
+    // A telemetry transport failure must not break the page or create an
+    // unhandled rejection. Keep the existing throttle; do not retry in a loop.
+    void recordUserActivity(pathname, ua).catch(() => undefined);
   }, [pathname]);
 
   return null;

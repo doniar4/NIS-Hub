@@ -87,7 +87,7 @@ function EditionForm({id,book,subjects,action,edition,variantId,variants=[]}:Edi
           form.set("replace", "on");
         }
         const result = await action(form, "finish"); setState(result);
-        if (result.success) router.replace("/admin?entity=books&id="+stableId);
+        if (result.success) router.replace("/admin/content?id="+stableId);
       } catch { setState({ error: file ? p.uploadError : p.bookError }); }
     });
   }} className="space-y-5">

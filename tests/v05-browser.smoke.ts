@@ -18,7 +18,9 @@ test("v0.5 Chromium/WebKit shell, school-day gaps and support with real isolated
  const bundle=await build({entryPoints:[resolve("tests/browser/v05-harness.tsx")],bundle:true,write:false,platform:"browser",format:"esm",jsx:"automatic",logLevel:"silent",
  define:{"process.env":JSON.stringify({NODE_ENV:"production"})},plugins:[{name:"test-routing-boundary",setup(api){
  api.onResolve({filter:/^next\/navigation$/},()=>({path:"navigation",namespace:"fixture"}));
- api.onLoad({filter:/.*/,namespace:"fixture"},()=>({contents:'export function usePathname(){return window.location.pathname;}',loader:"js"}));
+ api.onResolve({filter:/^next\/link$/},()=>({path:"link",namespace:"fixture"}));
+ api.onResolve({filter:/^@\/app\/actions\/(homework|community-safety)$/},()=>({path:"actions",namespace:"fixture"}));
+ api.onLoad({filter:/.*/,namespace:"fixture"},({path})=>({contents:path==="navigation"?'export function usePathname(){return window.location.pathname;}export const useRouter=()=>({refresh(){},prefetch(){}});':path==="link"?'export default function Link({prefetch,...props}){return <a {...props}/>;}':'export const loadDailyHomework=async()=>({data:[]});export const loadHomework=loadDailyHomework;export const saveHomework=async()=>({ok:true});export const deleteHomework=saveHomework;export const safetyAction=saveHomework;',loader:"jsx",resolveDir:process.cwd()}));
  }}]});
  const css=readdirSync(".next/static/css").filter(n=>n.endsWith(".css")).map(n=>readFileSync(join(".next/static/css",n),"utf8")).join("\n");
  const requests:string[]=[],db=await v05Database();let student=id(2),notificationAttempts=0;
@@ -68,7 +70,7 @@ test("v0.5 Chromium/WebKit shell, school-day gaps and support with real isolated
   await expect(page.locator(".app-sidebar .sidebar-link").first()).toHaveAccessibleName("Home");
   await page.reload({waitUntil:"networkidle"});await expect(page.locator("html")).toHaveAttribute("data-sidebar","collapsed");
   await page.getByRole("button",{name:"Expand sidebar",exact:true}).click();
-  await expect(page.locator(".app-sidebar")).toHaveCSS("width","248px");
+  await expect(page.locator(".app-sidebar")).toHaveCSS("width","240px");
   await page.getByRole("radio",{name:"Dark",exact:true}).check();await expect(page.locator("html")).toHaveAttribute("data-theme","dark");
   await page.screenshot({animations:"disabled",path:join(artifacts,name+"-home-dark-desktop.png"),fullPage:true});
   for(const locale of ["ru","kk","en"] as const){
@@ -91,7 +93,7 @@ test("v0.5 Chromium/WebKit shell, school-day gaps and support with real isolated
   await expect(page.locator(".home-timetable")).toContainText("Vacation: Autumn break");await expect(page.locator(".timetable-row")).toHaveCount(0);
   await page.getByRole("button",{name:"Show nearest school day",exact:true}).click();await expect(page.locator(".home-timetable time")).toHaveAttribute("dateTime","2026-09-28");
   await page.goto(origin+"/schedule?today=2026-09-22");await expect(page.getByRole("tabpanel")).toContainText("Non-school day");await expect(page.locator(".timetable-row")).toHaveCount(0);
-  await page.goto(origin+"/admin");await expect(page.locator(".dashboard-card")).toHaveCount(7);await expect(page.getByText("Open tickets: 2",{exact:false})).toBeVisible();
+  await page.goto(origin+"/admin");await expect(page.locator(".dashboard-card")).toHaveCount(0);await expect(page.locator(".admin-stat").filter({hasText:"Open tickets"})).toContainText("2");
   await page.screenshot({animations:"disabled",path:join(artifacts,name+"-admin-mobile.png"),fullPage:true});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.goto(origin+"/versions");await expect(page.locator(".room-change").first()).toContainText("305 → 307");
   await page.getByRole("searchbox",{name:"Search the library",exact:true}).fill("Physics");await page.getByRole("button",{name:"Search",exact:true}).click();

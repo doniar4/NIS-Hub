@@ -4,6 +4,7 @@ import "@fontsource-variable/noto-sans/wght.css";
 import "./globals.css";
 import "../styles/mobile.css";
 import "../styles/auth-oauth.css";
+import "../styles/admin.css";
 import {experienceBootstrap} from "@/lib/experience";
 import {FullLoadIntro} from "@/components/full-load-intro";
 import { themeBootstrap } from "@/lib/theme";
