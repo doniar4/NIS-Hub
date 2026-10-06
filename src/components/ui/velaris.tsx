@@ -166,11 +166,22 @@ const Velaris = ({
       parallax: gl.getUniformLocation(program, "u_parallax"),
     };
 
+    let hasRendered = false;
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-      canvas.width = Math.max(1, Math.round(container.clientWidth * dpr));
-      canvas.height = Math.max(1, Math.round(container.clientHeight * dpr));
+      const width = Math.max(1, Math.round(container.clientWidth * dpr));
+      const height = Math.max(1, Math.round(container.clientHeight * dpr));
+      if (canvas.width === width && canvas.height === height) return;
+      canvas.width = width;
+      canvas.height = height;
       gl.viewport(0, 0, canvas.width, canvas.height);
+      // Resizing clears this opaque WebGL buffer to black. ResizeObserver runs
+      // after rAF; redraw now so WebKit cannot composite that cleared frame
+      // through the translucent page while mobile browser chrome resizes.
+      if (hasRendered) {
+        gl.uniform2f(locs.res, width, height);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
     };
 
     const ro = new ResizeObserver(resize);
@@ -215,6 +226,7 @@ const Velaris = ({
       gl.uniform3fv(locs.colors, flat);
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      hasRendered = true;
       raf = requestAnimationFrame(render);
     };
 
