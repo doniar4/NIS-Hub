@@ -88,7 +88,7 @@
     border-radius: 16px;
     color: var(--text-secondary);
     text-align: center;
-    transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 160ms var(--ease-out);
   }
   .mobile-bottom-link svg { width: 21px; height: 21px; flex: 0 0 auto; }
   .mobile-bottom-link span { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .62rem; line-height: 1.2; }

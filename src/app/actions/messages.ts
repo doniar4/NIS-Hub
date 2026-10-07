@@ -1,6 +1,7 @@
 "use server";
 import { actionContext } from "@/lib/auth";
 import { uuid } from "@/lib/validation";
+import { withMessageAvatars } from "@/lib/message-avatars";
 import type {
   AppNotification,
   DirectMessage,
@@ -30,8 +31,9 @@ function failure(error: { code?: string; message?: string }): Failure {
 export async function loadInbox(): Promise<{ data: DmThread[] } | Failure> {
   try {
     const { supabase } = await actionContext();
-    const { data, error } = await supabase.rpc("dm_inbox_v053");
-    return error ? failure(error) : { data };
+    const { data, error } = await supabase.rpc("dm_inbox_v2");
+    return error ? failure(error) : { data: await withMessageAvatars(data ?? [],
+      (paths, ttl) => supabase.storage.from("avatars").createSignedUrls(paths, ttl)) };
   } catch {
     return { error: "failed" };
   }

@@ -1,6 +1,7 @@
 "use client";
 import {StudyAnswerForm} from "./study-answer-form";
-import {useState,useTransition} from "react";
+import {useEffect,useRef,useState,useTransition} from "react";
+import {MAX_STUDY_PAGE,studyRangeEnd} from "@/lib/study-range";
 import {generateStudy} from "@/app/actions/ai-study";
 import {STUDY_MODES,type StudyInput,type StudyResult} from "@/lib/ai-study";
 import {v051Copy} from "@/lib/v051-copy";
@@ -13,18 +14,30 @@ const labels={
  kk:{overview:"Шолу",concepts:"Негізгі ұғымдар",definitions:"Анықтамалар",facts:"Формулалар мен деректер",confusions:"Шатастыруға болатын тұстар",mistakes:"Материал бойынша қателер",questions:"Өзін-өзі тексеру",checklist:"Тексеру тізімі"},
  en:{overview:"Overview",concepts:"Key concepts",definitions:"Definitions",facts:"Formulas and facts",confusions:"Potential confusions",mistakes:"Source-based mistakes",questions:"Self-check",checklist:"Checklist"}
 };
-export type AiPanelConfig={enabled:boolean;maxPages:number;maxChars:number;dailyLimit:number};
-export function AiStudyPanel({variantId,totalPages,initialPage,config,defaultOpen=false}:{variantId:string;totalPages:number|null;initialPage:number;config:AiPanelConfig;defaultOpen?:boolean}){
+export type AiPanelConfig={enabled:boolean;maxPages:number;maxChars:number;dailyLimit:number;sourceReady?:boolean};
+export function AiStudyPanel({variantId,totalPages,initialPage,config,defaultOpen=false,embedded=false}:{variantId:string;totalPages:number|null;initialPage:number;config:AiPanelConfig;defaultOpen?:boolean;embedded?:boolean}){
  const {locale,t}=useI18n(),p=v051Copy(locale);
  const [start,setStart]=useState(String(initialPage)),[end,setEnd]=useState(String(initialPage)),[mode,setMode]=useState<StudyInput["mode"]>("summary");
  const [result,setResult]=useState<StudyResult|null>(null),[pending,transition]=useTransition();
- return <aside className="ai-study-panel"><details className="surface-card" open={defaultOpen}><summary className="ai-study-summary"><MagicWandIcon aria-hidden="true"/><span><strong>{p.ai}</strong><small>{communityCopy(locale).aiHelp}</small></span><ChevronDownIcon className="ai-study-chevron" aria-hidden="true"/></summary>
- {!config.enabled?<p className="mt-4">{p.aiDisabled}</p>:<div className="mt-5 space-y-5"><p className="text-sm">{p.aiConsent}</p>
+ const edited=useRef(false),working=useRef(false),currentLocale=useRef<typeof locale|null>(locale);
+ useEffect(()=>{currentLocale.current=locale;return ()=>{currentLocale.current=null;};},[locale]);
+ useEffect(()=>{
+  const follow=(event:Event)=>{
+   const detail=(event as CustomEvent<{variantId:string;page:number}>).detail;
+   if(detail?.variantId!==variantId||edited.current||working.current)return;
+   const page=Math.min(detail.page,totalPages??MAX_STUDY_PAGE,MAX_STUDY_PAGE);
+   setStart(String(page));setEnd(String(page));
+  };
+  window.addEventListener("nis-reader-page",follow);
+  return ()=>window.removeEventListener("nis-reader-page",follow);
+ },[variantId,totalPages]);
+ return <aside className="ai-study-panel"><details className={embedded?undefined:"surface-card"} open={defaultOpen}><summary className="ai-study-summary"><MagicWandIcon aria-hidden="true"/><span><strong>{p.ai}</strong><small>{communityCopy(locale).aiHelp}</small></span><ChevronDownIcon className="ai-study-chevron" aria-hidden="true"/></summary>
+ {!config.enabled?<p className="mt-4">{p.aiDisabled}</p>:config.sourceReady===false?<p className="mt-4" role="status">{p.unavailable}</p>:<div className="ai-study-content mt-5 space-y-5"><p className="text-sm">{p.aiConsent}</p>
  <p className="text-sm text-[var(--muted)]">{p.limit}<br/>{config.maxPages} {t.pages} · {config.maxChars.toLocaleString(locale)} · {config.dailyLimit}/24h</p>
- <form className="space-y-4" onSubmit={event=>{event.preventDefault();setResult(null);transition(async()=>{try{setResult(await generateStudy({variantId,start:Number(start),end:Number(end),mode,locale}));}catch{setResult({error:"failed"});}});}}>
- <fieldset disabled={pending} className="space-y-4"><div className="grid grid-cols-2 gap-3">
- <label><span className="field-label">{p.from}</span><input className="field" type="number" min={1} max={totalPages??1000} required value={start} onChange={e=>{setStart(e.target.value);setResult(null);}}/></label>
- <label><span className="field-label">{p.to}</span><input className="field" type="number" min={Number(start)||1} max={Math.min(totalPages??1000,(Number(start)||1)+config.maxPages-1)} required value={end} onChange={e=>{setEnd(e.target.value);setResult(null);}}/></label></div>
+ <form className="space-y-4" onSubmit={event=>{event.preventDefault();if(pending)return;setResult(null);edited.current=true;working.current=true;transition(async()=>{try{const next=await generateStudy({variantId,start:Number(start),end:Number(end),mode,locale});if(currentLocale.current===locale)setResult(next);}catch{if(currentLocale.current===locale)setResult({error:"failed"});}finally{working.current=false;}});}}>
+ <fieldset disabled={pending} className="space-y-4"><div className="ai-study-range grid grid-cols-2 gap-3">
+ <label><span className="field-label">{p.from}</span><input className="field" type="number" min={1} max={Math.min(totalPages??MAX_STUDY_PAGE,MAX_STUDY_PAGE)} required value={start} onChange={e=>{edited.current=true;setStart(e.target.value);const next=Number(e.target.value);if(Number.isInteger(next)&&next>=1&&next<=Math.min(totalPages??MAX_STUDY_PAGE,MAX_STUDY_PAGE))setEnd(String(studyRangeEnd(next,Number(end)||next,config.maxPages,totalPages)));setResult(null);}}/></label>
+ <label><span className="field-label">{p.to}</span><input className="field" type="number" min={Number(start)||1} max={Math.min(totalPages??MAX_STUDY_PAGE,MAX_STUDY_PAGE,(Number(start)||1)+config.maxPages-1)} required value={end} onChange={e=>{edited.current=true;setEnd(e.target.value);setResult(null);}}/></label></div>
  <label className="block"><span className="field-label">{p.ai}</span><select className="field" value={mode} onChange={e=>{setMode(e.target.value as StudyInput["mode"]);setResult(null);}}>{STUDY_MODES.map(value=><option key={value} value={value}>{p.modes[value]}</option>)}</select></label>
  <AiGenerateButton pending={pending} label={pending?p.working:p.generate}/></fieldset></form>
  {pending&&<p role="status">{p.working}</p>}{result?.error&&<p role="alert">{result.error==="configuration"?p.aiConfiguration:result.error==="timeout"?p.aiTimeout:result.error==="busy"?p.aiBusy:result.error==="provider_quota"?p.aiProviderQuota:result.error==="quota"?p.quota:result.error==="unavailable"?p.unavailable:result.error==="disabled"?p.aiDisabled:p.aiError}</p>}

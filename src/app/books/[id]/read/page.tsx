@@ -14,6 +14,8 @@ import { pageSchema } from "@/lib/validation";
 import { subjectName } from "@/lib/i18n";
 import { v051Copy } from "@/lib/v051-copy";
 
+export const maxDuration = 90;
+
 export default async function ReadPage({
   params,
   searchParams,
@@ -42,7 +44,7 @@ export default async function ReadPage({
   if (!edition) notFound();
 
   const supabase = await database();
-  const [progress, bookmarks] = await Promise.all([
+  const [progress, bookmarks, extraction] = await Promise.all([
     supabase
       .from("variant_reading_progress")
       .select("page_number")
@@ -55,6 +57,8 @@ export default async function ReadPage({
       .eq("profile_id", user.id)
       .eq("book_variant_id", edition.id)
       .order("page_number"),
+    supabase.from("book_extractions").select("status,content_revision")
+      .eq("book_variant_id",edition.id).maybeSingle(),
   ]);
   const bookmarkList = bookmarks.data ? bookmarks.data.map((b) => b.page_number) : [];
   const requested = pageSchema.safeParse(query.page);
@@ -114,16 +118,17 @@ export default async function ReadPage({
         </section>
 
         } inspector={
-          <AiStudyPanel defaultOpen
-            key={edition.id + "-ai"}
+          <AiStudyPanel defaultOpen embedded
+            key={edition.id + "-ai-" + locale}
             variantId={edition.id}
-            initialPage={Math.min(startPage, edition.page_count ?? 1000)}
+            initialPage={Math.min(startPage, edition.page_count ?? 1000, 1000)}
             totalPages={edition.page_count}
             config={{
               enabled: ai.enabled,
               maxPages: ai.maxPages,
               maxChars: ai.maxChars,
               dailyLimit: ai.dailyLimit,
+              sourceReady: !extraction.error && extraction.data?.status === "ready" && extraction.data.content_revision === edition.content_revision,
             }}
           />
         }>

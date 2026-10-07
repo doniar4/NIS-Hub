@@ -23,6 +23,7 @@ import type { DirectMessage, DmThread } from "@/lib/database.types";
 import { communityCopy } from "@/lib/community-copy";
 import { useI18n } from "./locale-provider";
 import { ReloadButton } from "./reload-button";
+import { ConversationAvatar } from "./conversation-avatar";
 
 const EMOJI_REACTIONS = ["👍", "❤️", "💡", "🔥"];
 
@@ -218,9 +219,7 @@ export function MessagesPanel({
                       onClick={() => selectThread(thread.id)}
                     >
                       <div className="relative">
-                        <span className="conversation-initial" aria-hidden="true">
-                          {thread.peer_name?.slice(0, 1).toLocaleUpperCase() || "N"}
-                        </span>
+                        <ConversationAvatar url={thread.peer_avatar_url} name={thread.peer_name} />
                       </div>
                       <span className="min-w-0 flex-1 ml-2">
                         <strong className="text-sm font-medium text-[var(--ink)] truncate block">
@@ -229,7 +228,7 @@ export function MessagesPanel({
                         <span className="conversation-preview text-xs text-[var(--muted)] truncate block mt-0.5">
                           {thread.last_deleted
                             ? v053Copy(locale).deleted
-                            : (thread.last_body ?? p.emptyChat)}
+                            : <>{thread.last_sender_id === userId && <>{locale === "ru" ? "Вы" : locale === "kk" ? "Сіз" : "You"}: </>}{thread.last_body ?? p.emptyChat}</>}
                         </span>
                       </span>
                       {thread.unread > 0 && (
@@ -424,7 +423,8 @@ function Conversation({
   // Read receipts preference
   const [readReceipts, setReadReceipts] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
-    return localStorage.getItem("nis-send-read-receipts") !== "false";
+    try { return localStorage.getItem("nis-send-read-receipts") !== "false"; }
+    catch { return true; }
   });
 
   const toggleReadReceipts = () => {
@@ -466,9 +466,6 @@ function Conversation({
       return next;
     });
   };
-
-  // Peer typing simulated status
-  const [peerTyping, setPeerTyping] = useState(false);
 
   const list = useRef<HTMLOListElement>(null),
     client = useRef<{ body: string; id: string } | null>(null),
@@ -578,9 +575,7 @@ function Conversation({
             className="conversation-profile flex items-center gap-2"
           >
             <div className="relative">
-              <span className="conversation-initial shadow-sm" aria-hidden="true">
-                {thread.peer_name.slice(0, 1).toLocaleUpperCase()}
-              </span>
+              <ConversationAvatar url={thread.peer_avatar_url} name={thread.peer_name} />
             </div>
             <div>
               <h2 className="section-title text-base sm:text-lg font-semibold text-[var(--ink)] leading-snug">
@@ -823,12 +818,6 @@ function Conversation({
         )}
       </ol>
 
-      {peerTyping && (
-        <div className="message-typing-indicator px-4">
-          {thread.peer_name} {p.typing}
-        </div>
-      )}
-
       {thread.blocked && (
         <p role="status" className="p-3 text-center text-xs text-[var(--muted)]">
           {v053Copy(locale).blocked}
@@ -864,9 +853,6 @@ function Conversation({
             setReplyTarget(null);
             client.current = null;
             nearBottom.current = true;
-
-            setPeerTyping(true);
-            setTimeout(() => setPeerTyping(false), 3000);
 
             const latest = await loadMessages(thread.id);
             if (!active.current) return;

@@ -380,7 +380,7 @@ export function AppFrame({
 
         <main id="main" tabIndex={-1} className="app-main">
 
-          <div className="page-content">{children}</div>
+          <div key={pathname} className="page-content">{children}</div>
         </main>
 
         <footer className="app-footer">

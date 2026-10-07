@@ -20,7 +20,7 @@ import { BookmarkIcon } from "@/components/icons";
 import { ReloadButton } from "@/components/reload-button";
 import { extractPageText } from "@/lib/pdf-page-text";
 import { isRenderCancellation, reportPdfError } from "@/lib/pdf-reader-errors";
-import { readerKeyDelta, readerScale } from "@/lib/reader-controls";
+import { readerKeyDelta, readerScale, captureReaderAnchor, readerAnchorScroll, readerViewportRect } from "@/lib/reader-controls";
 import { v051Copy } from "@/lib/v051-copy";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import type {
@@ -253,7 +253,7 @@ function PdfPage({
       className="relative flex justify-center border-b border-[var(--line)] bg-[var(--surface)] py-3 last:border-b-0"
     >
       <div
-        className="w-fit self-start relative"
+        className="pdf-page-surface w-fit relative"
         style={
           renderedSize
             ? { width: renderedSize.width, height: renderedSize.height }
@@ -356,6 +356,7 @@ export function PdfReader({
   const [page, setPage] = useState(initialPage);
   const [zoom, setZoom] = useState(1);
   const [fit, setFit] = useState<"width" | "page">("width");
+  const zoomAnchor = useRef<ReturnType<typeof captureReaderAnchor> | null>(null);
 
   const [height, setHeight] = useState(650);
   const [width, setWidth] = useState(() => {
@@ -564,12 +565,12 @@ export function PdfReader({
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      readerRef.current
-        ?.requestFullscreen?.()
-        .then(() => setFullscreen(true))
-        .catch(() => {
-          setFullscreen((prev) => !prev);
-        });
+      if (fullscreen) { setFullscreen(false); return; }
+      setFullscreen(true);
+      // iPhone browsers can lack the element Fullscreen API; the existing
+      // fixed reader layout also works as an in-page full-screen fallback.
+      const element=readerRef.current;
+      if(element?.requestFullscreen) void element.requestFullscreen().catch(()=>{});
     } else {
       document
         .exitFullscreen?.()
@@ -579,6 +580,15 @@ export function PdfReader({
         });
     }
   };
+
+  useEffect(()=>{
+    if(!fullscreen)return;
+    const previous=document.body.style.overflow;
+    document.body.style.overflow="hidden";
+    const close=(event:KeyboardEvent)=>{if(event.key==="Escape"&&!document.fullscreenElement)setFullscreen(false);};
+    window.addEventListener("keydown",close);
+    return ()=>{document.body.style.overflow=previous;window.removeEventListener("keydown",close);};
+  },[fullscreen]);
 
   const handleShare = async () => {
     const url =
@@ -597,7 +607,8 @@ export function PdfReader({
   const navigationAnchor = useRef<number | null>(initialPage);
   useEffect(() => {
     currentPage.current = page;
-  }, [page]);
+    window.dispatchEvent(new CustomEvent("nis-reader-page", { detail: { variantId, page } }));
+  }, [page, variantId]);
 
   const savedPage = useRef<number | null>(null);
 
@@ -676,6 +687,7 @@ export function PdfReader({
       }
 
       setMessage("");
+      zoomAnchor.current = null;
       if (currentPage.current !== next) {
         setText("");
         setTextFailed(false);
@@ -725,6 +737,7 @@ export function PdfReader({
     };
     const manual = () => {
       navigationAnchor.current = null;
+      zoomAnchor.current = null;
     };
     scrollRoot.addEventListener("scroll", onScroll, { passive: true });
     scrollRoot.addEventListener("wheel", manual, { passive: true });
@@ -745,7 +758,7 @@ export function PdfReader({
     const anchor = () => {
       frame = 0;
       const number = navigationAnchor.current;
-      if (number === null) return;
+      if (number === null || zoomAnchor.current) return;
       const element = scrollRoot.querySelector<HTMLElement>(
         `[data-page="${number}"]`,
       );
@@ -776,6 +789,7 @@ export function PdfReader({
   useEffect(() => {
     navigationAnchor.current = currentPage.current;
     if (!scrollRoot) return;
+    if (zoomAnchor.current) return;
     const number = currentPage.current;
     const element = scrollRoot.querySelector<HTMLElement>(
       `[data-page="${number}"]`,
@@ -790,6 +804,31 @@ export function PdfReader({
         behavior: "instant",
       });
   }, [width, height, fit, zoom, scrollRoot]);
+
+  const rememberZoomAnchor = () => {
+    if (!scrollRoot) return;
+    const surface = scrollRoot.querySelector<HTMLElement>(`[data-page="${currentPage.current}"] .pdf-page-surface`);
+    if (!surface) return;
+    zoomAnchor.current = captureReaderAnchor(readerViewportRect(scrollRoot), surface.getBoundingClientRect());
+    navigationAnchor.current = currentPage.current;
+  };
+
+  useEffect(() => {
+    if (!scrollRoot || !pdf || !zoomAnchor.current) return;
+    const restore = () => {
+      const anchor = zoomAnchor.current;
+      const surface = scrollRoot.querySelector<HTMLElement>(`[data-page="${currentPage.current}"] .pdf-page-surface`);
+      if (!anchor || !surface) return;
+      const next = readerAnchorScroll(anchor, readerViewportRect(scrollRoot), surface.getBoundingClientRect(), scrollRoot.scrollLeft, scrollRoot.scrollTop);
+      scrollRoot.scrollTo({ left: next.left, top: next.top, behavior: "instant" });
+    };
+    // PDF.js sizes pages asynchronously. Keep the same document point in view
+    // as this page and preceding page placeholders finish resizing.
+    const observer = new ResizeObserver(restore);
+    scrollRoot.querySelectorAll("[data-page], .pdf-page-surface").forEach(element => observer.observe(element));
+    restore();
+    return () => observer.disconnect();
+  }, [width, height, fit, zoom, scrollRoot, pdf]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -1212,7 +1251,7 @@ export function PdfReader({
               className="button button-secondary"
               aria-label={v.zoomOut}
               disabled={!pdf || zoom <= 0.5}
-              onClick={() => setZoom((value) => Math.max(0.5, value - 0.25))}
+              onClick={() => { rememberZoomAnchor(); setZoom((value) => Math.max(0.5, value - 0.25)); }}
             >
               −
             </button>
@@ -1225,7 +1264,7 @@ export function PdfReader({
               className="button button-secondary"
               aria-label={v.zoomIn}
               disabled={!pdf || zoom >= 3}
-              onClick={() => setZoom((value) => Math.min(3, value + 0.25))}
+              onClick={() => { rememberZoomAnchor(); setZoom((value) => Math.min(3, value + 0.25)); }}
             >
               +
             </button>
@@ -1236,6 +1275,7 @@ export function PdfReader({
             disabled={!pdf}
             aria-pressed={fit === "width" && zoom === 1}
             onClick={() => {
+              rememberZoomAnchor();
               setFit("width");
               setZoom(1);
             }}
@@ -1248,6 +1288,7 @@ export function PdfReader({
             disabled={!pdf}
             aria-pressed={fit === "page" && zoom === 1}
             onClick={() => {
+              rememberZoomAnchor();
               setFit("page");
               setZoom(1);
             }}

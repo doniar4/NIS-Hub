@@ -552,7 +552,7 @@ html[data-sidebar="collapsed"] .sidebar-brand-row .sidebar-collapse { width: 40p
 .profile-portrait img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; }
 .profile-settings { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 1.25rem; margin-top: 2rem; align-items: start; }
 .avatar-settings { min-width: 0; }
-.reader-workspace { display: flex; flex-direction: column; gap: 1.5rem; }
+/* Layout is owned by styles/workspaces.css, including the desktop AI column. */
 .reader-workspace > section { width: 100%; min-width: 0; }
 .ai-study-panel { order: initial; min-width: 0; }
 .ai-study-panel > details { padding: 1rem 1.25rem; }
@@ -1289,6 +1289,15 @@ html[data-sidebar="collapsed"] .sidebar-identity-row .sidebar-collapse { justify
 @media(prefers-reduced-motion:reduce) { .timetable-day { animation:none; } .study-route,.study-route .route-art,.route-reveal,.route-plus { transition:none; } }
 [data-motion="paused"] .timetable-day { animation:none; }
 [data-motion="paused"] :is(.study-route,.route-art,.route-reveal,.route-plus) { transition:none; }
+
+/* Reader sizing must follow the shell's final overrides. */
+.app-canvas > .app-main:has(.pdf-reader) {
+  width:100%; max-width:none; padding-inline:clamp(.5rem,1.2vw,1rem);
+}
+.pdf-scroll-viewport { overflow-anchor:none; }
+.page-content:has(.pdf-reader[data-fullscreen="true"]) { animation:none; transform:none; }
+.conversation-initial { overflow:hidden; flex-shrink:0; }
+.conversation-initial img { width:100%; height:100%; object-fit:cover; }
 
 .mobile-menu { display: none !important; }
 @media (max-width: 767px) {

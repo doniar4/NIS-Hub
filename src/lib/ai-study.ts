@@ -1,7 +1,8 @@
 import {z} from "zod";
+import {MAX_STUDY_PAGE} from "./study-range";
 export const STUDY_MODES=["summary","review","sor","soch","questions"] as const;
 export const STUDY_SECTIONS=["overview","concepts","definitions","facts","confusions","mistakes","questions","checklist"] as const;
-export const studyInput=z.object({variantId:z.uuid(),start:z.number().int().min(1).max(1000),end:z.number().int().min(1).max(1000),mode:z.enum(STUDY_MODES),locale:z.enum(["ru","kk","en"])}).strict().refine(v=>v.end>=v.start&&v.end-v.start<10);
+export const studyInput=z.object({variantId:z.uuid(),start:z.number().int().min(1).max(MAX_STUDY_PAGE),end:z.number().int().min(1).max(MAX_STUDY_PAGE),mode:z.enum(STUDY_MODES),locale:z.enum(["ru","kk","en"])}).strict().refine(v=>v.end>=v.start&&v.end-v.start<10);
 export const studyResponse=z.object({
  insufficient:z.boolean(),
  sections:z.array(z.object({kind:z.enum(STUDY_SECTIONS),insufficient:z.boolean(),points:z.array(z.object({

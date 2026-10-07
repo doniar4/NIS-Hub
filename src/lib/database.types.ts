@@ -1,5 +1,5 @@
 import type { Person } from "./people";
-export type DmThread = {peer_id:string;last_deleted:boolean;blocked:boolean;id:string;peer_name:string;last_body:string|null;last_at:string;unread:number};
+export type DmThread = {peer_id:string;last_deleted:boolean;blocked:boolean;id:string;peer_name:string;last_body:string|null;last_at:string;unread:number;peer_avatar_path?:string|null;peer_avatar_updated_at?:string|null;peer_avatar_url?:string|null;last_sender_id?:string|null};
 export type DirectMessage = {deleted_at:string|null;id:string;thread_id:string;sender_id:string;body:string;client_id:string;created_at:string};
 export type StudyGroupRole="owner"|"admin"|"member";
 export type StudyGroup = {id:string;name:string;subject:string;description:string;members_count:number;owner:boolean;last_at:string;role:StudyGroupRole;avatar_icon:number;avatar_color:number;admins_only_post:boolean;members_can_invite:boolean;notifications_muted:boolean;unread:number;pinned_message_id:string|null};
@@ -103,6 +103,7 @@ export type Database = { public: {
     set_dm_hidden:{Args:{p_thread:string;p_hidden:boolean};Returns:undefined};
     delete_own_dm:{Args:{p_message:string};Returns:undefined};
     dm_inbox_v053:{Args:Record<string,never>;Returns:DmThread[]};
+    dm_inbox_v2:{Args:Record<string,never>;Returns:DmThread[]};
     dm_history_v053:{Args:{p_thread:string;p_before?:string|null;p_id?:string|null};Returns:DirectMessage[]};
     notification_unread_v053:{Args:Record<string,never>;Returns:number};
     notification_feed_v053:{Args:Record<string,never>;Returns:WebNotification[]};

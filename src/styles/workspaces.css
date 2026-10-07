@@ -112,6 +112,10 @@
 .app-main:has(.pdf-reader) { max-width:none; padding-inline:clamp(.75rem,1.5vw,1.5rem); padding-bottom:1rem; }
 .reader-inspector .ai-study-panel > details > div { margin-top:.75rem!important; }
 .reader-inspector .ai-study-panel .ai-study-action-btn { width:100%; }
+.ai-study-panel,.ai-study-content,.ai-study-range > label { min-width:0; }
+.ai-study-range .field { width:100%; }
+.reader-inspector .ai-study-panel fieldset { margin:0; padding:0; border:0; }
+.reader-inspector .ai-study-panel section > section + section { margin-top:1.25rem; }
 
 .pdf-reader[data-fullscreen="true"] {
   position: fixed; inset: 0; z-index: 99999;

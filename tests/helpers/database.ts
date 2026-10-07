@@ -9,7 +9,10 @@ export async function phase3Database() {
     // Models SQL surfaces, NOT GoTrue or the Storage HTTP service.
     await db.exec(`
       create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create schema storage;
-      create table auth.users(id uuid primary key, raw_user_meta_data jsonb default '{}');
+      create table auth.users(id uuid primary key, raw_user_meta_data jsonb default '{}',
+        raw_app_meta_data jsonb default '{}', email text, created_at timestamptz default now(),
+        email_confirmed_at timestamptz, phone_confirmed_at timestamptz, last_sign_in_at timestamptz,
+        is_anonymous boolean default false);
       create function auth.uid() returns uuid language sql stable as $$
         select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
       $$;
