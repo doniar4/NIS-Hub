@@ -14,7 +14,7 @@ export interface StudyProvider {
 }
 
 export class StudyProviderError extends Error {
-  constructor(readonly code: "provider_quota" | "configuration" | "timeout" | "failed", readonly stage: "configuration" | "request" | "http" | "read-response" | "parse-response" | "validate-response" = "request", readonly httpStatus?: number) {
+  constructor(readonly code: "provider_unavailable" | "provider_quota" | "configuration" | "timeout" | "failed", readonly stage: "configuration" | "request" | "http" | "read-response" | "parse-response" | "validate-response" = "request", readonly httpStatus?: number) {
     super(code);
   }
 }
@@ -132,6 +132,10 @@ export function geminiProvider(
 
         if (response.status === 429) {
           throw new StudyProviderError("provider_quota", "http", response.status);
+        }
+
+        if (response.status === 503) {
+          throw new StudyProviderError("provider_unavailable", "http", response.status);
         }
 
         if (!response.ok) {

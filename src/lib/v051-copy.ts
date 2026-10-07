@@ -2,6 +2,7 @@ import type { Locale } from "./i18n";
 
 const copy = {
   ru: {
+    aiProviderUnavailable: "Сервис Gemini временно недоступен (503). Подождите немного и повторите запрос.",
     aiConfiguration:
       "AI недоступен: администратору нужно проверить модель и ключ Gemini.",
     aiTimeout:
@@ -61,6 +62,7 @@ const copy = {
   },
 
   kk: {
+    aiProviderUnavailable: "Gemini сервисі уақытша қолжетімсіз (503). Біраз күтіп, сұрауды қайталаңыз.",
     aiConfiguration:
       "AI қолжетімсіз: әкімші Gemini моделі мен кілтін тексеруі керек.",
     aiTimeout:
@@ -122,6 +124,7 @@ const copy = {
   },
 
   en: {
+    aiProviderUnavailable: "Gemini is temporarily unavailable (503). Wait a little and try again.",
     aiConfiguration:
       "AI is unavailable: an admin needs to check the Gemini model and key.",
     aiTimeout:

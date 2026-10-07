@@ -7,10 +7,10 @@ const input={variantId:"00000000-0000-4000-8000-000000000030",start:1,end:1,mode
 const pages=[{page:1,text:"A vector has a magnitude and a direction. Two equal vectors have the same magnitude and direction."}];
 const answer={insufficient:false,sections:[{kind:"overview",insufficient:false,points:[{text:"A vector has two properties.",evidence:[{page:1,quote:"A vector has a magnitude and a direction."}]}]}]};
 test("Gemini configuration failures are actionable and never leak raw provider details",async()=>{
- for(const status of [400,401,403,404,429,500]){
+ for(const status of [400,401,403,404,429,500,503]){
   const provider=geminiProvider({key:"private-key-fixture",model:"gemini-test",timeoutMs:100},async()=>Response.json({error:{message:"private-key-fixture https://private.invalid?token=secret"}},{status}));
   await assert.rejects(provider.generate(input,pages),(error:unknown)=>error instanceof StudyProviderError
-   &&error.code===(status===429?"provider_quota":status<500?"configuration":"failed")
+   &&error.code===(status===503?"provider_unavailable":status===429?"provider_quota":status<500?"configuration":"failed")
    &&error.httpStatus===status&&error.stage==="http"
    &&!error.message.includes("private"));
  }
@@ -42,4 +42,16 @@ test("AI diagnostics are development-only and discard source text, IDs, exceptio
   studyDebug("SECRET",{code:"SECRET",providerStage:"SECRET",httpStatus:"SECRET"});
   assert.deepEqual(log.mock.calls[1].arguments,["[AI Study]",{stage:"unexpected-error"}]);
  }finally{if(previous===undefined)delete env.NODE_ENV;else env.NODE_ENV=previous;}
+});
+
+test("Gemini 503 is shared by generation and answer review without automatic retries",async()=>{
+ let calls=0;
+ const provider=geminiProvider({key:"fixture",model:"gemini-test",timeoutMs:100},async()=>{
+  calls++;return new Response("private provider body",{status:503});
+ });
+ const unavailable=(error:unknown)=>error instanceof StudyProviderError&&error.code==="provider_unavailable"&&error.stage==="http"&&error.httpStatus===503;
+ await assert.rejects(provider.generate(input,pages),unavailable);
+ assert.equal(calls,1);
+ await assert.rejects(provider.reviewStudyAnswers("ru",pages,[{index:0,question:"What is a vector?",answer:"A magnitude and a direction."}]),unavailable);
+ assert.equal(calls,2);
 });

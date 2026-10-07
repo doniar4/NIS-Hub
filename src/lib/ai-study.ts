@@ -13,7 +13,7 @@ export const studyResponse=z.object({
 export type StudyInput=z.infer<typeof studyInput>;
 export type StudyResponse=z.infer<typeof studyResponse>;
 export type SourcePage={page:number;text:string};
-export type StudyResult={generationId?:string;error?:"disabled"|"quota"|"unavailable"|"busy"|"provider_quota"|"configuration"|"timeout"|"failed";response?:StudyResponse;cached?:boolean;source?:{start:number;end:number;variantId:string;hash:string}};
+export type StudyResult={generationId?:string;error?:"disabled"|"quota"|"unavailable"|"busy"|"provider_unavailable" | "provider_quota"|"configuration"|"timeout"|"failed";response?:StudyResponse;cached?:boolean;source?:{start:number;end:number;variantId:string;hash:string}};
 const normalize=(text:string)=>text
  .normalize("NFKC")
  .replace(/[\u00ad\u200b-\u200d\u2060\ufeff]/gu,"")
