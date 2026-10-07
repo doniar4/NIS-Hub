@@ -1,7 +1,7 @@
 begin;
 
 -- Runs inside Postgres: no Auth admin API pagination or network egress.
-create function private.cleanup_unverified_accounts() returns integer
+create or replace function private.cleanup_unverified_accounts() returns integer
 language plpgsql security definer set search_path='' as $$
 declare candidate uuid; removed integer:=0;
 begin

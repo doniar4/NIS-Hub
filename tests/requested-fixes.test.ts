@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { v051Database } from "./helpers/v051-database";
@@ -12,6 +13,10 @@ import { studyRangeEnd } from "../src/lib/study-range";
 test("DM avatar SQL permits visible peers only and preserves own message attribution", async () => {
   const db = await v051Database();
   try {
+    // A partial/manual rollout can leave functions and policy already installed.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      await db.exec(readFileSync(new URL("../supabase/releases/20261007_fixes.sql", import.meta.url), "utf8"));
+    }
     await db.exec(`insert into auth.users(id) values('${id(1)}'),('${id(2)}'),('${id(3)}');
       update profiles set display_name='Student-'||right(id::text,1);
       insert into storage.objects(bucket_id,name) values('avatars','${id(2)}/avatar.webp');

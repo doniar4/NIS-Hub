@@ -5,7 +5,7 @@
 begin;
 
 -- Preserve the v053 contract for older clients. No emails or private profile fields.
-create function public.dm_inbox_v2() returns table(
+create or replace function public.dm_inbox_v2() returns table(
  id uuid,peer_id uuid,peer_name text,last_body text,last_deleted boolean,
  last_at timestamptz,unread bigint,blocked boolean,peer_avatar_path text,
  peer_avatar_updated_at timestamptz,last_sender_id uuid
@@ -24,7 +24,7 @@ revoke all on function public.dm_inbox_v2() from public,anon;
 grant execute on function public.dm_inbox_v2() to authenticated;
 
 -- Private bucket: only canonical images belonging to an allowed DM peer.
-create function public.can_read_dm_avatar(p_name text) returns boolean
+create or replace function public.can_read_dm_avatar(p_name text) returns boolean
 language sql stable security definer set search_path='' as $$
  select auth.uid() is not null and exists(
   select 1 from public.profiles p join public.dm_threads t
@@ -38,6 +38,7 @@ language sql stable security definer set search_path='' as $$
 $$;
 revoke all on function public.can_read_dm_avatar(text) from public,anon;
 grant execute on function public.can_read_dm_avatar(text) to authenticated;
+drop policy if exists "Read allowed DM peer avatar" on storage.objects;
 create policy "Read allowed DM peer avatar" on storage.objects
  for select to authenticated using (
   bucket_id='avatars' and public.can_read_dm_avatar(name)
@@ -50,7 +51,7 @@ commit;
 begin;
 
 -- Runs inside Postgres: no Auth admin API pagination or network egress.
-create function private.cleanup_unverified_accounts() returns integer
+create or replace function private.cleanup_unverified_accounts() returns integer
 language plpgsql security definer set search_path='' as $$
 declare candidate uuid; removed integer:=0;
 begin
