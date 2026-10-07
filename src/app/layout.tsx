@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   title: { default: "NIS Hub", template: "%s · NIS Hub" },
   description: "NIS Hub brings schedules, books, homework, community and study tools together.",
   robots: { index: false, follow: false },
+  applicationName: "NIS Hub",
+  appleWebApp: { capable: true, title: "NIS Hub", statusBarStyle: "default" },
+  // Next 16 emits mobile-web-app-capable for appleWebApp. Keep the iOS
+  // compatibility directive through Metadata API, not a duplicate manual tag.
+  other: { "apple-mobile-web-app-capable": "yes" },
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
