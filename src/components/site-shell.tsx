@@ -12,6 +12,7 @@ import {AppFrame} from "./app-frame";
 import {NotificationCenter} from "./notification-center";
 import {HeaderAvatar} from "./header-avatar";
 import {ActivityTracker} from "./activity-tracker";
+import {InstallReminder} from "./install-discovery";
 export async function SiteShell({children}:{children:ReactNode}){
  const {t}=await getI18n(),viewer=await getViewer();let url:string|null=null;
  if(viewer.user&&viewer.profile?.avatar_path===viewer.user.id+"/avatar.webp"){
@@ -48,6 +49,7 @@ export async function SiteShell({children}:{children:ReactNode}){
       }
     >
       {viewer.user && <ActivityTracker />}
+      {viewer.user && <InstallReminder />}
       {children}
     </AppFrame>
   );

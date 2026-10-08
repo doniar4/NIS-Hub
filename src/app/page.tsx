@@ -17,6 +17,7 @@ import {getWeeklySchedule} from "@/lib/weekly-queries";
 import {safeNext,schoolDate} from "@/lib/validation";
 import {WelcomeScreen} from "@/components/welcome-screen";
 import {getPersonalTasks} from "@/lib/task-queries";
+import {InstallHomeCard} from "@/components/install-discovery";
 
 import { absoluteSiteUrl } from "@/lib/site-url";
 import { socialProviderEnabled } from "@/lib/auth-providers";
@@ -71,6 +72,7 @@ export default async function Home({searchParams}:{searchParams:Promise<Record<s
       <p className="dashboard-date">{new Intl.DateTimeFormat(locale,{timeZone:"Asia/Oral",weekday:"long",day:"numeric",month:"long"}).format(now)}</p></div>
       {classId&&<span className="status-chip">{classes.find(item=>item.id===classId)?.name}</span>}
     </header>
+    <InstallHomeCard/>
     <HomeStudyDashboard lessons={lessons} subjects={subjects} tasks={tasks} classId={classId} today={today} nonSchoolDays={nonSchoolDays} grade={grade} materials={materials}
       time={new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Oral",hour:"2-digit",minute:"2-digit",hour12:false}).format(now)}
       reading={<ReadingList limit={3} reading={reading}/>} activity={<RecentSmsGrades subjects={subjects} sessionPresent={smsConnected}/>}/>

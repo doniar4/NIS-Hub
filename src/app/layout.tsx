@@ -5,6 +5,8 @@ import "./globals.css";
 import "../styles/mobile.css";
 import "../styles/auth-oauth.css";
 import "../styles/admin.css";
+import "../styles/install.css";
+import { InstallProvider } from "@/components/install-provider";
 import {experienceBootstrap} from "@/lib/experience";
 import {FullLoadIntro} from "@/components/full-load-intro";
 import { themeBootstrap } from "@/lib/theme";
@@ -28,5 +30,5 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { locale } = await getI18n();
-  return <html lang={locale} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeBootstrap + ";" + experienceBootstrap }} /></head><body><LocaleProvider locale={locale}><FullLoadIntro/><SmoothScroll /><ParallaxBackground/>{children}</LocaleProvider></body></html>;
+  return <html lang={locale} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeBootstrap + ";" + experienceBootstrap }} /></head><body><LocaleProvider locale={locale}><FullLoadIntro/><SmoothScroll /><ParallaxBackground/><InstallProvider>{children}</InstallProvider></LocaleProvider></body></html>;
 }
