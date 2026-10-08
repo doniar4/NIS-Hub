@@ -17,6 +17,7 @@ import { database, getCatalogOptions } from "@/lib/queries";
 import { saveProfile } from "@/app/actions/profile";
 import { getPersonalTasks } from "@/lib/task-queries";
 import { TaskCenter } from "@/components/task-center";
+import { InstallProfileEntry } from "@/components/install-discovery";
 export default async function ProfilePage() {
   const { t, locale } = await getI18n();
   const c = communityCopy(locale);
@@ -82,6 +83,7 @@ export default async function ProfilePage() {
           hidePreview
         />
       </div>
+      <InstallProfileEntry />
       <div className="profile-reading mt-8 grid gap-6 lg:grid-cols-2">
         <section>
           <h2 className="section-title border-b border-[var(--line)] pb-4">
