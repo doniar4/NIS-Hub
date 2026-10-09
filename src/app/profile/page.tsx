@@ -1,27 +1,24 @@
 import { CommunityNav } from "@/components/community-nav";
-import { v053Copy } from "@/lib/v053-copy";
 import { ProfilePortrait } from "@/components/profile-portrait";
-import { communityCopy } from "@/lib/community-copy";
 import { AVATAR_URL_TTL_SECONDS } from "@/lib/avatar-policy";
 import { getI18n } from "@/lib/i18n-server";
 import { SiteShell } from "@/components/site-shell";
 import { PageIntro } from "@/components/ui";
-import { ActionForm } from "@/components/action-form";
-import { Field, SelectField } from "@/components/fields";
+import { ProfileForm } from "@/components/profile-form";
+import { profileCopy, profileIsIncomplete } from "@/lib/profile-copy";
 import { AvatarForm } from "@/components/avatar-form";
 import { uploadAvatar } from "@/app/actions/avatar";
-import { TopSubjects } from "@/components/top-subjects";
 import { ReadingList } from "@/components/reading-list";
 import { requireViewer } from "@/lib/auth";
 import { database, getCatalogOptions } from "@/lib/queries";
-import { saveProfile } from "@/app/actions/profile";
 import { getPersonalTasks } from "@/lib/task-queries";
 import { TaskCenter } from "@/components/task-center";
 import { InstallProfileEntry } from "@/components/install-discovery";
 export default async function ProfilePage() {
   const { t, locale } = await getI18n();
-  const c = communityCopy(locale);
+  const pc = profileCopy(locale);
   const { user, profile } = await requireViewer("/profile");
+  const incomplete = profileIsIncomplete(profile);
   const { classes, subjects } = await getCatalogOptions();
   const supabase = await database();
   const [{data:top,error},tasks] = await Promise.all([supabase.from("profile_top_subjects").select("subject_id,position").eq("profile_id", user.id).order("position"),getPersonalTasks()]);
@@ -39,43 +36,20 @@ export default async function ProfilePage() {
           url={avatar?.data?.signedUrl ?? null}
           name={profile.display_name ?? ""}
         />
-        <div><PageIntro title={profile.display_name || t.profile}>{t.profileHint}</PageIntro><p>{classes.find(row=>row.id===profile.class_id)?.name}</p></div>
+        <div><PageIntro title={profile.display_name || t.profile}>{t.profileHint}</PageIntro><p className="profile-class">{classes.find(row=>row.id===profile.class_id)?.name}</p></div>
       </div>
       <CommunityNav locale={locale}/>
-      <TaskCenter initialTasks={tasks} subjects={subjects}/>
       <div className="profile-settings">
-        <ActionForm
-          action={saveProfile}
-          label={t.saveProfile}
-          className="surface-card space-y-6"
-        >
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field
-              label={t.displayName}
-              name="display_name"
-              defaultValue={profile.display_name ?? ""}
-              required
-              maxLength={60}
-              autoComplete="nickname"
-            />
-            <SelectField
-              label={t.class}
-              name="class_id"
-              options={classes}
-              value={profile.class_id}
-            />
-          </div>
-          <p className="text-sm text-[var(--muted)]">{c.nameHint}</p>
-          <label className="block"><span className="field-label">{v053Copy(locale).bio}</span><textarea className="field" name="bio" maxLength={280} rows={4} defaultValue={profile.bio ?? ""} aria-describedby="bio-hint"/></label><p id="bio-hint" className="text-sm">{v053Copy(locale).bioHint}</p>
-          <TopSubjects
-            subjects={subjects}
-            initial={[1, 2, 3, 4].map(
-              (position) =>
-                top.find((item) => item.position === position)?.subject_id ??
-                "",
-            )}
-          />
-        </ActionForm>
+        <ProfileForm
+          classes={classes}
+          subjects={subjects}
+          profile={{ display_name: profile.display_name, class_id: profile.class_id, bio: profile.bio }}
+          top={[1, 2, 3, 4].map(
+            (position) =>
+              top.find((item) => item.position === position)?.subject_id ?? "",
+          )}
+          hasAvatar={!!profile.avatar_path}
+        />
         <AvatarForm
           url={avatar?.data?.signedUrl ?? null}
           hasAvatar={!!profile.avatar_path}
@@ -83,6 +57,7 @@ export default async function ProfilePage() {
           hidePreview
         />
       </div>
+      {!incomplete && <TaskCenter initialTasks={tasks} subjects={subjects} collapsible label={pc.tasks}/>}
       <InstallProfileEntry />
       <div className="profile-reading mt-8 grid gap-6 lg:grid-cols-2">
         <section>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useI18n } from "./locale-provider";
 import { subjectName } from "@/lib/i18n";
 import type { SubjectRow } from "@/lib/database.types";
@@ -15,6 +15,13 @@ export function TopSubjects({ subjects, initial }: { subjects: SubjectRow[]; ini
   const copy = locale === "ru"
     ? { choose: "Выбрать", change: "Изменить", remove: "Убрать", dialog: "Выберите предмет", dialogHint: "Предмет появится в этой позиции вашего профиля." }
     : { choose: "Choose", change: "Change", remove: "Remove", dialog: "Choose a subject", dialogHint: "The subject will be shown in this position on your profile." };
+  const root = useRef<HTMLFieldSetElement>(null);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    // Hidden inputs do not emit events; notify the enclosing form (autosave/dirty state).
+    if (firstRender.current) { firstRender.current = false; return; }
+    root.current?.dispatchEvent(new Event("change", { bubbles: true }));
+  }, [values]);
   const openPicker = (index: number) => {
     setActiveSlot(index);
     dialog.current?.showModal();
@@ -30,7 +37,7 @@ export function TopSubjects({ subjects, initial }: { subjects: SubjectRow[]; ini
     });
     dialog.current?.close();
   };
-  return <fieldset className="space-y-3">
+  return <fieldset ref={root} className="space-y-3">
     <legend className="section-title mb-3">Top 4</legend>
     <p className="text-sm text-[var(--muted)]">{t.topHint}</p>
     {values.map((value, index) => <input key={index} type="hidden" name="subjects" value={value}/>) }

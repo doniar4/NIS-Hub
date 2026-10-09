@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useEffect,useMemo,useState,useTransition} from "react";
-import {Archive,Bell,BellOff,CalendarDays,Check,CheckCircle2,ChevronRight,Clock3,Flag,ListTodo,Pencil,Plus} from "lucide-react";
+import {Archive,Bell,BellOff,CalendarDays,Check,CheckCircle2,ChevronDown,ChevronRight,Clock3,Flag,ListTodo,Pencil,Plus} from "lucide-react";
 import {savePersonalTask,setPersonalTaskStatus,toggleTaskSubtask,type SaveTaskInput} from "@/app/actions/tasks";
 import type {PersonalTask,SubjectRow,TaskPriority,TaskSubtask} from "@/lib/database.types";
 import {tasksCopy} from "@/lib/tasks-copy";
@@ -241,26 +241,40 @@ function TaskRow({task,subjects,onEdit,onChange,now,compact=false}:{task:Persona
  </li>;
 }
 
-export function TaskCenter({initialTasks,subjects,variant="full"}:{initialTasks:PersonalTask[];subjects:SubjectRow[];variant?:"full"|"compact"}){
- const {locale}=useI18n(),p=tasksCopy(locale),[tasks,setTasks]=useState(()=>sortedTasks(initialTasks)),[editing,setEditing]=useState<PersonalTask|null|undefined>(undefined),[filter,setFilter]=useState<Filter>("today"),[message,setMessage]=useState("");
+export function TaskCenter({initialTasks,subjects,variant="full",collapsible=false,label}:{initialTasks:PersonalTask[];subjects:SubjectRow[];variant?:"full"|"compact";collapsible?:boolean;label?:string}){
+ const {locale}=useI18n(),p=tasksCopy(locale),[tasks,setTasks]=useState(()=>sortedTasks(initialTasks)),[editing,setEditing]=useState<PersonalTask|null|undefined>(undefined),[filter,setFilter]=useState<Filter>("today"),[message,setMessage]=useState(""),[open,setOpen]=useState(false);
  const [now]=useState(()=>Date.now()),active=tasks.filter(task=>task.status==="active"),completed=tasks.filter(task=>task.status==="completed"),today=dayKey(new Date(now));
  const visible=useMemo(()=>{
   const rows=variant==="compact"?active:filter==="completed"?completed:filter==="all"?tasks:active.filter(task=>filter==="today"?(task.due_at?taskDay(task.due_at)!<=today:false):(task.due_at?taskDay(task.due_at)!>today:true));
   return sortedTasks(rows).slice(0,variant==="compact"?4:200);
  },[active,completed,filter,tasks,today,variant]);
  const replace=(task:PersonalTask)=>{setTasks(rows=>sortedTasks(rows.some(row=>row.id===task.id)?rows.map(row=>row.id===task.id?task:row):[task,...rows]));setEditing(undefined);setMessage(task.status==="completed"?p.completedMessage:task.status==="archived"?p.archived:p.saved);window.dispatchEvent(new Event("nis-task-change"));window.dispatchEvent(new Event("nis-notifications-change"));};
- return <section id="tasks" className={`surface-card task-center task-center-${variant}`}>
-  <header className="task-center-header">
-   <div className="task-center-heading"><span className="task-center-mark" aria-hidden="true"><ListTodo size={21}/></span><div><h2 className="section-title">{p.title}</h2><p>{variant==="compact"?p.quickHint:p.subtitle}</p></div></div>
-   <button type="button" className="button task-add-button" onClick={()=>setEditing(null)} aria-label={p.add} title={p.add}><Plus size={18} aria-hidden="true"/><span className="task-add-label">{p.add}</span></button>
-  </header>
+ useEffect(()=>{
+  if(!collapsible)return;
+  const sync=()=>{if(window.location.hash==="#tasks")setOpen(true);};
+  const timer=window.setTimeout(sync,0);window.addEventListener("hashchange",sync);
+  return()=>{window.clearTimeout(timer);window.removeEventListener("hashchange",sync);};
+ },[collapsible]);
+ const addButton=<button type="button" className="button task-add-button" onClick={()=>setEditing(null)} aria-label={p.add} title={p.add}><Plus size={18} aria-hidden="true"/><span className="task-add-label">{p.add}</span></button>;
+ const body=<>
   {variant==="full"&&<>
-   <NotificationPreference/>
+   <details className="task-notification-disclosure"><summary><Bell size={15} aria-hidden="true"/><span>{p.browserTitle}</span><ChevronDown size={15} aria-hidden="true" className="task-disclosure-chevron"/></summary><NotificationPreference/></details>
    <div className="task-filter" role="group" aria-label={p.title}>{(["today","upcoming","completed","all"] as Filter[]).map(item=><button type="button" key={item} aria-pressed={filter===item} onClick={()=>setFilter(item)}>{p[item]}<span>{item==="completed"?completed.length:item==="all"?tasks.length:item==="today"?active.filter(task=>task.due_at&&taskDay(task.due_at)!<=today).length:active.filter(task=>!task.due_at||taskDay(task.due_at)!>today).length}</span></button>)}</div>
   </>}
   {message&&<p className="task-inline-status" role="status"><CheckCircle2 size={15}/>{message}<button type="button" onClick={()=>setMessage("")} aria-label={p.close}>×</button></p>}
   {visible.length?<ul className="personal-task-list">{visible.map(task=><TaskRow key={task.id} task={task} subjects={subjects} now={now} compact={variant==="compact"} onEdit={setEditing} onChange={replace}/>)}</ul>:<div className="task-empty"><span aria-hidden="true"><Clock3 size={23}/></span><strong>{variant==="full"&&tasks.length?p.emptyFiltered:p.empty}</strong><p>{variant==="full"&&tasks.length?p.emptyFiltered:p.emptyHint}</p></div>}
   {variant==="compact"&&<Link className="task-manage-link" href="/profile#tasks"><span>{p.openProfile}</span><ChevronRight size={17}/></Link>}
-  {editing!==undefined&&<TaskForm task={editing} subjects={subjects} onClose={()=>setEditing(undefined)} onSaved={replace} onArchived={replace}/>} 
+  {editing!==undefined&&<TaskForm task={editing} subjects={subjects} onClose={()=>setEditing(undefined)} onSaved={replace} onArchived={replace}/>}
+ </>;
+ if(collapsible)return <details id="tasks" className="surface-card task-center task-center-full task-center-collapsible" open={open} onToggle={event=>setOpen(event.currentTarget.open)}>
+  <summary className="task-center-summary"><span className="task-center-mark" aria-hidden="true"><ListTodo size={19}/></span><span className="task-summary-title">{label??p.title}</span>{active.length>0&&<span className="task-summary-count">{active.length}</span>}<ChevronDown size={18} aria-hidden="true" className="task-disclosure-chevron"/></summary>
+  <div className="task-center-body"><div className="task-center-toolbar"><p>{p.subtitle}</p>{addButton}</div>{body}</div>
+ </details>;
+ return <section id="tasks" className={`surface-card task-center task-center-${variant}`}>
+  <header className="task-center-header">
+   <div className="task-center-heading"><span className="task-center-mark" aria-hidden="true"><ListTodo size={21}/></span><div><h2 className="section-title">{p.title}</h2><p>{variant==="compact"?p.quickHint:p.subtitle}</p></div></div>
+   {addButton}
+  </header>
+  {body}
  </section>;
 }

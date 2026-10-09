@@ -8,6 +8,7 @@ export async function proxy(request: NextRequest) {
   response.headers.set("Cache-Control", "private, no-store");
   // Bot requests have no browser session. The route validates its own secret/admin ID.
   if (request.nextUrl.pathname === "/api/telegram/webhook") return response;
+  if (request.nextUrl.pathname.startsWith("/api/cron/")) return response;
   const config = getSupabaseConfig();
   if (!config) return response;
   const supabase = createServerClient<Database>(config.url, config.key, { cookies: {

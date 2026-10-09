@@ -78,6 +78,7 @@ export function AppFrame({
   avatar,
   profileAccount,
   admin = false,
+  profileIncomplete = false,
 }: {
   children: ReactNode;
   preferences: ReactNode;
@@ -85,6 +86,7 @@ export function AppFrame({
   avatar: ReactNode;
   profileAccount?: ReactNode;
   admin?: boolean;
+  profileIncomplete?: boolean;
 }) {
   const { locale, t } = useI18n();
   const router = useRouter();
@@ -413,6 +415,7 @@ export function AppFrame({
           >
             {renderNavIcon(href)}
             <span>{label}</span>
+            {href === "/profile" && profileIncomplete && <i className="mobile-nav-dot" aria-hidden="true" />}
           </Link>
         ))}
       </nav>
