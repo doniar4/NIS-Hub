@@ -1,23 +1,29 @@
-/* Shared panel hierarchy. Loaded after legacy page styles so surfaces have one
+/* Liquid Glass panel hierarchy. Loaded after legacy page styles so surfaces have one
    source of truth without overriding layout, positioning, or component states. */
 :root {
-  --panel-background: rgb(255 255 255 / .86);
-  --panel-border: rgb(54 83 124 / .13);
+  --panel-background: linear-gradient(135deg, rgb(255 255 255 / .72), rgb(255 255 255 / .32) 48%, rgb(237 246 255 / .54));
+  --panel-border: rgb(255 255 255 / .78);
   --panel-edge: rgb(255 255 255 / .95);
-  --panel-elevation: 0 4px 8px -5px rgb(26 51 87 / .08), 0 14px 34px -20px rgb(26 51 87 / .2);
-  --panel-inset: #f0f4f9;
+  --panel-elevation: inset 0 -1px 1px rgb(35 68 110 / .07), inset 1px 0 1px rgb(255 255 255 / .55), inset -1px 0 1px rgb(255 255 255 / .25), 0 16px 40px -14px rgb(26 51 87 / .18);
+  --panel-inset: rgb(226 238 252 / .38);
   --panel-overlay: rgb(250 252 255 / .97);
   --panel-overlay-shadow: 0 24px 72px -18px rgb(20 39 70 / .28);
   --panel-padding: clamp(1.15rem, 2vw, 1.75rem);
+  --control-glass: linear-gradient(165deg, rgb(255 255 255 / .82), rgb(245 250 255 / .28) 55%, rgb(220 235 254 / .45));
+  --control-glass-hover: linear-gradient(165deg, rgb(255 255 255 / .95), rgb(237 246 255 / .5) 55%, rgb(211 230 252 / .6));
+  --control-glass-shadow: inset 0 1.5px 1px rgb(255 255 255 / .98), inset 1px 0 1px rgb(255 255 255 / .65), inset 0 -1px 1px rgb(44 77 119 / .15), 0 4px 12px -3px rgb(27 57 98 / .15);
 }
 :root[data-theme="dark"] {
-  --panel-background: rgb(22 35 53 / .93);
-  --panel-border: rgb(166 194 228 / .16);
-  --panel-edge: rgb(192 216 246 / .05);
-  --panel-elevation: 0 8px 28px -16px rgb(0 5 14 / .6);
-  --panel-inset: #122033;
+  --panel-background: linear-gradient(135deg, rgb(55 78 108 / .58), rgb(18 34 55 / .48) 48%, rgb(31 54 81 / .62));
+  --panel-border: rgb(185 213 246 / .24);
+  --panel-edge: rgb(219 236 255 / .3);
+  --panel-elevation: inset 0 -1px 1px rgb(0 8 22 / .3), inset 1px 0 1px rgb(203 226 255 / .12), 0 18px 44px -16px rgb(0 5 14 / .6);
+  --panel-inset: rgb(26 47 73 / .38);
   --panel-overlay: rgb(25 40 60 / .98);
   --panel-overlay-shadow: 0 24px 72px -18px rgb(0 5 14 / .7);
+  --control-glass: linear-gradient(165deg, rgb(136 171 211 / .28), rgb(34 57 85 / .32) 55%, rgb(84 123 171 / .2));
+  --control-glass-hover: linear-gradient(165deg, rgb(155 190 231 / .38), rgb(48 77 111 / .4) 55%, rgb(99 143 194 / .28));
+  --control-glass-shadow: inset 0 1.5px 1px rgb(218 236 255 / .38), inset 1px 0 1px rgb(185 214 247 / .15), inset 0 -1px 1px rgb(0 7 20 / .4), 0 5px 16px -4px rgb(0 5 18 / .45);
 }
 
 /* Main surfaces remain stable on hover; only actionable cards respond. */
@@ -29,11 +35,11 @@
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
   box-shadow: inset 0 1px var(--panel-edge), var(--panel-elevation);
-  backdrop-filter: blur(16px) saturate(120%);
-  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  backdrop-filter: blur(26px) saturate(180%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
 }
 :is(:root, :root[data-theme]) :is(a.dashboard-card, a.library-card, a.person-card, .library-catalog-card):is(:hover, :focus-within) {
-  background: var(--surface-raised);
+  background: var(--panel-background);
   border-color: color-mix(in srgb, var(--accent) 42%, var(--panel-border));
   box-shadow: inset 0 1px var(--panel-edge), 0 12px 30px -16px color-mix(in srgb, var(--accent) 28%, transparent);
 }
@@ -89,7 +95,7 @@
 :is(:root, :root[data-theme]) :is(.sms-mark, .sms-count-chip, .top-subject-slot, .task-notification-setting,
   .diary-upload, .notification-card) {
   background: var(--panel-inset); border: 1px solid var(--panel-border);
-  border-radius: 12px; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+  border-radius: 12px; box-shadow: inset 0 1px var(--panel-edge), inset 0 -1px rgb(20 40 70 / .04); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
 }
 :is(:root, :root[data-theme]) :is(.sms-subject-details, .sms-privacy-panel) {
   background: var(--panel-inset); box-shadow: none;
@@ -173,6 +179,44 @@
 .notification-card { padding: .85rem; }
 .empty-state { color: var(--muted); line-height: 1.7; }
 .empty-state :is(h2, strong) { color: var(--ink); }
+
+/* Refractive controls. These declarations supersede the legacy opaque button
+   rules; dimensions, semantics and disabled/destructive states stay local. */
+:is(:root, :root[data-theme]) :is(.button, .button-secondary, .icon-button):not(:disabled):not(.task-archive-button) {
+  background: var(--control-glass) !important;
+  border-color: var(--panel-border) !important;
+  box-shadow: var(--control-glass-shadow) !important;
+  backdrop-filter: blur(16px) saturate(185%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(185%) !important;
+}
+:is(:root, :root[data-theme]) :is(.button, .button-secondary, .icon-button):not(:disabled):not(.task-archive-button):hover {
+  background: var(--control-glass-hover) !important;
+  border-color: color-mix(in srgb, var(--panel-edge) 80%, var(--accent)) !important;
+}
+:is(:root, :root[data-theme]) :is(.button, .button-secondary, .icon-button):not(:disabled):not(.task-archive-button):active {
+  box-shadow: inset 0 2px 5px color-mix(in srgb, var(--accent) 22%, transparent), inset 0 1px var(--panel-edge) !important;
+}
+
+/* Small icon mounts carry the same edge lighting as the large panels. */
+:is(.panel-glyph, .task-center-mark, .profile-reminder-icon, .lesson-select > .subject-motif-frame,
+  .sms-subject-heading .subject-motif-frame, .conversation-initial) {
+  position: relative; isolation: isolate; border: 1px solid var(--panel-border);
+  border-radius: 13px; background: var(--control-glass);
+  box-shadow: var(--control-glass-shadow); color: var(--accent);
+}
+:is(.panel-glyph, .task-center-mark, .profile-reminder-icon)::after {
+  content: ""; position: absolute; inset: 3px; border-radius: 10px;
+  border-top: 1px solid var(--panel-edge); border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
+  pointer-events: none; z-index: -1;
+}
+:is(.panel-glyph, .task-center-mark, .profile-reminder-icon) svg {
+  stroke-width: 1.6; filter: drop-shadow(0 1px 0 var(--panel-edge));
+}
+.sms-subject-heading .subject-motif-frame { padding: 3px; }
+.sms-subject-heading .subject-motif { opacity: 1; }
+.subject-motif { filter: drop-shadow(0 1px 0 color-mix(in srgb, var(--panel-edge) 65%, transparent)); }
+.profile-progress-track { box-shadow: inset 0 1px 2px color-mix(in srgb, var(--accent) 16%, transparent), 0 1px var(--panel-edge); }
+.profile-step-mark { box-shadow: inset 0 1px var(--panel-edge), 0 2px 5px color-mix(in srgb, var(--accent) 8%, transparent); }
 /* Embedded editors retain their borderless integration in parent panels. */
 :is(:root, :root[data-theme]) :is(.schedule-homework .homework-panel, .reader-inspector .ai-study-panel > details) {
   padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none;
@@ -199,6 +243,8 @@
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   :root { --panel-background: var(--surface-raised); --panel-overlay: var(--surface-raised); --panel-border: var(--border-strong); }
   :root[data-theme="dark"] { --panel-background: var(--surface); --panel-overlay: var(--surface-elevated); --panel-border: var(--border-strong); }
+  :is(:root, :root[data-theme]) { --control-glass: var(--surface-raised); --control-glass-hover: var(--hover); }
+  :is(:root, :root[data-theme]) :is(.button, .button-secondary, .icon-button):not(:disabled):not(.task-archive-button) { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root { --panel-background: var(--surface-raised); --panel-overlay: var(--surface-raised); }

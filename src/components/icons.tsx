@@ -30,15 +30,15 @@ export function ArrowLeftIcon(props: IconProps) {
 }
 
 export function BookIcon(props: IconProps) {
-  return <Icon {...props}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" /><path d="M4 19a2 2 0 0 1 2-2h14M8 7h8" /></Icon>;
+  return <Icon {...props}><path d="M7 3h13v14H7Z" fill="currentColor" fillOpacity=".1" stroke="none" /><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" /><path d="M4 19a2 2 0 0 1 2-2h14M8 7h8M8 10h5" /><path d="M7 3v14M7 20h11" strokeWidth=".8" opacity=".55" /></Icon>;
 }
 
 export function CalendarIcon(props: IconProps) {
-  return <Icon {...props}><rect height="16" rx="1" width="16" x="4" y="5" /><path d="M8 3v4m8-4v4M4 10h16" /></Icon>;
+  return <Icon {...props}><path d="M4 5h16v5H4Z" fill="currentColor" fillOpacity=".12" stroke="none" /><rect height="16" rx="2.5" width="16" x="4" y="5" /><path d="M8 3v4m8-4v4M4 10h16" /><path d="M8 13h1m3 0h1m3 0h.1M8 17h1m3 0h1" strokeWidth="1.5" /><rect x="15" y="16" width="2" height="2" rx=".5" fill="currentColor" stroke="none" /></Icon>;
 }
 
 export function BookmarkIcon(props: IconProps) {
-  return <Icon {...props}><path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-3-6 3V4Z" /></Icon>;
+  return <Icon {...props}><path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-3-6 3V4Z" fill="currentColor" fillOpacity=".08" /><path d="M9 6h6M9 9h4" strokeWidth="1.2" opacity=".65" /></Icon>;
 }
 
 export function RefreshIcon(props: IconProps) {
@@ -46,7 +46,7 @@ export function RefreshIcon(props: IconProps) {
 }
 
 export function UserIcon(props: IconProps) {
-  return <Icon {...props}><circle cx="12" cy="8" r="3.5" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></Icon>;
+  return <Icon {...props}><circle cx="12" cy="8" r="3.5" fill="currentColor" fillOpacity=".1" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /><path d="M8 16.2q4 3 8 0M8 20v1m8-1v1" strokeWidth="1" opacity=".6" /></Icon>;
 }
 
 export function CheckIcon(props: IconProps) {
