@@ -7,6 +7,7 @@ import "../styles/auth-oauth.css";
 import "../styles/admin.css";
 import "../styles/install.css";
 import "../styles/profile.css";
+import "../styles/panels.css";
 import { InstallProvider } from "@/components/install-provider";
 import {experienceBootstrap} from "@/lib/experience";
 import {FullLoadIntro} from "@/components/full-load-intro";
