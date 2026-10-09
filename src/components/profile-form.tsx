@@ -135,8 +135,8 @@ export function ProfileForm({ classes, subjects, profile, top, hasAvatar }: {
       {doneCount < checklist.length && (
         <div className="profile-progress" role="group" aria-label={`${p.progress}: ${doneCount}/${checklist.length}`}>
           <div className="profile-progress-head"><strong>{p.progress}</strong><span>{doneCount}/{checklist.length}</span></div>
-          <div className="profile-progress-track" aria-hidden="true"><span style={{ width: `${(doneCount / checklist.length) * 100}%` }} /></div>
-          <ul>{checklist.map(step => <li key={step.label} data-done={step.done}>{step.done ? <Check size={13} aria-hidden="true" /> : <i aria-hidden="true" />}{step.label}</li>)}</ul>
+          <progress className="profile-progress-track" value={doneCount} max={checklist.length} aria-label={p.progress} />
+          <ul>{checklist.map((step, index) => <li key={step.label} data-done={step.done}><span className="profile-step-mark" aria-hidden="true">{step.done ? <Check size={13} /> : index + 1}</span>{step.label}</li>)}</ul>
         </div>
       )}
       <div className="grid gap-5 sm:grid-cols-2">
