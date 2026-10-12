@@ -2,7 +2,6 @@ import { createRoot } from "react-dom/client";
 import { useEffect, useState } from "react";
 import { AppFrame } from "../../src/components/app-frame";
 import { LocaleProvider } from "../../src/components/locale-provider";
-import { ProfileDock } from "../../src/components/profile-dock";
 import { ProfileActivity } from "../../src/components/profile-activity";
 import { ProfilePortrait } from "../../src/components/profile-portrait";
 import { ActivityTracker } from "../../src/components/activity-tracker";
@@ -65,7 +64,6 @@ function Harness() {
             <p className="profile-class">11 A</p>
           </div>
         </div>
-        <ProfileDock />
         <ProfileActivity
           initial={
             new URLSearchParams(location.search).has("unavailable")

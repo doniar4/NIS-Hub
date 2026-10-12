@@ -104,6 +104,8 @@ export function DockItem({
   href,
   onClick,
   pressed,
+  current,
+  controlClassName,
 }: {
   children: ReactNode;
   className?: string;
@@ -111,6 +113,8 @@ export function DockItem({
   href?: string;
   onClick?: () => void;
   pressed?: boolean;
+  current?: boolean;
+  controlClassName?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null),
     { mouseX, spring, distance, magnification, reduce } = useDock();
@@ -140,7 +144,14 @@ export function DockItem({
       onBlur={() => hovered.set(0)}
     >
       {href ? (
-        <Link className="dock-control" href={href} aria-label={label}>
+        <Link
+          className={cn("dock-control", controlClassName)}
+          href={href}
+          prefetch={false}
+          aria-label={label}
+          aria-current={current ? "page" : undefined}
+          onClick={onClick}
+        >
           {content}
         </Link>
       ) : (

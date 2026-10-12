@@ -20,6 +20,7 @@ import { useI18n } from "./locale-provider";
 import { v05Copy } from "@/lib/v05-copy";
 import { Sprout } from "./brand";
 
+import { Dock, DockItem, DockLabel, DockIcon } from "./ui/dock";
 import { communityCopy } from "@/lib/community-copy";
 import { v053Copy } from "@/lib/v053-copy";
 
@@ -110,7 +111,8 @@ export function AppFrame({
   const [searchExpanded, setSearchExpanded] = useState(false);
 
   useEffect(() => {
-    if (!searchExpanded || !window.matchMedia("(max-width: 767px)").matches) return;
+    if (!searchExpanded || !window.matchMedia("(max-width: 767px)").matches)
+      return;
     const focusTimer = window.setTimeout(() => searchInput.current?.focus(), 0);
     return () => window.clearTimeout(focusTimer);
   }, [searchExpanded]);
@@ -188,8 +190,16 @@ export function AppFrame({
   const activeRoute = optimisticRoute ?? pathname;
   const isRouteActive = (href: string) => {
     if (href === "/") return activeRoute === "/";
-    if (href === "/library") return activeRoute.startsWith("/library") || activeRoute.startsWith("/books");
-    if (href === "/profile") return activeRoute.startsWith("/profile") || activeRoute.startsWith("/people") || activeRoute.startsWith("/friends");
+    if (href === "/library")
+      return (
+        activeRoute.startsWith("/library") || activeRoute.startsWith("/books")
+      );
+    if (href === "/profile")
+      return (
+        activeRoute.startsWith("/profile") ||
+        activeRoute.startsWith("/people") ||
+        activeRoute.startsWith("/friends")
+      );
     if (href === "/support") return activeRoute.startsWith("/support");
     return activeRoute.startsWith(href);
   };
@@ -201,17 +211,23 @@ export function AppFrame({
       aria-label={t.mainNav}
       className="sidebar-navigation"
       data-has-active={hasActive}
-      style={{
-        "--active-route": hasActive ? activeIndex : 0,
-      } as CSSProperties}
+      style={
+        {
+          "--active-route": hasActive ? activeIndex : 0,
+        } as CSSProperties
+      }
     >
       {links.map(([href, label]) => {
         const isCurrent = isRouteActive(href);
         return (
           <Link
             key={href}
-            onMouseEnter={() => { if (hoverPrefetchRoutes.has(href)) router.prefetch(href); }}
-            onFocus={() => { if (hoverPrefetchRoutes.has(href)) router.prefetch(href); }}
+            onMouseEnter={() => {
+              if (hoverPrefetchRoutes.has(href)) router.prefetch(href);
+            }}
+            onFocus={() => {
+              if (hoverPrefetchRoutes.has(href)) router.prefetch(href);
+            }}
             prefetch={false}
             href={href}
             title={!mobile && collapsed ? label : undefined}
@@ -245,8 +261,6 @@ export function AppFrame({
       </a>
 
       <aside id="desktop-navigation" className="app-sidebar">
-
-
         <div className="sidebar-brand-row">
           <Link className="brand-link" href="/" aria-label="NIS Hub">
             <Sprout />
@@ -257,7 +271,9 @@ export function AppFrame({
         </div>
 
         <div className="sidebar-identity-row sidebar-toggle-row">
-          <div className="sidebar-edition sidebar-label"><span>NIS / НИШ / НЗМ</span></div>
+          <div className="sidebar-edition sidebar-label">
+            <span>NIS / НИШ / НЗМ</span>
+          </div>
           <button
             type="button"
             className="sidebar-collapse"
@@ -296,7 +312,12 @@ export function AppFrame({
         {navigation(false)}
 
         <div className="sidebar-bottom">
-          {profileAccount && <div className="sidebar-account">{profileAccount}{account}</div>}
+          {profileAccount && (
+            <div className="sidebar-account">
+              {profileAccount}
+              {account}
+            </div>
+          )}
           <div className="sidebar-legal" inert={collapsed ? true : undefined}>
             <Link href="/privacy">{t.privacy}</Link>
             <Link href="/terms">{t.terms}</Link>
@@ -328,7 +349,10 @@ export function AppFrame({
             data-expanded={searchExpanded}
             onFocusCapture={() => setSearchExpanded(true)}
             onBlurCapture={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget) && !searchInput.current?.value) {
+              if (
+                !event.currentTarget.contains(event.relatedTarget) &&
+                !searchInput.current?.value
+              ) {
                 setSearchExpanded(false);
               }
             }}
@@ -379,46 +403,59 @@ export function AppFrame({
         </header>
 
         <div className="app-canvas">
+          <main id="main" tabIndex={-1} className="app-main">
+            <div key={pathname} className="page-content">
+              {children}
+            </div>
+          </main>
 
-        <main id="main" tabIndex={-1} className="app-main">
+          <footer className="app-footer">
+            <p>NIS Hub · {t.beta}</p>
 
-          <div key={pathname} className="page-content">{children}</div>
-        </main>
-
-        <footer className="app-footer">
-          <p>NIS Hub · {t.beta}</p>
-
-          <div>
-            <Link href="/privacy">{t.privacy}</Link>
-            <Link href="/terms">{t.terms}</Link>
-          </div>
-        </footer>
+            <div>
+              <Link href="/privacy">{t.privacy}</Link>
+              <Link href="/terms">{t.terms}</Link>
+            </div>
+          </footer>
         </div>
       </div>
 
-      <nav className="mobile-bottom-nav" aria-label={t.mainNav}>
-        {([
-          ["/", t.home],
-          ["/library", t.library],
-          ["/schedule", t.schedule],
-          ["/people", mobileCommunity.community],
-          ["/profile", t.profile],
-        ] as const).map(([href, label]) => (
-          <Link
-            key={href}
-            href={href}
-            prefetch={false}
-            aria-label={label}
-            aria-current={(href === "/people" ? ["/people", "/friends", "/messages"].some((route) => activeRoute.startsWith(route)) : href === "/profile" ? activeRoute.startsWith("/profile") : isRouteActive(href)) ? "page" : undefined}
-            className="mobile-bottom-link"
-            onClick={() => setOptimisticRoute(href)}
-          >
-            {renderNavIcon(href)}
-            <span>{label}</span>
-            {href === "/profile" && profileIncomplete && <i className="mobile-nav-dot" aria-hidden="true" />}
-          </Link>
-        ))}
-      </nav>
+      <div className="mobile-bottom-nav">
+        <Dock label={t.mainNav} magnification={44}>
+          {(
+            [
+              ["/", t.home],
+              ["/library", t.library],
+              ["/schedule", t.schedule],
+              ["/people", mobileCommunity.community],
+              ["/profile", t.profile],
+            ] as const
+          ).map(([href, label]) => (
+            <DockItem
+              key={href}
+              href={href}
+              label={label}
+              current={
+                href === "/people"
+                  ? ["/people", "/friends", "/messages"].some((route) =>
+                      activeRoute.startsWith(route),
+                    )
+                  : href === "/profile"
+                    ? activeRoute.startsWith("/profile")
+                    : isRouteActive(href)
+              }
+              controlClassName="mobile-bottom-link"
+              onClick={() => setOptimisticRoute(href)}
+            >
+              <DockLabel>{label}</DockLabel>
+              <DockIcon>{renderNavIcon(href)}</DockIcon>
+              {href === "/profile" && profileIncomplete && (
+                <i className="mobile-nav-dot" aria-hidden="true" />
+              )}
+            </DockItem>
+          ))}
+        </Dock>
+      </div>
 
       <dialog
         ref={dialog}
@@ -436,8 +473,6 @@ export function AppFrame({
         }}
       >
         <div className="mobile-drawer-panel">
-
-
           <div className="flex items-center justify-between gap-3">
             <Link className="brand-link" href="/" onClick={close}>
               <Sprout />
@@ -457,7 +492,12 @@ export function AppFrame({
           </div>
 
           {navigation(true)}
-          {profileAccount && <div className="sidebar-account">{profileAccount}{account}</div>}
+          {profileAccount && (
+            <div className="sidebar-account">
+              {profileAccount}
+              {account}
+            </div>
+          )}
 
           <div className="sidebar-legal">
             <Link href="/privacy" onClick={close}>

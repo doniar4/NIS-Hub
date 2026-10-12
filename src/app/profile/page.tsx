@@ -15,7 +15,6 @@ import { getPersonalTasks } from "@/lib/task-queries";
 import { TaskCenter } from "@/components/task-center";
 import { InstallProfileEntry } from "@/components/install-discovery";
 import { ProfileActivity } from "@/components/profile-activity";
-import { ProfileDock } from "@/components/profile-dock";
 import { getProfileActivity } from "@/lib/profile-activity-query";
 export default async function ProfilePage() {
   const { t, locale } = await getI18n();
@@ -56,7 +55,6 @@ export default async function ProfilePage() {
           </p>
         </div>
       </div>
-      <ProfileDock />
       <ProfileActivity key={user.id} initial={activity} />
       <CommunityNav locale={locale} />
       <div className="profile-settings">

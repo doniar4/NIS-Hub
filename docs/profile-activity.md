@@ -8,7 +8,7 @@ Daily boundaries use `Asia/Oral` in SQL and the client. The current streak is co
 
 The authenticated RPC accepts no user ID and returns at most 371 date/count pairs for `auth.uid()` only. Paths, device strings, identifiers and other users' records never reach the chart. A missing migration or failed fetch displays an unavailable state with a retry button instead of sample statistics.
 
-The profile dock adapts the supplied spring-based Dock component. It links to home, library, schedule, profile tasks, profile activity and messages, and switches the existing stored theme. Each item has one native keyboard target. Magnification is disabled for reduced-motion and touch-only pointers. Mobile overflow is contained inside the dock.
+The supplied Dock component is now the fixed mobile navigation bar, replacing the previous mobile tabs. It links to home, library, schedule, community and profile, preserves the active route and the incomplete-profile indicator, and stays hidden on desktop and in the PDF reader. Each circular link has one native keyboard target and a 44-pixel touch area. Theme controls remain in the header.
 
 ## Font fallback
 
@@ -17,4 +17,4 @@ Local Fontsource variable files use `font-display: optional` and a full system-f
 ## Verification
 
 - `node --import tsx tests/profile-activity.test.ts`: daily boundary, streaks, missing days, owner-only SQL aggregation and preserved raw-log privacy.
-- `node --import tsx tests/profile-activity-browser.smoke.ts`: requires a production build for CSS. Tests flat/3D views, keyboard/tooltips, orbit, visit refresh, dock links/magnification/theme, RU/KK/EN, mobile widths, blocked fonts, slow connection and unavailable/retry states. Screenshot data is an isolated test fixture, never a production fallback.
+- `node --import tsx tests/profile-activity-browser.smoke.ts`: requires a production build for CSS. Tests flat/3D views, keyboard/tooltips, orbit, visit refresh, mobile dock links/active route/touch targets, header theme, RU/KK/EN, 320/390-pixel mobile widths, blocked fonts, slow connection and unavailable/retry states. Screenshot data is an isolated test fixture, never a production fallback.

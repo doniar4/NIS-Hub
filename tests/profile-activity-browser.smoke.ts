@@ -215,24 +215,38 @@ test("Profile skyline, streak updates, working dock and visible system fonts on 
         exact: true,
       }),
     ).toHaveAttribute("aria-pressed", "true");
-    const dock = page.getByRole("navigation", { name: "Быстрые переходы" });
+    const dock = page.locator(".mobile-bottom-nav");
+    await expect(dock).toBeHidden();
+    await expect(page.locator(".profile-shortcuts")).toHaveCount(0);
+    await page.setViewportSize({ width: 390, height: 1000 });
+    await expect(dock).toBeVisible();
     const library = dock.getByRole("link", { name: "Библиотека", exact: true });
     await expect(library).toHaveAttribute("href", "/library");
-    const before = await library.boundingBox();
-    assert.ok(before);
-    await library.hover();
-    await expect
-      .poll(() => library.evaluate((el) => el.clientWidth))
-      .toBeGreaterThan(50);
-    await page.mouse.move(0, 0);
+    await expect(dock.getByRole("link")).toHaveCount(5);
+    await expect(dock.locator('a[aria-current="page"]')).toHaveAttribute(
+      "href",
+      "/profile",
+    );
     await library.focus();
-    await expect(page.locator(".dock-label")).toContainText("Библиотека");
-    await expect(dock.getByRole("link")).toHaveCount(6);
-    await dock.getByRole("button", { name: "Сменить тему" }).click();
+    await expect(dock.locator(".dock-label")).toContainText("Библиотека");
+    const targets = await dock.getByRole("link").evaluateAll((links) =>
+      links.map((link) => {
+        const r = link.getBoundingClientRect();
+        return {
+          width: r.width,
+          height: r.height,
+          left: r.left,
+          right: r.right,
+        };
+      }),
+    );
+    assert.ok(
+      targets.every(
+        (r) => r.width >= 44 && r.height >= 44 && r.left >= 0 && r.right <= 390,
+      ),
+    );
+    await page.getByRole("radio", { name: "Тёмная", exact: true }).check();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-    await expect(
-      page.getByRole("radio", { name: "Тёмная", exact: true }),
-    ).toBeChecked();
     for (const locale of ["ru", "kk", "en"]) {
       await page.evaluate(
         (l) =>
@@ -241,7 +255,7 @@ test("Profile skyline, streak updates, working dock and visible system fonts on 
           ),
         locale,
       );
-      for (const width of [1440, 390]) {
+      for (const width of [1440, 390, 320]) {
         await page.setViewportSize({ width, height: 1000 });
         await expect(canvas).toBeVisible();
         await expect
