@@ -22,7 +22,9 @@ export type AiGeneration = {id:string;user_id:string;book_variant_id:string;cont
 export type Bookmark = { id: string; profile_id: string; book_id: string; page_number: number; created_at: string };
 export type Progress = { profile_id: string; book_id: string; page_number: number; updated_at: string };
 export type Lesson = { id: string; class_id: string; date: string; lesson_number: number; subject_id: string; teacher: string | null; room: string | null; created_at: string };
-export type WeeklyLesson = { subgroup_key?: string; subgroup_label?: string | null; audience?: string; id: string; class_id: string; weekday: number; lesson_start: number; lesson_end: number; start_time: string | null; end_time: string | null; subject_id: string; teacher: string | null; room: string | null; effective_from: string | null; effective_to: string | null; created_at: string; updated_at: string };
+export type WeeklyLesson = { assessment_date?: string; assessment_label?: string; assessment_minutes?: number | null; subgroup_key?: string; subgroup_label?: string | null; audience?: string; id: string; class_id: string; weekday: number; lesson_start: number; lesson_end: number; start_time: string | null; end_time: string | null; subject_id: string; teacher: string | null; room: string | null; effective_from: string | null; effective_to: string | null; created_at: string; updated_at: string };
+export type AssessmentLesson = {period_id?:string;id:string;class_id:string;date:string;lesson_start:number;lesson_end:number;subject_id:string|null;subject_label:string;duration_minutes:number|null;source_file:string;created_by:string|null;created_at:string};
+export type AssessmentPeriodRow={id:string;academic_year:number;quarter:number;revision_id:string;source_file:string;updated_by:string|null;updated_at:string};
 export type EduPageState = {id:boolean;aliases:Json;last_checked:string|null;last_synced:string|null;last_error:string|null;publication:string|null;version_id:string|null};
 export type NonSchoolDay = {id:string;start_date:string;end_date:string;type:"holiday"|"vacation"|"cancelled"|"other";label:string;created_by:string|null;created_at:string};
 export type ScheduleVersion = {id:string;created_at:string;created_by:string|null;source_type:"baseline"|"csv_tsv"|"delete"|"restore"|"edupage";row_count:number;note:string;status:"active"|"superseded";previous_id:string|null;restored_from:string|null;snapshot:Json};
@@ -47,6 +49,8 @@ type Table<Row, Required extends keyof Row> = { Row: Row; Insert: Pick<Row, Requ
 // owner's Supabase project after applying migrations; no cloud schema is assumed.
 export type Database = { public: {
   Tables: {
+    assessment_schedule: Table<AssessmentLesson,"class_id"|"date"|"lesson_start"|"lesson_end"|"subject_label"|"source_file">;
+    assessment_periods:Table<AssessmentPeriodRow,"academic_year"|"quarter">;
     edupage_sync_state: Table<EduPageState, "id">;
     sms_sessions: Table<{user_id:string;id:string;ciphertext:string;expires_at:string;created_at:string},"user_id"|"ciphertext"|"expires_at">;
     class_homework:Table<ClassHomework,"class_id"|"subject_id"|"due_date"|"body"|"created_by">;
@@ -90,6 +94,9 @@ export type Database = { public: {
   };
   Views: Record<string, never>;
   Functions: {
+    import_assessment_schedule:{Args:{p_lessons:Json;p_days:Json;p_source_file:string};Returns:number};
+    import_quarter_assessments:{Args:{p_lessons:Json;p_days:Json;p_source_file:string;p_academic_year:number;p_quarter:number;p_expected_revision:string|null};Returns:number};
+    clear_assessment_schedule:{Args:{p_dates:string[]};Returns:number};
     admin_control_read:{Args:{p_section:string;p_filters?:Json};Returns:Json};
     admin_update_user:{Args:{p_user:string;p_class:string|null;p_role:string;p_expected_role:string;p_confirm:boolean};Returns:undefined};
     library_page:{Args:{p_queries:string[];p_grade:number|null;p_subject:string|null;p_offset:number;p_secret:boolean};Returns:Json};

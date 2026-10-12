@@ -24,9 +24,19 @@ export function SmoothScroll() {
       frame = requestAnimationFrame(raf);
     };
     frame = requestAnimationFrame(raf);
+    const cancelOnFormInteraction = (event: PointerEvent) => {
+      if (
+        event.target instanceof Element &&
+        event.target.closest("form") &&
+        lenis.isScrolling
+      )
+        lenis.scrollTo(lenis.actualScroll, { immediate: true });
+    };
+    document.addEventListener("pointerdown", cancelOnFormInteraction);
 
     return () => {
       cancelAnimationFrame(frame);
+      document.removeEventListener("pointerdown", cancelOnFormInteraction);
       lenis.destroy();
     };
   }, []);

@@ -1119,6 +1119,7 @@ export function PdfReader({
           <div
             ref={setScrollRoot}
             className="pdf-scroll-viewport"
+            data-lenis-prevent
             aria-busy={busy}
             tabIndex={0}
             aria-label={t.reader}

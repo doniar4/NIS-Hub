@@ -33,6 +33,7 @@ export function ProfileForm({ classes, subjects, profile, top, hasAvatar }: {
   const { t, locale } = useI18n(), p = profileCopy(locale), c = communityCopy(locale), v = v053Copy(locale);
   const form = useRef<HTMLFormElement>(null);
   const saved = useRef("");
+  const baselineReady = useRef(false);
   const timer = useRef<number | undefined>(undefined);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
@@ -83,7 +84,14 @@ export function ProfileForm({ classes, subjects, profile, top, hasAvatar }: {
   useEffect(() => {
     const el = form.current;
     if (!el) return;
-    saved.current = snapshot(el);
+    // A locale change replaces event handlers, not the last persisted values.
+    // Otherwise an unsaved bio is silently accepted as the saved baseline.
+    if (!baselineReady.current) {
+      saved.current = snapshot(el);
+      baselineReady.current = true;
+    } else if (snapshot(el) !== saved.current) {
+      schedule(150);
+    }
     const onInput = (event: Event) => {
       if (!refresh()) return;
       const target = event.target as HTMLElement;

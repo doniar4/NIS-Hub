@@ -10,6 +10,7 @@ import { SubjectMotif } from "./subject-motif";
 import { useI18n } from "./locale-provider";
 import { materialKey, type MaterialMap } from "@/lib/schedule-materials";
 import { librarySubjectHref } from "@/lib/book-model";
+import {assessmentCopy} from "@/lib/assessment-copy";
 
 interface CurrentLessonHeroProps {
   lessons: WeeklyLesson[];
@@ -155,7 +156,7 @@ export function CurrentLessonHero({
   // ─── Ongoing lesson ───
   if (status.type === "ongoing") {
     const s = subjectsById.get(status.lesson.subject_id);
-    const sName = subjectName(s, locale);
+    const sName = status.lesson.assessment_label??subjectName(s, locale);
     const room = normalizeRoom(status.lesson.room);
     const lessonNum = lessonRange(status.lesson) || status.index;
     const materialHref = materials[materialKey(status.lesson.subject_id, grade)] ?? librarySubjectHref(status.lesson.subject_id, grade);
@@ -179,6 +180,7 @@ export function CurrentLessonHero({
                   {locale === "kk" ? `${lessonNum}-сабақ` : locale === "en" ? `Lesson ${lessonNum}` : `${lessonNum}-й урок`}
                 </span>
                 {room && <span className="status-pill">{room}</span>}
+                {status.lesson.assessment_date&&<span className="status-pill">{assessmentCopy(locale).badge}</span>}
                 {status.lesson.start_time && status.lesson.end_time && (
                   <span className="status-pill">{status.lesson.start_time.slice(0, 5)}–{status.lesson.end_time.slice(0, 5)}</span>
                 )}
@@ -189,9 +191,9 @@ export function CurrentLessonHero({
           </div>
 
           <div className="status-bar-actions">
-            <Link prefetch={false} className="status-material-link" href={materialHref}>
+            {!!status.lesson.subject_id&&<Link prefetch={false} className="status-material-link" href={materialHref}>
               <span aria-hidden="true">▣</span>{locale === "kk" ? "Оқулық" : locale === "en" ? "Textbook" : "Учебник"}
-            </Link>
+            </Link>}
             <div className="status-timer">
               <span className="status-timer-value">{formatCountdown(status.secondsLeft)}</span>
               <span className="status-timer-label">
@@ -207,7 +209,7 @@ export function CurrentLessonHero({
   // ─── Break between lessons ───
   if (status.type === "break") {
     const s = subjectsById.get(status.nextLesson.subject_id);
-    const sName = subjectName(s, locale);
+    const sName = status.nextLesson.assessment_label??subjectName(s, locale);
     const room = normalizeRoom(status.nextLesson.room);
     const lessonNum = lessonRange(status.nextLesson) || status.index;
 
@@ -248,7 +250,7 @@ export function CurrentLessonHero({
   // ─── Before school ───
   if (status.type === "before_school") {
     const s = subjectsById.get(status.nextLesson.subject_id);
-    const sName = subjectName(s, locale);
+    const sName = status.nextLesson.assessment_label??subjectName(s, locale);
     const room = normalizeRoom(status.nextLesson.room);
 
     return (

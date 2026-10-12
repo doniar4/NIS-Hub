@@ -15,8 +15,8 @@ export default async function SchedulePage({searchParams}:{searchParams:Promise<
   const requestedDate=dateSchema.safeParse((await searchParams).date);
   const date=requestedDate.success?requestedDate.data:schoolDate();
   const { t, locale } = await getI18n(); const { profile,user } = await requireViewer("/schedule");
-  const [{ classes,subjects }, lessons, nonSchoolDays] = await Promise.all([getCatalogOptions(),getWeeklySchedule(),getNonSchoolDays()]);
-  const materials=await getTimetableMaterials([...new Set(lessons.map(l=>l.subject_id))],[...new Set(classes.map(classGrade))]);
+  const [{ classes,subjects }, lessons, nonSchoolDays] = await Promise.all([getCatalogOptions(),getWeeklySchedule(undefined,true),getNonSchoolDays()]);
+  const materials=await getTimetableMaterials([...new Set(lessons.map(l=>l.subject_id).filter(Boolean))],[...new Set(classes.map(classGrade))]);
   return <SiteShell><PageIntro kicker={t.schoolDay} title={t.schedule}>{phase4Copy(locale).weeklyHint}</PageIntro>
     <StudentSchedule userId={user.id} materials={materials} lessons={lessons} classes={classes} subjects={subjects} initialClassId={profile.class_id ?? ""} date={date} nonSchoolDays={nonSchoolDays}/>
   </SiteShell>;
