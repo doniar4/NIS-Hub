@@ -14,7 +14,8 @@ import { pageSchema } from "@/lib/validation";
 import { subjectName } from "@/lib/i18n";
 import { v051Copy } from "@/lib/v051-copy";
 
-export const maxDuration = 90;
+// Leave time for source loading and cache settlement around the 90s provider cap.
+export const maxDuration = 120;
 
 export default async function ReadPage({
   params,

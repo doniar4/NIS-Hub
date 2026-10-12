@@ -1,11 +1,11 @@
 "use client";
-import "@fontsource-variable/outfit";
-import "@fontsource-variable/noto-sans/wght.css";
+import "../styles/fonts.css";
 import "./globals.css";
 import { useEffect, useSyncExternalStore } from "react";
 import { LocaleProvider } from "@/components/locale-provider";
 import { ErrorScreen } from "@/components/ui/error-screen";
 import { LOCALE_COOKIE, parseLocale, type Locale } from "@/lib/i18n";
+import { fontBootstrap } from "@/lib/font-fallback";
 import { themeBootstrap } from "@/lib/theme";
 
 const subscribe = () => () => {};
@@ -21,7 +21,7 @@ export default function GlobalError({ error, retry, reset }: {
     const locale = useSyncExternalStore(subscribe, readLocale, serverLocale);
     useEffect(() => { console.error(error); }, [error]);
     return <html lang={locale} suppressHydrationWarning>
-        <head><script dangerouslySetInnerHTML={{ __html: themeBootstrap }} /></head>
+        <head><script dangerouslySetInnerHTML={{ __html: fontBootstrap + ";" + themeBootstrap }} /></head>
         <body><LocaleProvider locale={locale}><ErrorScreen onRetry={() => (retry ?? reset)?.()} /></LocaleProvider></body>
     </html>;
 }

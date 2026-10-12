@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import "@fontsource-variable/outfit";
-import "@fontsource-variable/noto-sans/wght.css";
+import "../styles/fonts.css";
 import "./globals.css";
 import "../styles/mobile.css";
 import "../styles/auth-oauth.css";
@@ -11,6 +10,7 @@ import "../styles/panels.css";
 import { InstallProvider } from "@/components/install-provider";
 import {experienceBootstrap} from "@/lib/experience";
 import {FullLoadIntro} from "@/components/full-load-intro";
+import { fontBootstrap } from "@/lib/font-fallback";
 import { themeBootstrap } from "@/lib/theme";
 import { getI18n } from "@/lib/i18n-server";
 import { LocaleProvider } from "@/components/locale-provider";
@@ -32,5 +32,5 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { locale } = await getI18n();
-  return <html lang={locale} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeBootstrap + ";" + experienceBootstrap }} /></head><body><LocaleProvider locale={locale}><FullLoadIntro/><SmoothScroll /><ParallaxBackground/><InstallProvider>{children}</InstallProvider></LocaleProvider></body></html>;
+  return <html lang={locale} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: fontBootstrap + ";" + themeBootstrap + ";" + experienceBootstrap }} /></head><body><LocaleProvider locale={locale}><FullLoadIntro/><SmoothScroll /><ParallaxBackground/><InstallProvider>{children}</InstallProvider></LocaleProvider></body></html>;
 }

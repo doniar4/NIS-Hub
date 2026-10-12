@@ -13,6 +13,7 @@
 @import "../styles/skeleton.css";
 @import "../styles/not-found.css";
 @import "../styles/library.css";
+@import "../styles/ai-study.css";
 
 /* Retained component styles live below the new semantic design system. */
 * { box-sizing: border-box; }

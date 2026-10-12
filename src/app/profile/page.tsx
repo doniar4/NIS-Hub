@@ -14,6 +14,9 @@ import { database, getCatalogOptions } from "@/lib/queries";
 import { getPersonalTasks } from "@/lib/task-queries";
 import { TaskCenter } from "@/components/task-center";
 import { InstallProfileEntry } from "@/components/install-discovery";
+import { ProfileActivity } from "@/components/profile-activity";
+import { ProfileDock } from "@/components/profile-dock";
+import { getProfileActivity } from "@/lib/profile-activity-query";
 export default async function ProfilePage() {
   const { t, locale } = await getI18n();
   const pc = profileCopy(locale);
@@ -21,7 +24,15 @@ export default async function ProfilePage() {
   const incomplete = profileIsIncomplete(profile);
   const { classes, subjects } = await getCatalogOptions();
   const supabase = await database();
-  const [{data:top,error},tasks] = await Promise.all([supabase.from("profile_top_subjects").select("subject_id,position").eq("profile_id", user.id).order("position"),getPersonalTasks()]);
+  const [{ data: top, error }, tasks, activity] = await Promise.all([
+    supabase
+      .from("profile_top_subjects")
+      .select("subject_id,position")
+      .eq("profile_id", user.id)
+      .order("position"),
+    getPersonalTasks(),
+    getProfileActivity(supabase),
+  ]);
   if (error) throw new Error("Не удалось загрузить избранные предметы.");
   const avatar =
     profile.avatar_path === `${user.id}/avatar.webp`
@@ -36,14 +47,27 @@ export default async function ProfilePage() {
           url={avatar?.data?.signedUrl ?? null}
           name={profile.display_name ?? ""}
         />
-        <div><PageIntro title={profile.display_name || t.profile}>{t.profileHint}</PageIntro><p className="profile-class">{classes.find(row=>row.id===profile.class_id)?.name}</p></div>
+        <div>
+          <PageIntro title={profile.display_name || t.profile}>
+            {t.profileHint}
+          </PageIntro>
+          <p className="profile-class">
+            {classes.find((row) => row.id === profile.class_id)?.name}
+          </p>
+        </div>
       </div>
-      <CommunityNav locale={locale}/>
+      <ProfileDock />
+      <ProfileActivity key={user.id} initial={activity} />
+      <CommunityNav locale={locale} />
       <div className="profile-settings">
         <ProfileForm
           classes={classes}
           subjects={subjects}
-          profile={{ display_name: profile.display_name, class_id: profile.class_id, bio: profile.bio }}
+          profile={{
+            display_name: profile.display_name,
+            class_id: profile.class_id,
+            bio: profile.bio,
+          }}
           top={[1, 2, 3, 4].map(
             (position) =>
               top.find((item) => item.position === position)?.subject_id ?? "",
@@ -57,7 +81,18 @@ export default async function ProfilePage() {
           hidePreview
         />
       </div>
-      {!incomplete && <TaskCenter initialTasks={tasks} subjects={subjects} collapsible label={pc.tasks}/>}
+      <div id="profile-tasks">
+        {!incomplete ? (
+          <TaskCenter
+            initialTasks={tasks}
+            subjects={subjects}
+            collapsible
+            label={pc.tasks}
+          />
+        ) : (
+          <p className="profile-task-setup">{pc.reminderBody}</p>
+        )}
+      </div>
       <InstallProfileEntry />
       <div className="profile-reading mt-8 grid gap-6 lg:grid-cols-2">
         <section>

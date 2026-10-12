@@ -173,6 +173,7 @@ export type Database = { public: {
     save_book_edition: {Args:{p_book:Json;p_variant:Json;p_prepare?:boolean};Returns:string};
     save_book: { Args: { p_book: Json }; Returns: string };
     toggle_task_subtask: { Args: { p_task_id: string; p_subtask_id: string; p_completed: boolean }; Returns: Json };
+    profile_activity_year: { Args: Record<string, never>; Returns: {day:string;views:number}[] };
     log_user_activity: { Args: { p_path: string; p_user_agent?: string | null }; Returns: undefined };
   };
   Enums: { profile_role: "student" | "admin"; book_publication_status: Book["publication_status"]; book_license_status: "pending_review" | "approved" | "restricted" };
