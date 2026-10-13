@@ -10,6 +10,8 @@
 !.env.example
 .DS_Store
 .vercel
+# Private database and Storage migration backups
+.migration-backups/
 coverage/
 next-env.d.ts
 test-results/

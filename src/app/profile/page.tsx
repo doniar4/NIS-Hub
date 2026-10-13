@@ -46,6 +46,7 @@ export default async function ProfilePage() {
         <ActionForm
           action={saveProfile}
           label={t.saveProfile}
+          manualSubmit
           className="surface-card space-y-6"
         >
           <div className="grid gap-5 sm:grid-cols-2">
@@ -65,6 +66,7 @@ export default async function ProfilePage() {
             />
           </div>
           <p className="text-sm text-[var(--muted)]">{c.nameHint}</p>
+          <p className="text-sm text-[var(--muted)]">{locale === "ru" ? "Изменения сохраняются только по кнопке «Сохранить профиль»." : locale === "kk" ? "Өзгерістер тек «Профильді сақтау» батырмасы арқылы сақталады." : "Changes are saved only when you click Save profile."}</p>
           <label className="block"><span className="field-label">{v053Copy(locale).bio}</span><textarea className="field" name="bio" maxLength={280} rows={4} defaultValue={profile.bio ?? ""} aria-describedby="bio-hint"/></label><p id="bio-hint" className="text-sm">{v053Copy(locale).bioHint}</p>
           <TopSubjects
             subjects={subjects}

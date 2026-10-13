@@ -1,22 +1,34 @@
 "use client";
 import { useI18n } from "@/components/locale-provider";
 import { FlameButton } from "@/components/ui/flame-button";
-import { useActionState, useEffect, useRef, type ReactNode } from "react";
+import { startTransition, useActionState, useEffect, useRef, type ReactNode } from "react";
 import type { FormAction } from "@/lib/action-state";
-export function ActionForm({ action, children, label, className = "space-y-5", disabled = false, submitVariant = "default" }: {
+export function ActionForm({ action, children, label, className = "space-y-5", disabled = false, submitVariant = "default", manualSubmit = false }: {
     action: FormAction;
     children?: ReactNode;
     label: string;
     className?: string;
     disabled?: boolean;
     submitVariant?: "default" | "flame";
+    manualSubmit?: boolean;
 }) {
     const { t } = useI18n();
     const [state, formAction, pending] = useActionState(action, {});
     const feedback = useRef<HTMLParagraphElement>(null);
     useEffect(() => { if (state.error)
         feedback.current?.focus(); }, [state]);
-    return <form action={formAction} className={className}>
+    return <form action={manualSubmit ? undefined : formAction} className={className}
+      onKeyDown={manualSubmit ? event => {
+        if (event.key === "Enter" && event.target instanceof HTMLInputElement && event.target.type !== "submit") event.preventDefault();
+      } : undefined}
+      onSubmit={manualSubmit ? event => {
+        // Dispatch explicitly so React does not reset uncontrolled profile fields,
+        // including when the server returns a validation or database error.
+        event.preventDefault();
+        if (pending || disabled) return;
+        const form = new FormData(event.currentTarget);
+        startTransition(() => formAction(form));
+      } : undefined}>
     <fieldset className="min-w-0 space-y-5" disabled={pending || disabled}>{children}
       {submitVariant === "flame"
         ? <FlameButton disabled={pending || disabled} type="submit">{pending ? t.pending : label}</FlameButton>
