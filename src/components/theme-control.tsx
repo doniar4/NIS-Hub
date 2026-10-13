@@ -24,9 +24,11 @@ export function ThemeControl({
     const storage = (event: StorageEvent) => {
       if (event.key === THEME_KEY || event.key === null) sync();
     };
+    const observer = new MutationObserver(() => setTheme(parseTheme(document.documentElement.dataset.theme)));
+    observer.observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]});
     const timer = window.setTimeout(sync, 0);
     window.addEventListener("storage", storage);
-    return () => { clearTimeout(timer); window.removeEventListener("storage", storage); };
+    return () => { clearTimeout(timer); observer.disconnect(); window.removeEventListener("storage", storage); };
   }, []);
 
   function change(selected: Theme) {

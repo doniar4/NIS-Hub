@@ -25,12 +25,28 @@ export const getCatalogOptions = cache(async () => {
 export async function getLibraryBooks() {
   await requireViewer("/library");
   const supabase = await database();
+  let legacyCatalog = false;
   const catalog=await loadLibraryCatalog(async (after, size) => {
-    let query = supabase.from("books").select("id,title,grade,subject_id")
+    const fetchLegacy = async () => {
+      let legacy = supabase.from("books").select("id,title,grade,subject_id")
+        .eq("publication_status", "published").order("id").limit(size);
+      if (after) legacy = legacy.gt("id", after);
+      const result = await legacy;
+      if (result.error) throw Object.assign(new Error("Could not load library catalog"), { cause: result.error });
+      return result.data.map(book => ({ ...book, description: null, tags: [], quarter: null }));
+    };
+    if (legacyCatalog) return fetchLegacy();
+    let query = supabase.from("books").select("id,title,description,tags,quarter,grade,subject_id")
       .eq("publication_status", "published").order("id").limit(size);
     if (after) query = query.gt("id", after);
     const { data, error } = await query;
-    if (error) throw new Error("Could not load library catalog");
+    if (error) {
+      if ((error.code === "42703" || error.code === "PGRST204") && /\b(description|tags|quarter)\b/.test(error.message)) {
+        legacyCatalog = true;
+        return fetchLegacy();
+      }
+      throw Object.assign(new Error("Could not load library catalog"), { cause: error });
+    }
     return data;
   });
   const readable=new Set<string>();
@@ -71,8 +87,7 @@ export async function getReading() {
   if(variants.error)throw new Error("Could not load editions");
   const bookIds=[...new Set(variants.data.map(v=>v.book_id))];
   const books = bookIds.length ? await supabase.from("books").select("id,title,cover_path").in("id", bookIds).eq("publication_status","published") : { data: [], error: null };
-  if (books.error) throw new Error("Не удалось загрузить названия материалов.");
-  const catalog=variants.data.flatMap(v=>{const book=books.data?.find(b=>b.id===v.book_id);return book?[{...book,id:v.id,book_id:v.book_id,cover_path:v.cover_path,language:v.language}]:[];}), paths=catalog.map(coverPath).filter((path):path is string=>!!path);
+  const catalog=variants.data.flatMap(v=>{const book=books.data?.find(b=>b.id===v.book_id);return book?[{...book,id:v.id,book_id:v.book_id,cover_path:v.cover_path||book.cover_path,language:v.language}]:[];}), paths=catalog.map(coverPath).filter((path):path is string=>!!path);
   const covers=paths.length?await supabase.storage.from("book-covers").createSignedUrls(paths,BOOK_COVER_URL_TTL_SECONDS):{data:[]};
   const urls=new Map((covers.data??[]).map(row=>[row.path,row.signedUrl]));
   return { bookmarks: bookmarks.data.map(b=>({...b,book_id:b.book_variant_id})), progress: progress.data.map(b=>({...b,book_id:b.book_variant_id})), books: catalog.map(book=>({...book,cover_url:urls.get(coverPath(book)??"")??null})) };

@@ -1,14 +1,18 @@
 import { readFileSync } from "node:fs";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import { PGlite } from "@electric-sql/pglite";
 export const fixtureId = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 export async function phase3Database() {
-  const db = new PGlite({ extensions: { btree_gist } });
+  const db = new PGlite({ extensions: { btree_gist, pg_trgm } });
   try {
     // Models SQL surfaces, NOT GoTrue or the Storage HTTP service.
     await db.exec(`
-      create role anon; create role authenticated; create schema auth; create schema storage;
-      create table auth.users(id uuid primary key, raw_user_meta_data jsonb default '{}');
+      create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create schema storage;
+      create table auth.users(id uuid primary key, raw_user_meta_data jsonb default '{}',
+        raw_app_meta_data jsonb default '{}', email text, created_at timestamptz default now(),
+        email_confirmed_at timestamptz, phone_confirmed_at timestamptz, last_sign_in_at timestamptz,
+        is_anonymous boolean default false);
       create function auth.uid() returns uuid language sql stable as $$
         select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
       $$;

@@ -5,7 +5,7 @@ import {AppFrame} from "../../src/components/app-frame";
 import {LocaleProvider} from "../../src/components/locale-provider";
 import {PreferenceControls} from "../../src/components/preference-controls";
 import {SmsDiary} from "../../src/components/sms-diary";
-import {LibraryBrowser} from "../../src/components/library-browser";
+import {LibraryBrowser} from "./library-fixture";
 import {LegalContent} from "../../src/components/legal-content";
 import {HomeTimetable} from "../../src/components/home-timetable";
 import {StudyRoutes} from "../../src/components/study-routes";

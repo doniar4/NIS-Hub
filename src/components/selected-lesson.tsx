@@ -11,6 +11,7 @@ import { eduPageCopy } from "@/lib/edupage/copy";
 import { formatSchoolDate } from "@/lib/school-calendar";
 import { useI18n } from "./locale-provider";
 import { SubjectMotif } from "./subject-motif";
+import {assessmentCopy} from "@/lib/assessment-copy";
 
 export function SelectedLesson({lesson, subjects, date, grade = null, materials = {}}: {
   lesson?: WeeklyLesson; subjects: SubjectRow[]; date: string; grade?: number | null; materials?: MaterialMap;
@@ -24,19 +25,20 @@ export function SelectedLesson({lesson, subjects, date, grade = null, materials 
       <time dateTime={date}>{formatSchoolDate(date, locale)}</time>
       <div className="selected-lesson-title" aria-live="polite" aria-atomic="true">
         {lesson && <SubjectMotif subject={subject}/>}
-        <h2>{lesson ? subjectName(subject, locale) : c.select}</h2>
+        <h2>{lesson ? lesson.assessment_label??subjectName(subject, locale) : c.select}</h2>
       </div>
       {lesson && <>
         <dl className="lesson-facts">
+          {lesson.assessment_date&&<div><dt>{assessmentCopy(locale).badge}</dt><dd>{lesson.assessment_minutes?`${lesson.assessment_minutes} ${assessmentCopy(locale).minutes}`:"—"}</dd></div>}
           {lesson.start_time && lesson.end_time && <div><dt>{t.lesson}</dt><dd>{lesson.start_time.slice(0,5)}–{lesson.end_time.slice(0,5)}</dd></div>}
           {lesson.room && <div><dt>{t.room}</dt><dd>{normalizeRoom(lesson.room)}</dd></div>}
           {lesson.subgroup_label && <div><dt>{eduPageCopy(locale).subgroup}</dt><dd>{lesson.subgroup_label}</dd></div>}
         </dl>
-        <div className="selected-lesson-actions">
+        {!!lesson.subject_id&&<><div className="selected-lesson-actions">
           <Link prefetch={false} className="button" href={href}>{t.openMaterial} <span aria-hidden="true">↗</span></Link>
-          <Link prefetch={false} className="button button-secondary" href={studyHref(href)}>AI Study <span aria-hidden="true">✦</span></Link>
+          <Link prefetch={false} className="button button-secondary" href={studyHref(href)}>{c.study} <span aria-hidden="true">✦</span></Link>
         </div>
-        <p className="study-source-hint">{c.studyHint}</p>
+        <p className="study-source-hint">{c.studyHint}</p></>}
       </>}
     </div>
   </section>;

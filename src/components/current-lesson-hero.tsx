@@ -10,6 +10,7 @@ import { SubjectMotif } from "./subject-motif";
 import { useI18n } from "./locale-provider";
 import { materialKey, type MaterialMap } from "@/lib/schedule-materials";
 import { librarySubjectHref } from "@/lib/book-model";
+import { AssessmentBadge } from "./assessment-badge";
 
 interface CurrentLessonHeroProps {
   lessons: WeeklyLesson[];
@@ -28,7 +29,7 @@ export function CurrentLessonHero({
   grade = null,
   materials = {},
 }: CurrentLessonHeroProps) {
-  const { locale, t } = useI18n();
+  const { locale } = useI18n();
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState<Date>(() => new Date());
 
@@ -147,11 +148,15 @@ export function CurrentLessonHero({
   }
 
   const totalLessons = todayLessons.length;
+  const lessonRail=(active:number)=><div className="status-day-rail" aria-label={locale==="kk"?`Бүгін ${totalLessons} сабақ`:locale==="en"?`${totalLessons} lessons today`:`Сегодня ${totalLessons} уроков`}>
+    <span className="status-rail-label">{locale==="kk"?"Күн жолы":locale==="en"?"Today":"Маршрут дня"}</span>
+    <span className="status-rail-dots" aria-hidden="true">{todayLessons.map((lesson,index)=><i key={lesson.id} data-state={index<active?"done":index===active?"current":"next"}>{index+1}</i>)}</span>
+  </div>;
 
   // ─── Ongoing lesson ───
   if (status.type === "ongoing") {
     const s = subjectsById.get(status.lesson.subject_id);
-    const sName = subjectName(s, locale);
+    const sName = status.lesson.assessment_label??subjectName(s, locale);
     const room = normalizeRoom(status.lesson.room);
     const lessonNum = lessonRange(status.lesson) || status.index;
     const materialHref = materials[materialKey(status.lesson.subject_id, grade)] ?? librarySubjectHref(status.lesson.subject_id, grade);
@@ -175,18 +180,20 @@ export function CurrentLessonHero({
                   {locale === "kk" ? `${lessonNum}-сабақ` : locale === "en" ? `Lesson ${lessonNum}` : `${lessonNum}-й урок`}
                 </span>
                 {room && <span className="status-pill">{room}</span>}
+                {status.lesson.assessment_date&&<AssessmentBadge kind="soch" locale={locale} />}
                 {status.lesson.start_time && status.lesson.end_time && (
                   <span className="status-pill">{status.lesson.start_time.slice(0, 5)}–{status.lesson.end_time.slice(0, 5)}</span>
                 )}
               </div>
               <h2 className="status-subject">{sName}</h2>
+              {lessonRail(status.index-1)}
             </div>
           </div>
 
           <div className="status-bar-actions">
-            <Link prefetch={false} className="status-material-link" href={materialHref}>
+            {!!status.lesson.subject_id&&<Link prefetch={false} className="status-material-link" href={materialHref}>
               <span aria-hidden="true">▣</span>{locale === "kk" ? "Оқулық" : locale === "en" ? "Textbook" : "Учебник"}
-            </Link>
+            </Link>}
             <div className="status-timer">
               <span className="status-timer-value">{formatCountdown(status.secondsLeft)}</span>
               <span className="status-timer-label">
@@ -202,7 +209,7 @@ export function CurrentLessonHero({
   // ─── Break between lessons ───
   if (status.type === "break") {
     const s = subjectsById.get(status.nextLesson.subject_id);
-    const sName = subjectName(s, locale);
+    const sName = status.nextLesson.assessment_label??subjectName(s, locale);
     const room = normalizeRoom(status.nextLesson.room);
     const lessonNum = lessonRange(status.nextLesson) || status.index;
 
@@ -225,6 +232,7 @@ export function CurrentLessonHero({
                 {room && <span className="status-pill">{room}</span>}
               </div>
               <h2 className="status-subject">{sName}</h2>
+              {lessonRail(status.index-1)}
             </div>
           </div>
 
@@ -242,11 +250,11 @@ export function CurrentLessonHero({
   // ─── Before school ───
   if (status.type === "before_school") {
     const s = subjectsById.get(status.nextLesson.subject_id);
-    const sName = subjectName(s, locale);
+    const sName = status.nextLesson.assessment_label??subjectName(s, locale);
     const room = normalizeRoom(status.nextLesson.room);
 
     return (
-      <aside className="lesson-status-bar surface-card" aria-label={sName}>
+      <aside className="lesson-status-bar surface-card is-before" aria-label={sName}>
         <div className="status-bar-row">
           <div className="status-bar-left">
             <div className="status-motif">
@@ -266,6 +274,7 @@ export function CurrentLessonHero({
                 </span>
               </div>
               <h2 className="status-subject">{sName}</h2>
+              {lessonRail(0)}
             </div>
           </div>
 

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { flushSync } from "react-dom";
+import { usePathname, useRouter } from "next/navigation";
 import {
   MagnifyingGlassIcon,
   ChatBubbleIcon,
@@ -20,9 +21,12 @@ import { useI18n } from "./locale-provider";
 import { v05Copy } from "@/lib/v05-copy";
 import { Sprout } from "./brand";
 
+import { Dock, DockItem, DockLabel, DockIcon } from "./ui/dock";
 import { communityCopy } from "@/lib/community-copy";
+import { v053Copy } from "@/lib/v053-copy";
 
 let memoryCollapsed = false;
+const hoverPrefetchRoutes = new Set(["/", "/library", "/schedule", "/profile"]);
 
 function snapshot() {
   try {
@@ -76,6 +80,7 @@ export function AppFrame({
   avatar,
   profileAccount,
   admin = false,
+  profileIncomplete = false,
 }: {
   children: ReactNode;
   preferences: ReactNode;
@@ -83,10 +88,13 @@ export function AppFrame({
   avatar: ReactNode;
   profileAccount?: ReactNode;
   admin?: boolean;
+  profileIncomplete?: boolean;
 }) {
   const { locale, t } = useI18n();
+  const router = useRouter();
   const p = v05Copy(locale);
   const community = communityCopy(locale);
+  const mobileCommunity = v053Copy(locale);
   const pathname = usePathname();
   const [optimisticRoute, setOptimisticRoute] = useState<string | null>(null);
   const [previousPath, setPreviousPath] = useState(pathname);
@@ -102,6 +110,12 @@ export function AppFrame({
   const searchInput = useRef<HTMLInputElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
+
+  function expandSearch() {
+    // Commit visibility before focusing, while still in the iOS user gesture.
+    flushSync(() => setSearchExpanded(true));
+    searchInput.current?.focus();
+  }
 
   useEffect(() => {
     document.documentElement.dataset.sidebar = snapshot()
@@ -161,6 +175,7 @@ export function AppFrame({
   ];
 
   const renderNavIcon = (href: string) => {
+    if (href === "/people") return <ChatBubbleIcon aria-hidden="true" />;
     if (href === "/messages") return <ChatBubbleIcon aria-hidden="true" />;
     if (href === "/diary") return <ReaderIcon aria-hidden="true" />;
     if (href === "/") return <NavIcon index={0} />;
@@ -175,8 +190,16 @@ export function AppFrame({
   const activeRoute = optimisticRoute ?? pathname;
   const isRouteActive = (href: string) => {
     if (href === "/") return activeRoute === "/";
-    if (href === "/library") return activeRoute.startsWith("/library") || activeRoute.startsWith("/books");
-    if (href === "/profile") return activeRoute.startsWith("/profile") || activeRoute.startsWith("/people") || activeRoute.startsWith("/friends");
+    if (href === "/library")
+      return (
+        activeRoute.startsWith("/library") || activeRoute.startsWith("/books")
+      );
+    if (href === "/profile")
+      return (
+        activeRoute.startsWith("/profile") ||
+        activeRoute.startsWith("/people") ||
+        activeRoute.startsWith("/friends")
+      );
     if (href === "/support") return activeRoute.startsWith("/support");
     return activeRoute.startsWith(href);
   };
@@ -188,15 +211,23 @@ export function AppFrame({
       aria-label={t.mainNav}
       className="sidebar-navigation"
       data-has-active={hasActive}
-      style={{
-        "--active-route": hasActive ? activeIndex : 0,
-      } as CSSProperties}
+      style={
+        {
+          "--active-route": hasActive ? activeIndex : 0,
+        } as CSSProperties
+      }
     >
       {links.map(([href, label]) => {
         const isCurrent = isRouteActive(href);
         return (
           <Link
             key={href}
+            onMouseEnter={() => {
+              if (hoverPrefetchRoutes.has(href)) router.prefetch(href);
+            }}
+            onFocus={() => {
+              if (hoverPrefetchRoutes.has(href)) router.prefetch(href);
+            }}
             prefetch={false}
             href={href}
             title={!mobile && collapsed ? label : undefined}
@@ -229,9 +260,7 @@ export function AppFrame({
         {t.skip}
       </a>
 
-      <aside id="desktop-navigation" className="app-sidebar">
-
-
+      <aside data-lenis-prevent id="desktop-navigation" className="app-sidebar">
         <div className="sidebar-brand-row">
           <Link className="brand-link" href="/" aria-label="NIS Hub">
             <Sprout />
@@ -242,7 +271,9 @@ export function AppFrame({
         </div>
 
         <div className="sidebar-identity-row sidebar-toggle-row">
-          <div className="sidebar-edition sidebar-label"><span>NIS / НИШ / НЗМ</span></div>
+          <div className="sidebar-edition sidebar-label">
+            <span>NIS / НИШ / НЗМ</span>
+          </div>
           <button
             type="button"
             className="sidebar-collapse"
@@ -281,7 +312,12 @@ export function AppFrame({
         {navigation(false)}
 
         <div className="sidebar-bottom">
-          {profileAccount && <div className="sidebar-account">{profileAccount}{account}</div>}
+          {profileAccount && (
+            <div className="sidebar-account">
+              {profileAccount}
+              {account}
+            </div>
+          )}
           <div className="sidebar-legal" inert={collapsed ? true : undefined}>
             <Link href="/privacy">{t.privacy}</Link>
             <Link href="/terms">{t.terms}</Link>
@@ -311,9 +347,20 @@ export function AppFrame({
             aria-label={p.search}
             className="global-search"
             data-expanded={searchExpanded}
-            onFocusCapture={() => setSearchExpanded(true)}
+            onSubmit={(event) => {
+              if (!searchInput.current?.value.trim()) {
+                event.preventDefault();
+                expandSearch();
+              }
+            }}
+            onFocusCapture={(event) => {
+              if ((event.target as EventTarget) === searchInput.current) setSearchExpanded(true);
+            }}
             onBlurCapture={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget) && !searchInput.current?.value) {
+              if (
+                !event.currentTarget.contains(event.relatedTarget) &&
+                !searchInput.current?.value
+              ) {
                 setSearchExpanded(false);
               }
             }}
@@ -338,14 +385,16 @@ export function AppFrame({
             />
 
             <button
-              type={searchExpanded ? "submit" : "button"}
+              type="button"
               aria-label={searchExpanded ? p.searchGo : p.search}
               aria-expanded={searchExpanded}
               aria-controls="global-search"
-              onClick={() => {
-                if (!searchExpanded) {
-                  setSearchExpanded(true);
-                  requestAnimationFrame(() => searchInput.current?.focus());
+              onClick={(event) => {
+                if (!searchInput.current?.value.trim()) {
+                  // iOS opens the keyboard only from a synchronous user gesture.
+                  expandSearch();
+                } else {
+                  event.currentTarget.form?.requestSubmit();
                 }
               }}
             >
@@ -364,24 +413,61 @@ export function AppFrame({
         </header>
 
         <div className="app-canvas">
+          <main id="main" tabIndex={-1} className="app-main">
+            <div key={pathname} className="page-content">
+              {children}
+            </div>
+          </main>
 
-        <main id="main" tabIndex={-1} className="app-main">
+          <footer className="app-footer">
+            <p>NIS Hub · {t.beta}</p>
 
-          <div className="page-content">{children}</div>
-        </main>
-
-        <footer className="app-footer">
-          <p>NIS Hub · {t.beta}</p>
-
-          <div>
-            <Link href="/privacy">{t.privacy}</Link>
-            <Link href="/terms">{t.terms}</Link>
-          </div>
-        </footer>
+            <div>
+              <Link href="/privacy">{t.privacy}</Link>
+              <Link href="/terms">{t.terms}</Link>
+            </div>
+          </footer>
         </div>
       </div>
 
-      <dialog
+      <div className="mobile-bottom-nav">
+        <Dock label={t.mainNav} magnification={44}>
+          {(
+            [
+              ["/", t.home],
+              ["/library", t.library],
+              ["/schedule", t.schedule],
+              ["/people", mobileCommunity.community],
+              ["/profile", t.profile],
+            ] as const
+          ).map(([href, label]) => (
+            <DockItem
+              key={href}
+              href={href}
+              label={label}
+              current={
+                href === "/people"
+                  ? ["/people", "/friends", "/messages"].some((route) =>
+                      activeRoute.startsWith(route),
+                    )
+                  : href === "/profile"
+                    ? activeRoute.startsWith("/profile")
+                    : isRouteActive(href)
+              }
+              controlClassName="mobile-bottom-link"
+              onClick={() => setOptimisticRoute(href)}
+            >
+              <DockLabel>{label}</DockLabel>
+              <DockIcon>{renderNavIcon(href)}</DockIcon>
+              {href === "/profile" && profileIncomplete && (
+                <i className="mobile-nav-dot" aria-hidden="true" />
+              )}
+            </DockItem>
+          ))}
+        </Dock>
+      </div>
+
+      <dialog data-lenis-prevent
         ref={dialog}
         id="mobile-navigation"
         className="mobile-drawer"
@@ -397,8 +483,6 @@ export function AppFrame({
         }}
       >
         <div className="mobile-drawer-panel">
-
-
           <div className="flex items-center justify-between gap-3">
             <Link className="brand-link" href="/" onClick={close}>
               <Sprout />
@@ -418,7 +502,12 @@ export function AppFrame({
           </div>
 
           {navigation(true)}
-          {profileAccount && <div className="sidebar-account">{profileAccount}{account}</div>}
+          {profileAccount && (
+            <div className="sidebar-account">
+              {profileAccount}
+              {account}
+            </div>
+          )}
 
           <div className="sidebar-legal">
             <Link href="/privacy" onClick={close}>

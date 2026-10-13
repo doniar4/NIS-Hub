@@ -10,6 +10,8 @@ import { BookIcon } from "./icons";
 import { ActionMenu } from "./action-menu";
 import { TaskDialog } from "./task-dialog";
 
+import { HomeworkFields } from "./homework-fields";
+
 export function LessonActions({
   subjectId,
   subject,
@@ -88,6 +90,7 @@ export function LessonActions({
                     subject: subjectId,
                     date: data.get("date"),
                     body: data.get("body"),
+                    kind: data.get("kind"),
                   });
                   if ("error" in result) {
                     setError(result.error);
@@ -102,19 +105,7 @@ export function LessonActions({
               });
             }}
           >
-            <label>
-              <span className="field-label">{p.body}</span>
-              <textarea
-                className="field"
-                name="body"
-                rows={4}
-                required
-                maxLength={1000}
-                data-dialog-autofocus
-                disabled={pending}
-                placeholder={p.homeworkPlaceholder}
-              />
-            </label>
+            <HomeworkFields disabled={pending} autoFocus />
             <label>
               <span className="field-label">{p.due}</span>
               <input

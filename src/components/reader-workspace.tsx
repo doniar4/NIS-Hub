@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState,useSyncExternalStore,type ReactNode} from "react";
 import {useI18n} from "./locale-provider";
+import {MagicWandIcon} from "@radix-ui/react-icons";
 import {designCopy} from "@/lib/design-copy";
 
 const subscribeDesktop=(listener:()=>void)=>{const media=window.matchMedia("(min-width: 1280px)");media.addEventListener("change",listener);return ()=>media.removeEventListener("change",listener);};
@@ -14,7 +15,7 @@ export function ReaderWorkspace({children,inspector,information}:{children:React
   const desktop=useSyncExternalStore(subscribeDesktop,desktopSnapshot,()=>false);
   const studyIntent=useSyncExternalStore(subscribeHash,hashSnapshot,()=>false);
   const [requestedOpen,setOpen]=useState<boolean|null>(null);
-  const open=requestedOpen??(desktop||studyIntent);
+  const open=requestedOpen??studyIntent;
   useEffect(()=>{const hash=()=>{if(window.location.hash==="#ai-study")setOpen(true);};window.addEventListener("hashchange",hash);return ()=>window.removeEventListener("hashchange",hash);},[]);
   useEffect(()=>{
     const element=dialog.current;if(!element)return;
@@ -34,9 +35,9 @@ export function ReaderWorkspace({children,inspector,information}:{children:React
       <button ref={trigger} className="button button-secondary" aria-expanded={open} aria-controls="ai-study" onClick={()=>setOpen(!open)}>{c.openStudy} <span aria-hidden="true">✦</span></button>
     </div>
     <div className="reader-main">{children}</div>
-    <dialog ref={dialog} id="ai-study" className="reader-inspector" aria-label="AI Study" onCancel={event=>{event.preventDefault();close();}}
+    <dialog data-lenis-prevent ref={dialog} id="ai-study" className="reader-inspector" aria-label={c.study} onCancel={event=>{event.preventDefault();close();}}
       onClick={event=>{if(event.target!==event.currentTarget)return;const rect=event.currentTarget.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)close();}}>
-      <header className="inspector-heading"><h2>AI Study</h2><button className="icon-button" aria-label={c.close} onClick={close}>×</button></header>
+      <header className="inspector-heading"><div className="inspector-brand"><MagicWandIcon aria-hidden="true"/><h2>{c.study}</h2></div><button className="icon-button" aria-label={c.close} onClick={close}>×</button></header>
       {inspector}
     </dialog>
   </section>;

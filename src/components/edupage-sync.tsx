@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import {useState,useTransition} from "react";
 import type {ClassRow,SubjectRow} from "@/lib/database.types";
 import type {WeeklyInput} from "@/lib/timetable-import";
@@ -50,13 +51,13 @@ export function EduPageSync({initial,classes,subjects,action=syncEduPage}:{
       </select>
     </label>);
   };
-  return <section className="surface-card mt-8 min-w-0 space-y-5" aria-labelledby="edupage-title" aria-busy={pending}>
+  return <section className="surface-card edupage-panel mt-8 min-w-0 space-y-5" aria-labelledby="edupage-title" aria-busy={pending}>
     <h2 id="edupage-title" className="section-title">{t.title}</h2>
     <a className="text-link break-all" href="https://nisuralsk.edupage.org/timetable/" target="_blank" rel="noreferrer">https://nisuralsk.edupage.org/timetable/</a>
-    <dl className="space-y-2 break-words">
+    <dl className="edupage-status break-words">
       <div><dt>{t.checked}</dt><dd>{date(result.checkedAt??initial.lastChecked)}</dd></div>
       <div><dt>{t.synced}</dt><dd>{date(result.synced?result.checkedAt:initial.lastSynced)}</dd></div>
-      <div><dt>{t.version}</dt><dd><a className="text-link break-all" href="/admin/versions">{result.version??initial.activeVersion??"—"}</a></dd></div>
+      <div><dt>{t.version}</dt><dd><Link className="text-link break-all" href="/admin/schedule/versions">{result.version??initial.activeVersion??"—"}</Link></dd></div>
     </dl>
     <p role="status">{pending?t.waiting:!initial.ready?t.migration:!initial.enabled?t.disabled:result.synced?t.saved:result.unchanged?t.noChanges:t.ready}</p>
     {message&&<p role="alert">{message}</p>}

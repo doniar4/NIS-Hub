@@ -17,25 +17,35 @@ import {LessonActions} from "./lesson-actions";
 import {EmptyState} from "./ui";
 import {SubjectMotif} from "./subject-motif";
 import {SelectedLesson} from "./selected-lesson";
+import {DayHomeworkProvider, useProvidedHomeworkDay} from "./day-homework-provider";
+import {InlineLessonHomework} from "./inline-lesson-homework";
+import { AssessmentBadge } from "./assessment-badge";
+import { homeworkKind } from "@/lib/homework-kind";
+import {assessmentCopy} from "@/lib/assessment-copy";
 
 export function WeeklyLessonList({lessons,subjects,grade=null,materials={},date,canAddHomework=false,selectedId,onSelect}:{
   lessons:WeeklyLesson[]; subjects:SubjectRow[]; grade?:number|null; materials?:MaterialMap; date?:string; canAddHomework?:boolean;
   selectedId?:string; onSelect?:(id:string)=>void;
 }) {
-  const {locale,t}=useI18n(),subjectsById=useMemo(()=>subjectMap(subjects),[subjects]);
+  const {locale,t}=useI18n(),subjectsById=useMemo(()=>subjectMap(subjects),[subjects]),assessment=assessmentCopy(locale);
+  const homework=useProvidedHomeworkDay();
   return <>
     {lessons.some(row=>row.subgroup_label)&&<p className="my-3 text-sm text-[var(--muted)]">{eduPageCopy(locale).groupHint}</p>}
     <ol className="lesson-list">{lessons.map(row=>{
+      const label=row.assessment_label??subjectName(subjectsById.get(row.subject_id),locale);
       const content=<><SubjectMotif subject={subjectsById.get(row.subject_id)}/>
         <span className="lesson-clock">{row.start_time&&row.end_time&&<span className="lesson-time">{row.start_time.slice(0,5)}–{row.end_time.slice(0,5)}</span>}<span className="lesson-slot">{t.lesson} {lessonRange(row)}</span></span>
-        <span className="lesson-info"><strong>{subjectName(subjectsById.get(row.subject_id),locale)}</strong>
+        <span className="lesson-info"><strong>{label}</strong>
+          {row.assessment_date&&<span className="lesson-assessment-meta"><AssessmentBadge kind="soch" locale={locale}/>{row.assessment_minutes?<span>{row.assessment_minutes} {assessment.minutes}</span>:null}</span>}
           {row.subgroup_label&&<span className="lesson-room">{eduPageCopy(locale).subgroup}: {row.subgroup_label}</span>}
           {row.room&&<span className="lesson-room">{t.room}: {normalizeRoom(row.room)}</span>}
         </span></>;
-      return <li key={row.id} className={"timetable-row lesson-row"+(selectedId===row.id?" is-selected":"")}>
+      const assignments=homework&&homework.date===date?(homework.bySubject.get(row.subject_id)??[]).filter(item=>item.class_id===row.class_id):[];
+      return <li key={row.id} data-assessment={row.assessment_date?"true":undefined} data-assessment-kind={row.assessment_date?"soch":assignments.some(item=>homeworkKind(item)==="sor")?"sor":undefined} className={"timetable-row lesson-row"+(selectedId===row.id?" is-selected":"")+(assignments.length?" has-homework":"")}>
         {onSelect?<button type="button" className="lesson-select" aria-pressed={selectedId===row.id} onClick={()=>onSelect(row.id)}>{content}</button>:<div className="lesson-select lesson-static">{content}</div>}
-        <LessonActions key={row.id+(date??"")} subjectId={row.subject_id} subject={subjectName(subjectsById.get(row.subject_id),locale)}
-          href={materials[materialKey(row.subject_id,grade)]??librarySubjectHref(row.subject_id,grade)} date={date} canAddHomework={canAddHomework}/>
+        <InlineLessonHomework key={row.id+(date??"")} rows={assignments} subject={label}/>
+        {!!row.subject_id&&<LessonActions key={row.id+(date??"")} subjectId={row.subject_id} subject={label}
+          href={materials[materialKey(row.subject_id,grade)]??librarySubjectHref(row.subject_id,grade)} date={date} canAddHomework={canAddHomework}/>}
       </li>;
     })}</ol>
   </>;
@@ -52,7 +62,7 @@ export function WeeklyScheduleBrowser({lessons,classes,subjects,initialClassId,d
   const filtered=useMemo(()=>weeklyDay(lessons,classId,weekday,schoolWeek(date).dates[weekday-1]),[lessons,classId,weekday,date]);
   const grade=classGrade(classes.find(c=>c.id===classId));
   const selected=filtered.find(row=>row.id===selectedId)??filtered[0];
-  return <section className="schedule-browser mt-8">
+  return <DayHomeworkProvider date={selectedDate} classId={initialClassId}><section className="schedule-browser mt-8">
     <div className="schedule-controls surface-card">
       <div className="schedule-class-picker">
         <label htmlFor="schedule-class-select" className="schedule-class-badge">
@@ -96,5 +106,5 @@ export function WeeklyScheduleBrowser({lessons,classes,subjects,initialClassId,d
       </div>
     </section>
     {homeworkEditor?.(selectedDate)}
-  </section>;
+  </section></DayHomeworkProvider>;
 }

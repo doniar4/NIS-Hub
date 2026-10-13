@@ -40,20 +40,21 @@ Regenerate or compare database types against the deployed schema after migration
 
 Set real production values in Vercel. Do not use placeholders from `.env.example`.
 
-The committed `vercel.json` runs server functions in Dubai (`dxb1`), a compute region Vercel explicitly positions for Central Asia. Redeploy after changing this file; an existing deployment keeps its original region. No extra environment variable is required. If an SMS login still returns `interactive_required`, inspect the Vercel runtime log entry `[sms] provider verification required`: `domain_captcha` means SMS assigned its domain-bound Google CAPTCHA to the Vercel egress IP, while `password_change`, `authenticator_enrollment`, and `unknown_challenge` identify other provider-side steps. These log entries contain no account identifier, credentials, cookies, provider body or URL.
+The committed `vercel.json` does not force a compute region. If an SMS login returns `interactive_required`, inspect the Vercel runtime log entry `[sms] provider verification required`: `domain_captcha` means SMS assigned its domain-bound Google CAPTCHA to the Vercel egress IP, while `password_change`, `authenticator_enrollment`, and `unknown_challenge` identify other provider-side steps. These log entries contain no account identifier, credentials, cookies, provider body or URL.
 
 Vercel uses dynamic outbound IPs by default. A stable or residential egress requires separately managed infrastructure (or Vercel Static IPs/Secure Compute) and cannot be produced by an application setting. Do not point `SMS_BASE_URL` at a generic proxy: the connector intentionally pins the official SMS origin. A trusted relay would need its own authenticated, allowlisted implementation and security review.
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or the legacy anon key)
-- `APP_BASE_URL`
+- `NEXT_PUBLIC_SITE_URL=https://nis-hub-ura.vercel.app`
+- `GOOGLE_AUTH_ENABLED=true`, only after Google Cloud and Supabase Auth are configured
 - `TELEGRAM_BOT_TOKEN` and `TELEGRAM_ADMIN_CHAT_ID`, if Support notifications are enabled
 - `SMS_SESSION_SECRET`, if SMS Diary is enabled
 - `GEMINI_API_KEY` and `GEMINI_MODEL`, if AI Study is enabled
 - `EDUPAGE_TIMETABLE_ENABLED=true`, only after authorizing and validating the timetable source
 - `AI_STUDY_ENABLED=true`, only when the Gemini configuration is ready
 
-In Supabase Authentication, configure the canonical production Site URL and approved redirect URLs. Confirm that the deployed `APP_BASE_URL` matches the canonical URL.
+In Supabase Authentication, configure the canonical production Site URL and exact `/auth/callback` redirect URL. Follow [auth and SEO setup](auth-seo-setup.md); the Google secret stays only in Supabase.
 
 ## 3. Authenticated production smoke test
 

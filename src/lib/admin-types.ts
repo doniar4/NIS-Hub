@@ -1,0 +1,16 @@
+import type {Browser,Device} from "./admin-control";
+import type {ClassHomework} from "./database.types";
+export type AdminStats={online:number;today:number;totalUsers:number;newUsers:number;homeworkToday:number;openTickets:number};
+export type AdminUser={id:string;display_name:string|null;class_id:string|null;class_name:string|null;role:"student"|"admin";created_at:string;last_activity:string|null;device:Device;browser:Browser};
+export type AdminUsers={total:number;rows:AdminUser[]};
+export type Registration={id:string;display_name:string|null;class_name:string|null;created_at:string};
+export type ClassActivity={id:string;name:string;registered:number;active:number};
+export type AdminEvent={id:string;user_id:string|null;display_name:string|null;class_name:string|null;action:string;created_at:string;device:Device;browser:Browser};
+export type ActivitySummary={online:number;today:number;week:number;agents:{device:Device;browser:Browser;count:number}[]};
+export type ChartPoint={at:string;count:number;label?:string};
+export type HomeworkStats={today:number;week:number;authors:number;visible:number;hidden:number;telegram:number};
+export type AdminHomework=ClassHomework&{telegram:boolean};
+export type HomeworkPage={total:number;rows:AdminHomework[]};
+export type TicketStats={open:number;waiting:number;resolved:number};
+export type AdminDataMap={stats:AdminStats;registrations:Registration[];classes:ClassActivity[];users:AdminUsers;feed:AdminEvent[];activity:ActivitySummary;chart:ChartPoint[];homeworkStats:HomeworkStats;homework:HomeworkPage;tickets:TicketStats};
+export type AdminDataKey=keyof AdminDataMap;

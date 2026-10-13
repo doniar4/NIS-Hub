@@ -8,8 +8,10 @@ import { getI18n } from "./i18n-server";
 import { phase4Copy } from "./phase4-copy";
 import { schoolWeek, weeklyDay } from "./weekly-schedule";
 import type { WeeklyScheduleSource } from "./schedule-source";
+import {getAssessmentSchedule} from "./assessment-queries";
+import {assessmentOverlays} from "./assessment-schedule";
 
-export async function getWeeklySchedule(classId?: string) {
+export async function getWeeklySchedule(classId?: string, includeAssessments=false) {
   await requireViewer("/schedule");
   const db = await database(); const { locale } = await getI18n();
   const rows: WeeklyLesson[] = [];
@@ -21,14 +23,14 @@ export async function getWeeklySchedule(classId?: string) {
     if (error) throw new Error(phase4Copy(locale).importError);
     if (page === 20 && data.length) throw new Error(phase4Copy(locale).scheduleLimit);
     rows.push(...data);
-    if (data.length < 500) return rows;
+    if (data.length < 500) break;
   }
-  return rows;
+  return includeAssessments ? [...rows,...assessmentOverlays((await getAssessmentSchedule(classId)).rows,rows)] : rows;
 }
 export const weeklyDatabaseSchedule: WeeklyScheduleSource = {
   async getDay(classId, date) {
     const weekday = schoolWeek(date).weekday;
     if (weekday < 1 || weekday > 5 || !isSchoolDay(date,await getNonSchoolDays())) return [];
-    return weeklyDay(await getWeeklySchedule(classId), classId, weekday, date);
+    return weeklyDay(await getWeeklySchedule(classId,true), classId, weekday, date);
   },
 };

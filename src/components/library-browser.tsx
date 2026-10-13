@@ -1,299 +1,367 @@
 "use client";
-
-import { BOOK_GRADES } from "@/lib/book-model";
-
-import { v051Copy } from "@/lib/v051-copy";
-
-import { subjectMap } from "@/lib/catalog";
-
 import Link from "next/link";
-
-import { useEffect, useMemo, useState } from "react";
-
-import { useI18n } from "./locale-provider";
-
-import { EmptyState, Notice } from "./ui";
-
+import { useEffect, useRef, useState, useTransition } from "react";
+import { ArrowUpRight } from "lucide-react";
+import { BOOK_GRADES } from "@/lib/book-model";
 import { subjectName } from "@/lib/i18n";
-
 import {
-  filterBooks,
   initialLibraryFilters,
   libraryFilterUrl,
-  type LibraryBook,
   type LibraryFilters,
+  type LibraryPage,
 } from "@/lib/library";
-
-import type {
-  ClassRow,
-  SubjectRow,
-} from "@/lib/database.types";
-
+import type { SubjectRow } from "@/lib/database.types";
+import { useI18n } from "./locale-provider";
 import { SubjectMotif } from "./subject-motif";
 
+type Personal = {
+  history: { query: string; searched_at: string }[];
+  recent: { id: string; title: string; opened_at: string }[];
+};
 export function LibraryBrowser({
-  books,
+  page,
   subjects,
   initial,
-  truncated,
   studyIntent = false,
+  mutateAction: changeLibrary,
 }: {
-  books: LibraryBook[];
-  classes: ClassRow[];
+  page: LibraryPage;
+  personal?: Personal;
   subjects: SubjectRow[];
   initial: LibraryFilters;
-  truncated: boolean;
   studyIntent?: boolean;
+  mutateAction: typeof import("@/app/actions/library").changeLibrary;
 }) {
   const { t, locale } = useI18n();
-  const p = v051Copy(locale);
-
-  const subjectsById = useMemo(
-    () => subjectMap(subjects),
-    [subjects],
-  );
-
-  const [q, setQ] = useState(initial.q);
-  const [grade, setGrade] = useState(initial.grade);
-  const [subject, setSubject] = useState(initial.subject);
-
-  const [previousInitial, setPreviousInitial] =
-    useState(initial);
-
-  // A deliberate server navigation may supply a fresh object with identical
-  // initial values. Reset then, but never on local filter-state updates.
-  if (previousInitial !== initial) {
-    setPreviousInitial(initial);
-    setQ(initial.q);
-    setGrade(initial.grade);
-    setSubject(initial.subject);
-  }
-
-  const filteredBooks = useMemo(
-    () =>
-      filterBooks(books, {
-        q,
-        grade,
-        subject,
-      }).sort((a, b) =>
-        a.title.localeCompare(b.title, locale),
-      ),
-    [books, q, grade, subject, locale],
-  );
+  const label = (ru: string, kk: string, en: string) =>
+    locale === "ru" ? ru : locale === "kk" ? kk : en;
+  const [filters, setFilters] = useState(initial),
+    [query, setQuery] = useState(initial.q);
+  const [result, setResult] = useState(page);
+  const [loading, setLoading] = useState(false),
+    [error, setError] = useState("");
+  const [, startTransition] = useTransition();
+  const request = useRef<AbortController | null>(null),
+    sequence = useRef(0),
+    initialRequest = useRef(true);
+  const [revision, setRevision] = useState(0);
 
   useEffect(() => {
+    const timer = setTimeout(
+      () => setFilters((f) => (f.q === query ? f : { ...f, q: query })),
+      300,
+    );
+    return () => clearTimeout(timer);
+  }, [query]);
+  useEffect(() => {
     const restore = () => {
-      const values = initialLibraryFilters(
-        Object.fromEntries(
-          new URLSearchParams(
-            window.location.search,
-          ),
-        ),
+      const next = initialLibraryFilters(
+        Object.fromEntries(new URLSearchParams(location.search)),
       );
-
-      setQ(values.q);
-      setGrade(values.grade);
-      setSubject(values.subject);
+      setFilters(next);
+      setQuery(next.q);
     };
-
     window.addEventListener("popstate", restore);
-
-    return () =>
-      window.removeEventListener(
-        "popstate",
-        restore,
-      );
+    return () => window.removeEventListener("popstate", restore);
   }, []);
-
-  function change(values: LibraryFilters) {
-    setQ(values.q);
-    setGrade(values.grade);
-    setSubject(values.subject);
-
+  useEffect(() => {
     window.history.replaceState(
       window.history.state,
       "",
-      libraryFilterUrl(
-        window.location.href,
-        values,
-      ),
+      libraryFilterUrl(window.location.href, filters),
     );
+  }, [filters]);
+  useEffect(() => {
+    if (initialRequest.current) {
+      initialRequest.current = false;
+      return;
+    }
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
+    const version = ++sequence.current;
+    setLoading(true);
+    setError("");
+    const params = new URLSearchParams({
+      ...filters,
+    });
+    // Clear the previous query at the async request boundary; never append it
+    // to a response for different filters.
+    queueMicrotask(() => {
+      if (!controller.signal.aborted)
+        setResult({ books: [], total: 0, nextOffset: null, suggestions: [] });
+    });
+    fetch(`/api/library?${params}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw Error();
+        const data = await response.json();
+        if (version === sequence.current) {
+          setResult(data);
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted)
+          setError(
+            label(
+              "Не удалось загрузить библиотеку.",
+              "Кітапхана жүктелмеді.",
+              "Could not load the library.",
+            ),
+          );
+      })
+      .finally(() => {
+        if (version === sequence.current) setLoading(false);
+      });
+    return () => controller.abort();
+    // The response is language-neutral; locale changes only affect labels.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, revision]);
+  useEffect(() => {
+    if (!filters.q.trim()) return;
+    const timer = setTimeout(
+      () =>
+        startTransition(async () => {
+          await changeLibrary({ kind: "search", name: filters.q }).catch(()=>undefined);
+        }),
+      1200,
+    );
+    return () => clearTimeout(timer);
+  }, [filters.q, changeLibrary]);
+
+  async function more() {
+    if (result.nextOffset === null || loading) return;
+    const version = sequence.current;
+    const controller = new AbortController();
+    request.current = controller;
+    setLoading(true);
+    setError("");
+    const params = new URLSearchParams({
+      ...filters,
+      offset: String(result.nextOffset),
+    });
+    try {
+      const response = await fetch(`/api/library?${params}`, {
+        signal: controller.signal,
+      });
+      if (!response.ok) throw Error();
+      const data: LibraryPage = await response.json();
+      if (version === sequence.current)
+        setResult((prev) => ({
+          ...data,
+          books: [
+            ...prev.books,
+            ...data.books.filter(
+              (b) => !prev.books.some((old) => old.id === b.id),
+            ),
+          ],
+        }));
+    } catch {
+      if (!controller.signal.aborted)
+        setError(
+          label(
+            "Не удалось загрузить следующую страницу.",
+            "Келесі бет жүктелмеді.",
+            "Could not load the next page.",
+          ),
+        );
+    } finally {
+      if (version === sequence.current) setLoading(false);
+    }
   }
 
   return (
-    <section aria-label={t.library}>
-      <div
-        role="search"
-        className="library-filters mt-8 grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(8rem,1.7fr)_minmax(6rem,.7fr)_minmax(10rem,1fr)_auto]"
-      >
+    <section className="library-workspace" aria-label={t.library}>
+      <div className="library-search-fields" role="search">
         <label>
           <span className="field-label">
-            {t.title}
+            {label(
+              "Название, автор или предмет",
+              "Атауы, авторы немесе пәні",
+              "Title, author or subject",
+            )}
           </span>
-
           <input
-            className="field"
             type="search"
+            className="field"
             maxLength={100}
-            value={q}
-            onChange={(event) =>
-              change({
-                q: event.target.value,
-                grade,
-                subject,
-              })
-            }
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
           />
         </label>
-
         <label>
           <span className="field-label">
-            {p.grade}
+            {label("Класс", "Сынып", "Grade")}
           </span>
-
           <select
             className="field"
-            value={grade}
-            onChange={(event) =>
-              change({
-                q,
-                grade: event.target.value,
-                subject,
-              })
+            value={filters.grade}
+            onChange={(e) =>
+              setFilters((f) => ({ ...f, grade: e.target.value }))
             }
           >
             <option value="">
-              {p.allGrades}
+              {label("Все классы", "Барлық сыныптар", "All grades")}
             </option>
-
-            {grade &&
-              !BOOK_GRADES.some(
-                (item) => String(item) === grade,
-              ) && (
-                <option value={grade}>
-                  {t.unavailableFilter}
-                </option>
-              )}
-
-            {BOOK_GRADES.map((item) => (
-              <option value={item} key={item}>
-                {item}
+            {BOOK_GRADES.map((g) => (
+              <option key={g} value={g}>
+                {g}
               </option>
             ))}
           </select>
         </label>
-
         <label>
-          <span className="field-label">
-            {t.subject}
-          </span>
-
+          <span className="field-label">{t.subject}</span>
           <select
             className="field"
-            value={subject}
-            onChange={(event) =>
-              change({
-                q,
-                grade,
-                subject: event.target.value,
-              })
+            value={filters.subject}
+            onChange={(e) =>
+              setFilters((f) => ({ ...f, subject: e.target.value }))
             }
           >
-            <option value="">
-              {t.allSubjects}
-            </option>
-
-            {subject &&
-              !subjects.some(
-                (item) => item.id === subject,
-              ) && (
-                <option value={subject}>
-                  {t.unavailableFilter}
-                </option>
-              )}
-
-            {subjects.map((item) => (
-              <option
-                value={item.id}
-                key={item.id}
-              >
-                {subjectName(item, locale)}
+            <option value="">{t.allSubjects}</option>
+            {subjects.map((s) => (
+              <option value={s.id} key={s.id}>
+                {subjectName(s, locale)}
               </option>
             ))}
           </select>
         </label>
-
         <button
-          className="button button-secondary"
           type="button"
-          onClick={() =>
-            change({
-              q: "",
-              grade: "",
-              subject: "",
-            })
-          }
+          className="button button-secondary"
+          onClick={() => {
+            setQuery("");
+            setFilters({ q: "", grade: "", subject: "" });
+          }}
         >
           {t.resetFilters}
         </button>
       </div>
-
-      {truncated && (
-        <div className="mt-6">
-          <Notice>
-            {t.catalogLimit} {books.length}.{" "}
-            {t.catalogLimitHint}
-          </Notice>
+      <p className="library-result-count" role="status" aria-live="polite">
+        {loading
+          ? label("Загрузка…", "Жүктелуде…", "Loading…")
+          : `${t.results}: ${result.total} · ${label("Показано", "Көрсетілді", "Showing")} ${result.books.length}`}
+      </p>
+      {!loading && !result.books.length && (
+        <div className="library-empty">
+          <h2>{t.noMaterials}</h2>
+          <p>{t.noMaterialsHint}</p>
+          {!!result.suggestions.length && (
+            <div className="search-suggestions">
+              {label(
+                "Возможно, вы имели в виду:",
+                "Мүмкін, сіз іздегеніңіз:",
+                "Did you mean:",
+              )}
+              {result.suggestions.map((s) => (
+                <button type="button" key={s} onClick={() => setQuery(s)}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
-
-      <p
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="my-5 text-sm text-[var(--muted)]"
-      >
-        {t.results}: {filteredBooks.length}
-      </p>
-
-      {!filteredBooks.length ? (
-        <EmptyState title={t.noMaterials}>
-          {t.noMaterialsHint}
-        </EmptyState>
-      ) : (
-        <ul className="library-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredBooks.map((book) => (
-            <li
-              key={book.id}
-              className="min-w-0"
+      <ul className="library-grid library-catalog-grid">
+        {result.books.map((book) => (
+          <li className="library-catalog-card" key={book.id}>
+            <Link
+              prefetch={false}
+              href={`/books/${book.id}/read${studyIntent ? "#ai-study" : ""}`}
+              className="library-material-link"
+              onClick={() =>
+                startTransition(async () => {
+                  await changeLibrary({ kind: "recent", bookId: book.id }).catch(()=>undefined);
+                })
+              }
             >
-              <Link prefetch={false} href={"/books/" + book.id + "/read" + (studyIntent ? "#ai-study" : "")} className="library-card p-6 h-full flex flex-col" aria-label={t.openMaterial + ": " + book.title}>
-              <SubjectMotif subject={subjectsById.get(book.subject_id)} />
-
-              <p className="field-label">
+              <SubjectMotif
+                subject={subjects.find((s) => s.id === book.subject_id)}
+              />
+              <p className="library-card-subject">
                 {subjectName(
-                  subjectsById.get(
-                    book.subject_id,
-                  ),
+                  subjects.find((s) => s.id === book.subject_id),
                   locale,
                 )}
               </p>
-
-              <h2 className="text-xl font-semibold">
-                {book.title}
-              </h2>
-
-              <p className="mt-3 text-sm text-[var(--muted)]">
-                {book.grade
-                  ? p.grade + " " + book.grade
-                  : ""}
+              <h2>{book.title}</h2>
+              <p className="library-card-author">
+                {book.author ||
+                  label(
+                    "Автор не указан",
+                    "Автор көрсетілмеген",
+                    "Author not specified",
+                  )}
               </p>
-
-              <span className="mt-auto pt-5 inline-flex min-h-11 items-center text-sm font-semibold underline">{t.openMaterial}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+              {book.description && (
+                <p className="library-description">{book.description}</p>
+              )}
+              <div className="library-card-metadata">
+                {book.grade && (
+                  <span>
+                    {label("Класс", "Сынып", "Grade")} {book.grade}
+                  </span>
+                )}
+                {book.quarter && (
+                  <span>
+                    {book.quarter} {label("четверть", "тоқсан", "quarter")}
+                  </span>
+                )}
+                {(book.languages ?? []).map((l) => (
+                  <span key={l} lang={l === "kz" ? "kk" : l}>
+                    {(
+                      {
+                        ru: "Русский",
+                        kz: "Қазақша",
+                        en: "English",
+                        und: label(
+                          "Язык не указан",
+                          "Тіл көрсетілмеген",
+                          "Language unspecified",
+                        ),
+                      } as Record<string, string>
+                    )[l] ?? l}
+                  </span>
+                ))}
+              </div>
+              {!!book.tags?.length && (
+                <div className="library-tags">
+                  {book.tags.slice(0, 4).map((tag) => (
+                    <span key={tag}>{tag}</span>
+                  ))}
+                </div>
+              )}
+              <span className="library-open-label">
+                {t.openMaterial}
+                <ArrowUpRight size={17} />
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {result.nextOffset !== null && (
+        <button
+          type="button"
+          className="button button-secondary library-load-more"
+          disabled={loading}
+          onClick={() => void more()}
+        >
+          {loading
+            ? label("Загрузка…", "Жүктелуде…", "Loading…")
+            : label("Показать ещё", "Тағы көрсету", "Show more")}
+        </button>
+      )}
+      {error && (
+        <div role="alert" className="library-error">
+          {error}
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => setRevision((v) => v + 1)}
+          >
+            {label("Повторить", "Қайталау", "Retry")}
+          </button>
+        </div>
       )}
     </section>
   );

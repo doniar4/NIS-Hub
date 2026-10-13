@@ -43,6 +43,12 @@ test("v0.5.1 migrations preserve legacy PDFs/covers and reading data; editions r
   await assert.rejects(db.query("insert into public.book_variants(book_id,language,storage_path) values ($1,'kz','books/new.pdf')",[id(30)]));
   await asUser(db,id(1));
   await db.query("insert into public.book_variants(id,book_id,language,storage_path,page_count,publication_status) values ($1,$2,'kz','books/kz.pdf',2,'published')",[id(31),id(30)]);
+  await db.query("select public.save_book_edition($1::jsonb,$2::jsonb,false)",[
+    JSON.stringify({id:id(30),title:"Textbook",description:"Motion and forces",tags:["physics","mechanics"],quarter:2,subject_id:id(20),grade:9,author:null,publisher:null,publication_year:null,publication_status:"published"}),
+    JSON.stringify({id:id(30),language:"ru",storage_path:"legacy/book.pdf",file_size:100,page_count:3,publication_status:"published",cover_path:"books/cover.webp"}),
+  ]);
+  const searchable=(await db.query<{description:string;tags:string[];quarter:number}>("select description,tags,quarter from public.books where id=$1",[id(30)])).rows[0];
+  assert.deepEqual(searchable,{description:"Motion and forces",tags:["physics","mechanics"],quarter:2});
   await db.query("insert into storage.objects(bucket_id,name) values ('book-files','books/kz.pdf')");
   await assert.rejects(db.query("insert into public.book_variants(book_id,language,storage_path) values ($1,'kz','books/duplicate.pdf')",[id(30)]));
   await asUser(db,id(2));

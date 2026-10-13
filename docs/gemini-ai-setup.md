@@ -13,14 +13,18 @@ GEMINI_MODEL=gemini-3.6-flash
 AI_STUDY_DAILY_LIMIT=10
 AI_STUDY_MAX_PAGES=10
 AI_STUDY_MAX_SOURCE_CHARS=30000
-AI_STUDY_TIMEOUT_MS=25000
+AI_STUDY_TIMEOUT_MS=60000
 ```
 
 Supply your own key privately. Never use `NEXT_PUBLIC_GEMINI_API_KEY` or commit `.env.local`. Restart the running Next.js process after environment changes; update the hosting environment separately. Do not change Supabase keys, Storage visibility or RLS to repair a provider error.
 
 On 2026-09-16 the configured account returned HTTP 404 for `gemini-2.5-flash`, explaining that it is no longer available to new users and recommending `gemini-3.6-flash`. The latter accepted a bounded synthetic study request with the compatible schema. A model can appear in `models.list` yet reject generation for the account; verify with a small non-private generation. No automatic model fallback is used.
 
-Limits may be lowered through the environment, not raised above 10 attempts per user/day, 10 pages, 30,000 source characters or 60,000 ms. The daily counter resets on the Asia/Oral calendar day, not a rolling 24-hour window. Reserved attempts count even on provider failure; cache hits do not consume another attempt. Do not clear quota tables to work around an error.
+On 2026-10-12 a synthetic Russian summary request with low thinking and the current schema succeeded on `gemini-3.6-flash` in 2.8 seconds with locally validated source quotes. SOR preparation succeeded in 4.4 seconds and answer review in 1.9 seconds. In the same diagnostic session, `gemini-3.7-flash` returned HTTP 503 and `gemini-3.8-flash` reached the 60-second deadline. Availability can change; use a model verified with your key rather than relying on `models.list` alone.
+
+Limits may be lowered through the environment, not raised above 10 attempts per user/day, 10 pages, 30,000 source characters or 90,000 ms. The daily counter resets on the Asia/Oral calendar day, not a rolling 24-hour window. Reserved attempts count even on provider failure; cache hits do not consume another attempt. Do not clear quota tables to work around an error.
+
+Generation uses low thinking on Gemini 3 and a 512-token thinking budget on Gemini 2.5 Flash/Pro. Other model families receive no thinking option. Compact prompts and an 8,192-token output cap leave room for complete JSON and Cyrillic source quotes. Both study generation and answer review use the same transport.
 
 ## Text preparation
 
@@ -50,7 +54,7 @@ Raw provider/database messages, textbook text, user/book IDs, keys and signed UR
 - HTTP 400: check request/schema compatibility. The provider receives a small structural schema; exact bounds and citations are still strictly checked locally.
 - HTTP 401/403: check key validity, API/project restrictions and regional availability privately.
 - `provider_quota`: Gemini quota, distinct from the app's daily limit.
-- `timeout`: try a smaller source range. No automatic retry sends another paid request.
+- `timeout`: the request and body read share one deadline (60 seconds by default, up to 90). The panel offers a manual retry for the first selected page. No automatic retry sends another paid request. If your deployment still sets `AI_STUDY_TIMEOUT_MS=25000`, update it to `60000` and restart/redeploy. The Reader advertises a 120-second execution budget; the host must support it.
 - `busy`: an identical request is already reserved.
 - `failed / validate-response`: an answer failed shape, length or source citation checks; it is not shown or cached as a successful answer.
 - `unavailable`: check publication, current extraction, selected range and source size.

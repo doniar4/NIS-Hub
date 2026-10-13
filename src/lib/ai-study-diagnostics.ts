@@ -3,7 +3,7 @@
  * messages, exceptions, source text, IDs, URLs or any environment values.
  */
 const stages=["disabled","invalid-input","range-too-large","edition-unavailable","book-unavailable","extraction-unavailable","pages-unavailable","source-size-invalid","reservation-error","reservation-state","missing-generation","cache-invalid","save-generation-failed","provider-error","unexpected-error"] as const;
-const codes=["disabled","unavailable","busy","quota","provider_quota","configuration","timeout","failed"] as const;
+const codes=["disabled","unavailable","busy","quota","provider_unavailable","provider_quota","configuration","timeout","failed"] as const;
 const providerStages=["configuration","request","http","read-response","parse-response","validate-response"] as const;
 export function studyDebug(stage:string,details:Record<string,unknown>={}){
  if(process.env.NODE_ENV!=="development")return;

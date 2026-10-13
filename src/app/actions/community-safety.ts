@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 export async function safetyAction(input:unknown):Promise<{ok:true}|{error:CommunityError}>{
  const parsed=z.discriminatedUnion("action",[
  z.object({action:z.enum(["block","unblock","hide","delete","resolve"]),id:z.uuid()}).strict(),
- z.object({action:z.literal("report"),id:z.uuid(),kind:z.enum(["profile","message","homework"]),reason:z.enum(["spam","harassment","privacy","other"]),detail:z.string().trim().max(500)}).strict()
+ z.object({action:z.literal("report"),id:z.uuid(),kind:z.enum(["profile","message","homework","group","group_message"]),reason:z.enum(["spam","harassment","privacy","other"]),detail:z.string().trim().max(500)}).strict()
  ]).safeParse(input);
  if(!parsed.success)return {error:"failed"};
  try{

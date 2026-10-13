@@ -15,7 +15,7 @@ import {TicketFields} from "../../src/components/ticket-fields";
 import {TicketConversation} from "../../src/components/ticket-conversation";
 import {ScheduleDiff} from "../../src/components/schedule-diff";
 import {FullLoadIntro} from "../../src/components/full-load-intro";
-import {LibraryBrowser} from "../../src/components/library-browser";
+import {LibraryBrowser} from "./library-fixture";
 import {initialLibraryFilters} from "../../src/lib/library";
 import {parseLocale} from "../../src/lib/i18n";
 import {v05Copy} from "../../src/lib/v05-copy";

@@ -1,7 +1,8 @@
 :root {
  color-scheme:light;
- --font-display:"Outfit Variable","Noto Sans Variable",sans-serif;
- --font-body:"Noto Sans Variable","Outfit Variable",sans-serif;
+ --font-system:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+ --font-display:"Outfit Variable","Noto Sans Variable",var(--font-system);
+ --font-body:"Noto Sans Variable","Outfit Variable",var(--font-system);
  --bg:#e8edf3; --bg-accent-1:#dbe5f1; --bg-accent-2:#e5ebf2;
 	--surface:#f6f8fb; --surface-raised:#fff; --surface-soft:#e9eef5; --surface-elevated:var(--surface-raised);
  --glass:rgb(255 255 255 / .22); --glass-strong:rgb(255 255 255 / .34);
@@ -55,3 +56,6 @@
  :root { --text-secondary:#46536b; --border:#a9b9cf; --border-strong:#7287a4; }
  :root[data-theme="dark"] { --text-secondary:#c5d2e4; --border:#496687; --border-strong:#7f9dc0; }
 }
+
+/* The pre-paint connection check avoids downloading decorative fonts on slow links. */
+:root[data-font="system"] { --font-display:var(--font-system); --font-body:var(--font-system); }

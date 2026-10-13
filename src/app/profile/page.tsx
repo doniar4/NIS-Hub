@@ -1,30 +1,45 @@
 import { CommunityNav } from "@/components/community-nav";
-import { v053Copy } from "@/lib/v053-copy";
 import { ProfilePortrait } from "@/components/profile-portrait";
-import { communityCopy } from "@/lib/community-copy";
 import { AVATAR_URL_TTL_SECONDS } from "@/lib/avatar-policy";
 import { getI18n } from "@/lib/i18n-server";
 import { SiteShell } from "@/components/site-shell";
 import { PageIntro } from "@/components/ui";
-import { ActionForm } from "@/components/action-form";
-import { Field, SelectField } from "@/components/fields";
+import { ProfileForm } from "@/components/profile-form";
+import { profileCopy, profileIsIncomplete } from "@/lib/profile-copy";
 import { AvatarForm } from "@/components/avatar-form";
 import { uploadAvatar } from "@/app/actions/avatar";
-import { TopSubjects } from "@/components/top-subjects";
 import { ReadingList } from "@/components/reading-list";
 import { requireViewer } from "@/lib/auth";
 import { database, getCatalogOptions } from "@/lib/queries";
-import { saveProfile } from "@/app/actions/profile";
 import { getPersonalTasks } from "@/lib/task-queries";
 import { TaskCenter } from "@/components/task-center";
+import { InstallProfileEntry } from "@/components/install-discovery";
+import { ProfileActivity } from "@/components/profile-activity";
+import { getProfileActivity } from "@/lib/profile-activity-query";
+import { SchoolSettings } from "@/components/school-settings";
+import { schoolCopy } from "@/lib/school-copy";
+import {canShowProfileActivity} from "@/lib/profile-completion";
+import {ProfileActivityGate} from "@/components/profile-activity-gate";
+import {FirstVisitGuide} from "@/components/first-visit-guide";
 export default async function ProfilePage() {
   const { t, locale } = await getI18n();
-  const c = communityCopy(locale);
+  const pc = profileCopy(locale);
   const { user, profile } = await requireViewer("/profile");
+  const incomplete = profileIsIncomplete(profile);
   const { classes, subjects } = await getCatalogOptions();
   const supabase = await database();
-  const [{data:top,error},tasks] = await Promise.all([supabase.from("profile_top_subjects").select("subject_id,position").eq("profile_id", user.id).order("position"),getPersonalTasks()]);
+  const [{ data: top, error }, tasks] = await Promise.all([
+    supabase
+      .from("profile_top_subjects")
+      .select("subject_id,position")
+      .eq("profile_id", user.id)
+      .order("position"),
+    getPersonalTasks(),
+  ]);
   if (error) throw new Error("Не удалось загрузить избранные предметы.");
+  const topIds=[1,2,3,4].map(position=>top.find(item=>item.position===position)?.subject_id??"");
+  const complete=canShowProfileActivity(profile,topIds);
+  const activity=complete?await getProfileActivity(supabase):null;
   const avatar =
     profile.avatar_path === `${user.id}/avatar.webp`
       ? await supabase.storage
@@ -35,48 +50,36 @@ export default async function ProfilePage() {
     <SiteShell>
       <div className="profile-heading surface-card">
         <ProfilePortrait
+          key={avatar?.data?.signedUrl ?? "no-avatar"}
           url={avatar?.data?.signedUrl ?? null}
           name={profile.display_name ?? ""}
         />
-        <div><PageIntro title={profile.display_name || t.profile}>{t.profileHint}</PageIntro><p>{classes.find(row=>row.id===profile.class_id)?.name}</p></div>
+        <div>
+          <PageIntro title={profile.display_name || t.profile}>
+            {t.profileHint}
+          </PageIntro>
+          <p className="profile-class">
+            {classes.find((row) => row.id === profile.class_id)?.name}
+          </p>
+        </div>
       </div>
-      <CommunityNav locale={locale}/>
-      <TaskCenter initialTasks={tasks} subjects={subjects}/>
+      {!complete&&<FirstVisitGuide profile={profile} top={topIds} locale={locale} classAvailable={classes.some(row=>row.school_id===profile.school_id)}/>}
+      <ProfileActivityGate userId={user.id} complete={complete}>{complete&&<ProfileActivity key={user.id} initial={activity}/>}</ProfileActivityGate>
+      <SchoolSettings key={profile.school_id} schoolId={profile.school_id} hasClass={!!profile.class_id} />
       <div className="profile-settings">
-        <ActionForm
-          action={saveProfile}
-          label={t.saveProfile}
-          manualSubmit
-          className="surface-card space-y-6"
-        >
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field
-              label={t.displayName}
-              name="display_name"
-              defaultValue={profile.display_name ?? ""}
-              required
-              maxLength={60}
-              autoComplete="nickname"
-            />
-            <SelectField
-              label={t.class}
-              name="class_id"
-              options={classes}
-              value={profile.class_id}
-            />
-          </div>
-          <p className="text-sm text-[var(--muted)]">{c.nameHint}</p>
-          <p className="text-sm text-[var(--muted)]">{locale === "ru" ? "Изменения сохраняются только по кнопке «Сохранить профиль»." : locale === "kk" ? "Өзгерістер тек «Профильді сақтау» батырмасы арқылы сақталады." : "Changes are saved only when you click Save profile."}</p>
-          <label className="block"><span className="field-label">{v053Copy(locale).bio}</span><textarea className="field" name="bio" maxLength={280} rows={4} defaultValue={profile.bio ?? ""} aria-describedby="bio-hint"/></label><p id="bio-hint" className="text-sm">{v053Copy(locale).bioHint}</p>
-          <TopSubjects
-            subjects={subjects}
-            initial={[1, 2, 3, 4].map(
-              (position) =>
-                top.find((item) => item.position === position)?.subject_id ??
-                "",
-            )}
-          />
-        </ActionForm>
+        <ProfileForm
+          key={profile.school_id}
+          classes={profile.school_id ? classes.filter(row => row.school_id === profile.school_id) : classes}
+          classHint={schoolCopy(locale).noClasses}
+          subjects={subjects}
+          profile={{
+            display_name: profile.display_name,
+            class_id: profile.class_id,
+            bio: profile.bio,
+          }}
+          top={topIds}
+          hasAvatar={!!profile.avatar_path}
+        />
         <AvatarForm
           url={avatar?.data?.signedUrl ?? null}
           hasAvatar={!!profile.avatar_path}
@@ -84,6 +87,20 @@ export default async function ProfilePage() {
           hidePreview
         />
       </div>
+      <CommunityNav locale={locale} />
+      <div id="profile-tasks">
+        {!incomplete ? (
+          <TaskCenter
+            initialTasks={tasks}
+            subjects={subjects}
+            collapsible
+            label={pc.tasks}
+          />
+        ) : (
+          <p className="profile-task-setup">{pc.reminderBody}</p>
+        )}
+      </div>
+      <InstallProfileEntry />
       <div className="profile-reading mt-8 grid gap-6 lg:grid-cols-2">
         <section>
           <h2 className="section-title border-b border-[var(--line)] pb-4">

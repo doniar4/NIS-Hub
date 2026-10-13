@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useEffect, useRef, useState, type FormEvent } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { EyeOpenIcon, EyeNoneIcon } from "@radix-ui/react-icons";
 import { cancelSmsLogin, connectSms, continueSmsLogin, disconnectSms, loadSmsSubject, refreshSms, sendSmsLoginCode } from "@/app/actions/sms";
 import { smsCopy } from "@/lib/sms/copy";
@@ -96,12 +96,12 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
       } catch {}
     }
   }, [details]);
-  async function run(action:()=>Promise<SmsResult>) {
-    const id=++requestId.current; setPending(true);
-    try {const value=await action();if(requestId.current===id){setResult(value);setDetails({});}}
-    catch {if(requestId.current===id)setResult({connected:result.connected,error:"sms_unavailable"});}
-    finally {if(requestId.current===id)setPending(false);}
-  }
+  const run = useCallback(async (action: () => Promise<SmsResult>) => {
+    const id = ++requestId.current; setPending(true);
+    try { const value = await action(); if (requestId.current === id) { setResult(value); setDetails({}); } }
+    catch { if (requestId.current === id) setResult((prev) => ({ connected: prev.connected, error: "sms_unavailable" })); }
+    finally { if (requestId.current === id) setPending(false); }
+  }, []);
   function connect(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if(pending)return;
@@ -179,7 +179,7 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
       return new RegExp(`(^|\\s)${expected}([\\s.-]|$)`).test(label) || new RegExp(`(^|\\s)${numeral}([\\s.-]|$)`).test(label);
     }) ?? snapshot.filters.terms[0];
     void run(() => refreshSms({yearId:snapshot.filters!.yearId,termId:preferred.id}));
-  }, [pending, snapshot]);
+  }, [pending, snapshot, run]);
   function matchingSubject(name:string) {
     const normalize=(value:string)=>value.normalize("NFKC").toLocaleLowerCase().trim();
     const matches=subjects.filter(s=>[s.name,s.name_ru,s.name_kz,s.name_en,s.short_name].some(v=>v&&normalize(v)===normalize(name)));
@@ -289,8 +289,7 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
                 padding: 0,
               }}
               onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
-              tabIndex={-1}
+              aria-label={showPassword ? p.hidePassword : p.showPassword}
             >
               {showPassword ? (
                 <EyeNoneIcon width={18} height={18} aria-hidden="true" />
@@ -356,7 +355,7 @@ export function SmsDiary({enabled,sessionPresent,subjects=[]}:{enabled:boolean;s
         const counts=s.assessmentsLoaded||detail?.assessments?assessmentCounts(s,detail?.assessments):undefined;
         return <article className={`sms-subject${snapshot.subjects.length%2===1&&index===snapshot.subjects.length-1?" sms-subject-wide":""}`} key={s.sourceId??s.subject} data-diary-card>
           <header className="sms-subject-heading">
-            <div data-diary-motif><SubjectMotif subject={subject}/></div>
+            <div data-diary-motif><SubjectMotif subject={subject} name={s.subject}/></div>
             <div className="sms-subject-title"><h2>{subject?subjectName(subject,locale):s.subject}</h2>
               <div className="sms-result-line"><strong>{s.percent===undefined?"—":formatNumber(s.percent)+"%"}</strong><span>{s.percent===undefined?p.noScore:s.percentSource==="derived"?p.derived:p.official}</span></div>
             </div>

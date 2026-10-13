@@ -1,21 +1,18 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Lenis from "@studio-freight/lenis";
 import { ArrowDown } from "lucide-react";
 import { useI18n } from "@/components/locale-provider";
 
 const ShaderBackground = dynamic(
-  () => import("@/components/ui/shader-background"),
-  { ssr: false }
+  () =>
+    import("@/components/ui/shader-background").catch(() => ({
+      default: () => null,
+    })),
+  { ssr: false },
 );
 
 type ParallaxProps = {
@@ -24,6 +21,7 @@ type ParallaxProps = {
   header: ReactNode;
   visual: ReactNode;
   children: ReactNode;
+  authEntry?: boolean;
 };
 
 /**
@@ -36,6 +34,7 @@ export function ParallaxComponent({
   header,
   visual,
   children,
+  authEntry = false,
 }: ParallaxProps) {
   const root = useRef<HTMLDivElement>(null);
   const [showScrollCue, setShowScrollCue] = useState(false);
@@ -46,6 +45,7 @@ export function ParallaxComponent({
    * and the user has stayed there for 5 seconds.
    */
   useEffect(() => {
+    if (authEntry) return;
     const hero = root.current?.querySelector(".parallax__header");
 
     if (!hero) return;
@@ -65,7 +65,7 @@ export function ParallaxComponent({
       },
       {
         threshold: [0, 0.9],
-      }
+      },
     );
 
     observer.observe(hero);
@@ -74,15 +74,13 @@ export function ParallaxComponent({
       clearTimeout(timer);
       observer.disconnect();
     };
-  }, []);
+  }, [authEntry]);
 
-  /**
-   * Lenis + GSAP + ScrollTrigger parallax.
-   */
+  /** Decorative GSAP parallax; the global component owns smooth scrolling. */
   useEffect(() => {
     const element = root.current;
 
-    if (!element) return;
+    if (!element || authEntry) return;
 
     gsap.registerPlugin(ScrollTrigger);
 
@@ -91,64 +89,17 @@ export function ParallaxComponent({
     media.add(
       "(prefers-reduced-motion: no-preference)",
       () => {
-        const hero =
-          element.querySelector<HTMLElement>(
-            "[data-parallax-layers]"
-          );
+        const hero = element.querySelector<HTMLElement>(
+          "[data-parallax-layers]",
+        );
 
         const content =
-          element.querySelector<HTMLElement>(
-            ".parallax__content"
-          );
+          element.querySelector<HTMLElement>(".parallax__content");
 
         if (!hero || !content) return;
 
-        /**
-         * Preserve touch and keyboard scrolling.
-         * Smooth only wheel input.
-         */
-        const lenis = new Lenis({
-          lerp: 0.09,
-          smoothWheel: true,
-          syncTouch: false,
-        });
-
-        /**
-         * GSAP ticker time is in seconds.
-         * Lenis RAF expects milliseconds.
-         */
-        const tick = (time: number) => {
-          lenis.raf(time * 1000);
-        };
-
-        /**
-         * Keep ScrollTrigger and OpticalEnvironment
-         * refraction in sync with Lenis smooth-scroll frames.
-         *
-         * IMPORTANT:
-         * Never reuse the same Event instance here.
-         * A fresh Event must be created for every dispatch.
-         */
-        let dispatchingScroll = false;
-        const handleLenisScroll = () => {
-          ScrollTrigger.update();
-
-          if (dispatchingScroll) return;
-
-          dispatchingScroll = true;
-          try {
-            window.dispatchEvent(
-              new Event("scroll", {
-                bubbles: true,
-              })
-            );
-          } finally {
-            dispatchingScroll = false;
-          }
-        };
-
-        lenis.on("scroll", handleLenisScroll);
-        gsap.ticker.add(tick);
+        // RootLayout owns the single smooth-scroll instance. Authentication
+        // must stay usable while decoration or its JavaScript is still loading.
 
         /**
          * Main hero parallax timeline.
@@ -162,20 +113,16 @@ export function ParallaxComponent({
           },
         });
 
-        [85, 65, 35, -12].forEach(
-          (yPercent, index) => {
-            timeline.to(
-              hero.querySelectorAll(
-                `[data-parallax-layer="${index + 1}"]`
-              ),
-              {
-                yPercent,
-                ease: "none",
-              },
-              0
-            );
-          }
-        );
+        [85, 65, 35, -12].forEach((yPercent, index) => {
+          timeline.to(
+            hero.querySelectorAll(`[data-parallax-layer="${index + 1}"]`),
+            {
+              yPercent,
+              ease: "none",
+            },
+            0,
+          );
+        });
 
         /**
          * Fade the welcome copy while scrolling.
@@ -186,53 +133,47 @@ export function ParallaxComponent({
             opacity: 0,
             ease: "none",
           },
-          0.15
+          0.15,
         );
 
         /**
          * Tablet parallax.
          */
         timeline.to(
-          hero.querySelector(
-            ".welcome-hardware-tablet"
-          ),
+          hero.querySelector(".welcome-hardware-tablet"),
           {
             xPercent: -16,
             yPercent: 42,
             rotation: -5,
             ease: "none",
           },
-          0
+          0,
         );
 
         /**
          * Laptop parallax.
          */
         timeline.to(
-          hero.querySelector(
-            ".welcome-hardware-laptop"
-          ),
+          hero.querySelector(".welcome-hardware-laptop"),
           {
             yPercent: 14,
             ease: "none",
           },
-          0
+          0,
         );
 
         /**
          * Phone parallax.
          */
         timeline.to(
-          hero.querySelector(
-            ".welcome-hardware-phone"
-          ),
+          hero.querySelector(".welcome-hardware-phone"),
           {
             xPercent: 20,
             yPercent: -30,
             rotation: 6,
             ease: "none",
           },
-          0
+          0,
         );
 
         /**
@@ -243,47 +184,31 @@ export function ParallaxComponent({
          * GSAP scroll transforms.
          */
         const hardware = [
-          ...hero.querySelectorAll<HTMLElement>(
-            ".welcome-hardware"
-          ),
+          ...hero.querySelectorAll<HTMLElement>(".welcome-hardware"),
         ];
 
         const pointerMedia = window.matchMedia(
-          "(hover: hover) and (pointer: fine)"
+          "(hover: hover) and (pointer: fine)",
         );
 
         const move = (event: PointerEvent) => {
           if (!pointerMedia.matches) return;
 
-          const rect =
-            hero.getBoundingClientRect();
+          const rect = hero.getBoundingClientRect();
 
-          if (
-            rect.width === 0 ||
-            rect.height === 0
-          ) {
+          if (rect.width === 0 || rect.height === 0) {
             return;
           }
 
-          const x =
-            (event.clientX - rect.left) /
-              rect.width -
-            0.5;
+          const x = (event.clientX - rect.left) / rect.width - 0.5;
 
-          const y =
-            (event.clientY - rect.top) /
-              rect.height -
-            0.5;
+          const y = (event.clientY - rect.top) / rect.height - 0.5;
 
-          hardware.forEach(
-            (device, index) => {
-              const depth =
-                [24, 10, 36][index] ?? 10;
+          hardware.forEach((device, index) => {
+            const depth = [24, 10, 36][index] ?? 10;
 
-              device.style.translate =
-                `${x * depth}px ${y * depth}px`;
-            }
-          );
+            device.style.translate = `${x * depth}px ${y * depth}px`;
+          });
         };
 
         const resetPointer = () => {
@@ -292,49 +217,20 @@ export function ParallaxComponent({
           });
         };
 
-        hero.addEventListener(
-          "pointermove",
-          move
-        );
+        hero.addEventListener("pointermove", move);
 
-        hero.addEventListener(
-          "pointerleave",
-          resetPointer
-        );
+        hero.addEventListener("pointerleave", resetPointer);
 
-        /**
-         * The auth form remains real/selectable
-         * content throughout the reveal.
-         */
-        gsap.from(
-          content.querySelector(
-            ".welcome-auth-panel"
-          ),
-          {
-            y: 54,
-            scale: 0.97,
-            opacity: 0,
-            ease: "none",
-
-            scrollTrigger: {
-              trigger: content,
-              start: "top 95%",
-              end: "top 35%",
-              scrub: true,
-            },
-          }
-        );
+        // The form is always visible; scroll progress never hides its controls.
 
         /**
          * Smooth jump to authentication section.
          */
-        const jumpToAuth = (
-          event: MouseEvent
-        ) => {
+        const jumpToAuth = (event: MouseEvent) => {
           const target =
             event.target instanceof Element
               ? event.target.closest<HTMLAnchorElement>(
-                  'a[href="#welcome-auth"]'
+                  'a[href="#welcome-auth"]',
                 )
               : null;
 
@@ -351,120 +247,45 @@ export function ParallaxComponent({
 
           event.preventDefault();
 
-          lenis.scrollTo(content, {
-            duration: 1.1,
-
-            onComplete: () => {
-              content
-                .querySelector<HTMLElement>(
-                  "[role=tab][aria-selected=true]"
-                )
-                ?.focus({
-                  preventScroll: true,
-                });
-            },
-          });
+          content.scrollIntoView({ behavior: "smooth", block: "start" });
+          content
+            .querySelector<HTMLElement>("[role=tab][aria-selected=true]")
+            ?.focus({
+              preventScroll: true,
+            });
         };
 
-        element.addEventListener(
-          "click",
-          jumpToAuth
-        );
+        element.addEventListener("click", jumpToAuth);
 
-        /**
-         * Keyboard focus must never land
-         * inside a partly faded form.
-         */
-        const revealOnFocus = (
-          event: FocusEvent
-        ) => {
+        /** Keep keyboard focus within the visible authentication section. */
+        const revealOnFocus = (event: FocusEvent) => {
           if (
             event.target instanceof Element &&
-            event.target.matches(
-              ":focus-visible"
-            ) &&
-            content.getBoundingClientRect()
-              .top > 100
+            event.target.matches(":focus-visible") &&
+            content.getBoundingClientRect().top > 100
           ) {
-            lenis.scrollTo(content, {
-              immediate: true,
-            });
+            content.scrollIntoView({ behavior: "instant", block: "start" });
           }
         };
 
-        content.addEventListener(
-          "focusin",
-          revealOnFocus
-        );
-
-        /**
-         * Stop an active smooth-scroll animation
-         * when the user directly interacts with
-         * the authentication content.
-         */
-        const cancelScrollOnInteraction =
-          () => {
-            if (lenis.isScrolling) {
-              lenis.scrollTo(
-                lenis.actualScroll,
-                {
-                  immediate: true,
-                }
-              );
-            }
-          };
-
-        content.addEventListener(
-          "pointerdown",
-          cancelScrollOnInteraction
-        );
+        content.addEventListener("focusin", revealOnFocus);
 
         /**
          * Cleanup for this matchMedia context.
          */
         return () => {
-          hero.removeEventListener(
-            "pointermove",
-            move
-          );
+          hero.removeEventListener("pointermove", move);
 
-          hero.removeEventListener(
-            "pointerleave",
-            resetPointer
-          );
+          hero.removeEventListener("pointerleave", resetPointer);
 
           resetPointer();
 
-          element.removeEventListener(
-            "click",
-            jumpToAuth
-          );
+          element.removeEventListener("click", jumpToAuth);
 
-          content.removeEventListener(
-            "focusin",
-            revealOnFocus
-          );
-
-          content.removeEventListener(
-            "pointerdown",
-            cancelScrollOnInteraction
-          );
-
-          /**
-           * Remove the Lenis listener BEFORE
-           * destroying the Lenis instance.
-           */
-          lenis.off(
-            "scroll",
-            handleLenisScroll
-          );
-
-          gsap.ticker.remove(tick);
-
-          lenis.destroy();
+          content.removeEventListener("focusin", revealOnFocus);
         };
       },
-      element
+      element,
     );
 
     /**
@@ -474,11 +295,12 @@ export function ParallaxComponent({
     return () => {
       media.revert();
     };
-  }, []);
+  }, [authEntry]);
 
   return (
     <div
       className="public-experience welcome-screen parallax"
+      data-auth-entry={authEntry ? "true" : undefined}
       ref={root}
     >
       {header}
@@ -489,10 +311,7 @@ export function ParallaxComponent({
           aria-labelledby="welcome-title"
           data-parallax-layers
         >
-          <div
-            className="welcome-atmosphere"
-            aria-hidden="true"
-          >
+          <div className="welcome-atmosphere" aria-hidden="true">
             <div
               className="welcome-ribbon welcome-ribbon-left"
               data-parallax-layer="1"
@@ -507,10 +326,7 @@ export function ParallaxComponent({
           </div>
 
           {showScrollCue && (
-            <a
-              className="welcome-scroll-cue"
-              href="#welcome-auth"
-            >
+            <a className="welcome-scroll-cue" href="#welcome-auth">
               {
                 {
                   ru: "Листай вниз — начнём",
@@ -520,30 +336,19 @@ export function ParallaxComponent({
               }
 
               <span>
-                <ArrowDown
-                  size={17}
-                  aria-hidden="true"
-                />
+                <ArrowDown size={17} aria-hidden="true" />
               </span>
             </a>
           )}
 
           <div className="welcome-main">
-            <div
-              className="welcome-copy max-w-6xl"
-              data-parallax-layer="3"
-            >
-              <h1 id="welcome-title">
-                {title}
-              </h1>
+            <div className="welcome-copy max-w-6xl" data-parallax-layer="3">
+              <h1 id="welcome-title">{title}</h1>
 
               <p>{subtitle}</p>
             </div>
 
-            <div
-              className="welcome-visual"
-              data-parallax-layer="4"
-            >
+            <div className="welcome-visual" data-parallax-layer="4">
               {visual}
             </div>
           </div>
@@ -554,10 +359,7 @@ export function ParallaxComponent({
           className="parallax__content"
           aria-labelledby="welcome-auth-title"
         >
-          <div
-            className="welcome-auth-background"
-            aria-hidden="true"
-          >
+          <div className="welcome-auth-background" aria-hidden="true">
             <ShaderBackground />
           </div>
 

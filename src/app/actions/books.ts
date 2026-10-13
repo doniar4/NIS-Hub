@@ -15,7 +15,10 @@ export async function saveBook(form:FormData,stage:"prepare"|"finish"):Promise<A
   const id=uuid.safeParse(form.get("id")),vid=uuid.safeParse(form.get("variant_id"));
   if(!id.success||!vid.success||!["prepare","finish"].includes(stage))return {error:t.bookInvalid};
   const {data:current,error:readError}=await supabase.from("book_variants").select("*").eq("id",vid.data).maybeSingle();
-  if(readError)return {error:t.bookError};
+  if(readError){
+   console.error("[saveBook] edition-read-failed", {code: readError.code});
+   return {error:t.bookError};
+  }
   if(current&&current.book_id!==id.data)return {error:t.bookInvalid};
   const uploading=form.get("upload")==="yes";
   if(!current&&!uploading)return {error:t.pdfInvalid};
@@ -31,14 +34,24 @@ export async function saveBook(form:FormData,stage:"prepare"|"finish"):Promise<A
   }
   if(stage==="prepare"&&!uploading)return {error:t.bookInvalid};
   if(stage==="finish"&&(parsed.data.variant_status==="published"||uploading)){
-   const {data,error}=await supabase.storage.from("book-files").info(path);
-   if(error||!data||typeof data.size!=="number"||data.size<5||data.size>BOOK_PDF_BYTES||data.contentType?.split(";")[0]!=="application/pdf")return {error:t.fileMissing};
-   size=data.size;
+   const {data}=await supabase.storage.from("book-files").info(path);
+   if(data&&typeof data.size==="number"&&data.size>=5&&data.size<=BOOK_PDF_BYTES&&data.contentType?.split(";")[0]==="application/pdf"){
+    size=data.size;
+   }else if(uploading||!size||size<5||size>BOOK_PDF_BYTES){
+    return {error:t.fileMissing};
+   }
   }
   const book=parsed.data;
-  const {error}=await supabase.rpc("save_book_edition",{p_book:book,p_variant:{id:vid.data,language:book.language,storage_path:path,page_count:book.page_count,file_size:size,publication_status:book.variant_status},p_prepare:stage==="prepare"});
-  if(error)return {error:t.bookError};
- }catch{return {error:t.bookError};}
+  const coverPath = form.get("cover_path") ? String(form.get("cover_path")) : (uploading ? `books/${vid.data}.jpg` : current?.cover_path ?? null);
+  const {error}=await supabase.rpc("save_book_edition",{p_book:{...book,cover_path:coverPath},p_variant:{id:vid.data,language:book.language,storage_path:path,page_count:book.page_count,file_size:size,publication_status:book.variant_status,cover_path:coverPath},p_prepare:stage==="prepare"});
+  if(error){
+   console.error("[saveBook] edition-save-failed", {code: error.code});
+   return {error:t.bookError};
+  }
+ }catch{
+  console.error("[saveBook] unexpected-failure");
+  return {error:t.bookError};
+ }
  if(stage==="finish")revalidatePath("/","layout");
  return {success:t.bookSaved};
 }

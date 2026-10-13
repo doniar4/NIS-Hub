@@ -1,0 +1,12 @@
+/* Shared spring dock controls. Mobile placement is defined in mobile.css. */
+.dock-scroll { width:100%; min-width:0; display:flex; align-items:flex-end; min-height:112px; padding:40px 0 10px; overflow-x:auto; scrollbar-width:thin; max-width:100%; }
+.app-dock { display:flex; align-items:flex-end; gap:12px; width:max-content; margin:0 auto; padding:12px 16px; border:1px solid var(--glass-border); border-radius:24px; background:var(--surface-soft); box-shadow:inset 0 1px var(--glass-highlight); }
+.dock-item { position:relative; flex-shrink:0; }
+.dock-control { display:flex; align-items:center; justify-content:center; width:100%; height:100%; min-width:44px; min-height:44px; padding:0; border:0; border-radius:50%; background:color-mix(in srgb,var(--accent) 9%,var(--surface)); color:var(--text-secondary); cursor:pointer; transition:background 180ms,color 180ms; }
+.dock-control:hover,.dock-control:focus-visible { color:var(--accent); background:var(--accent-soft); }
+.dock-control:focus-visible { outline:2px solid var(--focus-ring); outline-offset:4px; }
+.dock-icon { display:grid; place-items:center; pointer-events:none; }
+.dock-icon svg { width:100%; height:100%; }
+.dock-label { position:absolute; bottom:calc(100% + 12px); left:50%; transform:translateX(-50%); width:max-content; max-width:180px; padding:.4rem .6rem; border-radius:8px; background:var(--text); color:var(--surface); font-size:.7rem; font-weight:500; line-height:1.4; pointer-events:none; box-shadow:var(--shadow-soft); }
+
+@media(prefers-reduced-motion:reduce) { .dock-control { transition:none; } }

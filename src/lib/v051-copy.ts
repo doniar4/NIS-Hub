@@ -2,10 +2,11 @@ import type { Locale } from "./i18n";
 
 const copy = {
   ru: {
+    aiProviderUnavailable: "Сервис Gemini временно недоступен (503). Подождите немного и повторите запрос.",
     aiConfiguration:
       "AI недоступен: администратору нужно проверить модель и ключ Gemini.",
     aiTimeout:
-      "Gemini не успел ответить вовремя. Это может быть временной задержкой сервиса — повторите запрос через несколько секунд.",
+      "Gemini не ответил за отведённое время. Попробуйте одну страницу или повторите запрос позже.",
     aiBusy:
       "Такой запрос уже выполняется. Подождите немного и повторите.",
     aiProviderQuota:
@@ -31,8 +32,8 @@ const copy = {
     extract: "Извлечь текст для AI",
     extractHint:
       "Один раз для каждого PDF. Скан без текстового слоя не поддерживается.",
-    ai: "AI Study",
-    aiDisabled: "AI Study не включён оператором.",
+    ai: "Учебный помощник",
+    aiDisabled: "Учебный помощник не включён оператором.",
     aiConsent:
       "В Gemini отправляется только выбранный текст учебника. Не выбирайте конфиденциальные данные. Ответ может содержать ошибки — сверяйтесь с источником.",
     from: "Со страницы",
@@ -61,10 +62,11 @@ const copy = {
   },
 
   kk: {
+    aiProviderUnavailable: "Gemini сервисі уақытша қолжетімсіз (503). Біраз күтіп, сұрауды қайталаңыз.",
     aiConfiguration:
       "AI қолжетімсіз: әкімші Gemini моделі мен кілтін тексеруі керек.",
     aiTimeout:
-      "Gemini уақытында жауап бермеді. Бұл сервистің уақытша кідірісі болуы мүмкін — бірнеше секундтан кейін қайталаңыз.",
+      "Gemini белгіленген уақытта жауап бермеді. Бір бетті таңдаңыз немесе сұрауды кейін қайталаңыз.",
     aiBusy:
       "Бұл сұрау орындалып жатыр. Біраз күтіп, қайталаңыз.",
     aiProviderQuota:
@@ -91,9 +93,9 @@ const copy = {
     extract: "AI үшін мәтінді шығару",
     extractHint:
       "Әр PDF үшін бір рет. Мәтін қабаты жоқ скан қолдау таппайды.",
-    ai: "AI Study",
+    ai: "Оқу көмекшісі",
     aiDisabled:
-      "Оператор AI Study қызметін қосқан жоқ.",
+      "Оператор оқу көмекшісін қосқан жоқ.",
     aiConsent:
       "Gemini-ге тек таңдалған оқулық мәтіні жіберіледі. Құпия деректерді таңдамаңыз. Жауапта қате болуы мүмкін — дереккөзбен салыстырыңыз.",
     from: "Бастапқы бет",
@@ -122,10 +124,11 @@ const copy = {
   },
 
   en: {
+    aiProviderUnavailable: "Gemini is temporarily unavailable (503). Wait a little and try again.",
     aiConfiguration:
       "AI is unavailable: an admin needs to check the Gemini model and key.",
     aiTimeout:
-      "Gemini did not respond in time. This can be a temporary provider delay — retry in a few seconds.",
+      "Gemini did not respond before the deadline. Try one page or retry later.",
     aiBusy:
       "An identical request is already running. Wait briefly and retry.",
     aiProviderQuota:

@@ -1,0 +1,93 @@
+/* Amber marks quarter assessments; teal is the quieter section assessment. */
+.assessment-badge {
+  position:relative; isolation:isolate; display:inline-flex; align-items:center; gap:.4rem;
+  width:fit-content; flex-shrink:0; padding:.28rem .65rem; border-radius:7px;
+  font:750 .7rem/1.2 var(--font-body); letter-spacing:.055em; white-space:nowrap;
+  overflow:hidden; vertical-align:middle;
+}
+.assessment-badge[data-kind="soch"] {
+  color:#fff8e9; background:linear-gradient(120deg,#825019,#ae7130 60%,#825019);
+  border:1px solid #b98749; box-shadow:inset 0 1px rgb(255 255 255 / .24),0 2px 8px rgb(112 67 14 / .15);
+}
+.assessment-badge[data-kind="sor"] {
+  color:#165a59; background:linear-gradient(120deg,#dbf1e9,#e9f7f3 50%,#d5e9eb);
+  border:1px solid #8ebfba; box-shadow:inset 0 1px rgb(255 255 255 / .7);
+}
+.assessment-badge-dot { width:4px; height:4px; border-radius:50%; background:currentColor; opacity:.8; }
+.lesson-assessment-meta { display:flex; flex-wrap:wrap; align-items:center; gap:.65rem; margin-top:.4rem; }
+.lesson-assessment-meta > span:last-child:not(.assessment-badge) { color:var(--text-secondary); font-size:.73rem; }
+.lesson-homework-kinds { display:inline-flex; flex-wrap:wrap; align-items:center; gap:.4rem; }
+.lesson-homework-kinds .assessment-badge { padding:.2rem .45rem; font-size:.65rem; }
+.lesson-homework-full > li > .assessment-badge { margin-inline-end:.5rem; }
+.lesson-homework-full > li > span:last-child { white-space:pre-wrap; }
+
+.lesson-list > .timetable-row.lesson-row[data-assessment-kind] {
+  position:relative; isolation:isolate; overflow:hidden; border-radius:12px;
+  border:1px solid var(--assessment-edge); border-inline-start:3px solid var(--assessment-accent);
+  background:linear-gradient(115deg,var(--assessment-wash),color-mix(in srgb,var(--surface) 65%,transparent) 65%,var(--assessment-wash));
+  box-shadow:inset 0 1px rgb(255 255 255 / .3),0 3px 12px var(--assessment-shadow);
+}
+.lesson-list > .timetable-row.lesson-row[data-assessment-kind="soch"] {
+  --assessment-accent:#a76a28; --assessment-edge:#c79a5d80;
+  --assessment-wash:#f0d5a65c; --assessment-shadow:#9765240c;
+}
+.lesson-list > .timetable-row.lesson-row[data-assessment-kind="sor"] {
+  --assessment-accent:#478b86; --assessment-edge:#7eaead66;
+  --assessment-wash:#a5d5c72b; --assessment-shadow:#2e737c06;
+}
+.lesson-list > .timetable-row.lesson-row[data-assessment-kind].is-selected {
+  border-color:var(--assessment-accent); box-shadow:inset 0 0 0 1px var(--assessment-edge),0 3px 14px var(--assessment-shadow);
+}
+.lesson-list > .timetable-row.lesson-row[data-assessment-kind] .lesson-info { border-color:var(--assessment-accent); }
+.lesson-list > .timetable-row.lesson-row[data-assessment-kind] .lesson-select > .subject-motif-frame {
+  color:var(--assessment-accent); background:var(--assessment-wash); border-color:var(--assessment-edge);
+}
+.lesson-list > .timetable-row.lesson-row[data-assessment-kind] > * { position:relative; z-index:1; }
+.lesson-list > .timetable-row.lesson-row[data-assessment-kind]::before {
+  content:""; position:absolute; z-index:0; pointer-events:none; inset:-50% -30%;
+  background:linear-gradient(110deg,transparent 35%,rgb(255 255 255 / .24) 48%,transparent 62%);
+  transform:translateX(-24%); animation:assessment-sheen 12s ease-in-out infinite alternate;
+}
+.lesson-list > .timetable-row.lesson-row[data-assessment-kind="sor"]::before { opacity:.6; animation-duration:16s; }
+@keyframes assessment-sheen { to { transform:translateX(24%); } }
+
+.homework-entry[data-homework-kind="sor"],.compact-entries > li[data-homework-kind="sor"] {
+  padding:1rem; margin-block:.5rem; border:1px solid color-mix(in srgb,#478b86 30%,var(--line));
+  border-inline-start:3px solid #478b86; border-radius:10px;
+  background:linear-gradient(115deg,color-mix(in srgb,#92cdb8 12%,transparent),color-mix(in srgb,var(--surface) 30%,transparent));
+}
+.homework-entry > .assessment-badge { justify-self:start; }
+.compact-entries > li > .assessment-badge { margin-top:.4rem; }
+.homework-kind-field { padding:0; margin:0; border:0; }
+.homework-kind-options { display:flex; flex-wrap:wrap; gap:.6rem; }
+.homework-kind-option { position:relative; cursor:pointer; }
+.homework-kind-option input { position:absolute; width:1px; height:1px; opacity:0; }
+.homework-kind-option > span {
+  display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:.6rem 1rem;
+  color:var(--text-secondary); border:1px solid var(--line-strong); border-radius:10px;
+  background:color-mix(in srgb,var(--surface) 45%,transparent); font-size:.82rem; font-weight:600;
+  transition:border-color 180ms ease,background 180ms ease,color 180ms ease;
+}
+.homework-kind-option:hover > span { border-color:var(--accent); color:var(--text); }
+.homework-kind-option input:checked + span { color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
+.homework-kind-option[data-kind="sor"] input:checked + span { color:#165a59; border-color:#478b86; background:linear-gradient(120deg,#dbf1e9,#e9f7f3,#d5e9eb); }
+.homework-kind-option input:focus-visible + span { outline:2px solid var(--accent); outline-offset:3px; }
+.homework-kind-option input:disabled + span { opacity:.55; cursor:wait; }
+.homework-kind-hint { margin-top:.6rem; color:var(--text-secondary); font-size:.75rem; line-height:1.5; }
+.homework-optional { margin-inline-start:.6rem; font-weight:400; color:var(--text-secondary); }
+
+:root[data-theme="dark"] .assessment-badge[data-kind="soch"] { color:#ffe6b7; background:linear-gradient(120deg,#674019,#825426,#674019); border-color:#bb8949; }
+:root[data-theme="dark"] .assessment-badge[data-kind="sor"],
+:root[data-theme="dark"] .homework-kind-option[data-kind="sor"] input:checked + span { color:#b6e4d6; background:linear-gradient(120deg,#203d3c,#2c4c46,#233f48); border-color:#588f89; }
+:root[data-theme="dark"] .lesson-list > .timetable-row.lesson-row[data-assessment-kind="soch"] {
+  --assessment-accent:#d2a05c; --assessment-edge:#b6874e73; --assessment-wash:#bb854927; --assessment-shadow:#00000010;
+}
+:root[data-theme="dark"] .lesson-list > .timetable-row.lesson-row[data-assessment-kind="sor"] {
+  --assessment-accent:#77b5a9; --assessment-edge:#70b0a64d; --assessment-wash:#6cae9815;
+}
+:root[data-theme="dark"] .lesson-list > .timetable-row.lesson-row[data-assessment-kind]::before { opacity:.18; }
+@media (prefers-reduced-motion:reduce) {
+  .lesson-list > .timetable-row.lesson-row[data-assessment-kind]::before { animation:none; }
+  .homework-kind-option > span { transition:none; }
+}
+[data-motion="paused"] .lesson-list > .timetable-row.lesson-row[data-assessment-kind]::before { animation:none; }

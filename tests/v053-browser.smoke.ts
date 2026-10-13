@@ -13,7 +13,7 @@ import { v053Copy } from "../src/lib/v053-copy";
 const expect=baseExpect.configure({timeout:15000});
 const artifacts=join(process.cwd(),"test-results","community-ui");
 test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, community safety, homework, answer UI and responsive locales", {timeout:240000},async t=>{
- const methods=["findPeople","changeFriend","safetyAction","loadHomework","saveHomework","deleteHomework","loadInbox","startConversation","loadMessages","sendMessage","markConversationRead","loadNotifications","dismissNotification","reviewStudyAnswers"];
+ const methods=["findPeople","changeFriend","safetyAction","loadHomework","loadDailyHomework","saveHomework","deleteHomework","loadInbox","startConversation","loadMessages","sendMessage","markConversationRead","loadNotifications","dismissNotification","reviewStudyAnswers"];
  const bundle=await build({entryPoints:["tests/browser/v053-harness.tsx"],bundle:true,write:false,platform:"browser",format:"esm",jsx:"automatic",define:{"process.env":JSON.stringify({NODE_ENV:"production"})},plugins:[{name:"isolated-boundaries",setup(api){
  api.onResolve({filter:/^(?:@\/app\/actions\/(people|community-safety|homework|study-answers)|\.\.\/\.\.\/src\/app\/actions\/people|@\/lib\/community-client)$/},()=>({path:"rpc",namespace:"fixture"}));
  api.onResolve({filter:/^next\/navigation$/},()=>({path:"navigation",namespace:"fixture"}));
@@ -52,6 +52,7 @@ test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, co
  case "dismissNotification":await rpc("dismiss_notification",a);result={ok:true};break;
  case "loadNotifications":result={data:(await db.query("select * from notification_feed_v053()")).rows,unread:Number((await rpc("notification_unread_v053")).rows[0].value)};break;
  case "loadHomework":result={data:(await db.query("select * from class_homework where due_date=$1 order by created_at,id limit 20 offset $2",[a[0],a[1]??0])).rows};break;
+ case "loadDailyHomework":result={data:(await db.query("select * from class_homework where due_date=$1 order by created_at,id",[a[0]])).rows};break;
  case "saveHomework":await rpc("save_class_homework",[a[0].subject,a[0].date,a[0].body,a[0].id]);result={ok:true};break;
  case "deleteHomework":await rpc("delete_class_homework",a);result={ok:true};break;
  case "reviewStudyAnswers":result={response:{feedback:[{index:0,status:"correct",feedback:"Supported by the source.",evidence:[{page:1,quote:"Chlorophyll absorbs light."}]}],topicsToReview:[]},source:{start:1,end:1,variantId:id(30),hash:"fixture"}};break;
@@ -68,11 +69,11 @@ test("v053 Chromium/WebKit: full hitboxes, zero-request filters, school days, co
  for(const [engineName,engine]of (process.env.NIS_BROWSER_ENGINE==="chromium"?[["chromium",chromium]]as const:[["chromium",chromium],["webkit",webkit]]as const)){
  const browser=await engine.launch({headless:true,...(engineName==="chromium"&&process.env.NIS_CHROMIUM_PATH?{executablePath:process.env.NIS_CHROMIUM_PATH}:{})});
  try{const page=await browser.newPage({viewport:{width:1280,height:900}}),errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
- await page.goto(origin+"/library");await expect(page.locator(".library-card")).toHaveCount(125);await page.waitForLoadState("networkidle");
+ await page.goto(origin+"/library");await expect(page.locator(".library-material-link")).toHaveCount(24);await page.waitForLoadState("networkidle");
  const network:string[]=[];const track=(r:{url():string})=>network.push(r.url());page.on("request",track);
  await page.locator('input[type="search"]').last().fill("Physics");await page.getByRole("combobox",{name:"Grade",exact:true}).selectOption("8");await page.getByRole("combobox",{name:"Subject",exact:true}).selectOption(id(21));
  assert.ok(page.url().includes("subject="+id(21)));await page.getByRole("button",{name:"Reset filters"}).click();assert.deepEqual(network,[]);page.off("request",track);
- const card=page.locator(".library-card").first(),box=await card.boundingBox();assert.ok(box);await card.click({position:{x:box.width-5,y:box.height-5}});await page.waitForURL(/\/books\//);
+ const card=page.locator(".library-material-link").first(),box=await card.boundingBox();assert.ok(box);await card.click({position:{x:box.width-5,y:box.height-5}});await page.waitForURL(/\/books\//);
  await page.goto(origin+"/schedule");assert.equal(await page.getByText("NEVER_VISIBLE_TEACHER").count(),0);
  const tab=page.getByRole("tab").nth(1),tabBox=await tab.boundingBox();assert.ok(tabBox);await tab.click({position:{x:tabBox.width-10,y:tabBox.height-10}});await expect(tab).toHaveAttribute("aria-selected","true");await tab.press("ArrowRight");await expect(page.getByRole("tab").nth(2)).toHaveAttribute("aria-selected","true");
  const material=page.locator(".timetable-materials").first();await expect(material).toHaveAttribute("href","/library?subject="+id(20)+"&grade=7");

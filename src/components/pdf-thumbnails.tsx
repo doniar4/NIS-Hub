@@ -37,7 +37,7 @@ function Thumbnail({pdf,number,current,onSelect,root}:{pdf:PDFDocumentProxy;numb
 export function PdfThumbnails({pdf,page,onSelect}:{pdf:PDFDocumentProxy;page:number;onSelect:(page:number)=>void}) {
   const [root,setRoot]=useState<HTMLDivElement|null>(null),{locale}=useI18n();
   useEffect(()=>{const current=root?.querySelector<HTMLElement>('[aria-current="page"]');if(!root||!current)return;const item=current.getBoundingClientRect(),rail=root.getBoundingClientRect();if(item.top<rail.top||item.bottom>rail.bottom)root.scrollTo({top:root.scrollTop+item.top-rail.top-root.clientTop,behavior:"instant"});},[page,root]);
-  return <div ref={setRoot} className="pdf-thumbnails" role="navigation" aria-label={designCopy(locale).thumbnails}>
+  return <div ref={setRoot} className="pdf-thumbnails" data-lenis-prevent tabIndex={0} role="navigation" aria-label={designCopy(locale).thumbnails}>
     {Array.from({length:pdf.numPages},(_,index)=><Thumbnail key={index} pdf={pdf} number={index+1} current={page} onSelect={onSelect} root={root}/>)}
   </div>;
 }

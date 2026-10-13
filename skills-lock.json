@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "web-design-guidelines": {
+      "source": "/home/ali/Загрузки/vercel-labs-agent-skills-web-design-guidelines.zip",
+      "sourceType": "local-archive",
+      "skillPath": "SKILL.md",
+      "computedHash": "f4647ca866a3accf763777f83e7682954f0187cd6bea7eea0399796652414e8f"
+    },
     "apple-design": {
       "source": "dickwu/apple-design-skill",
       "sourceType": "github",

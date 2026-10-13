@@ -1,0 +1,173 @@
+.install-home,
+.install-reminder,
+.install-profile {
+  margin-block: 1rem;
+  padding: 1rem;
+  min-width: 0;
+}
+.install-card-copy {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.install-card-copy img,
+.install-profile-button img,
+.install-guide-header img {
+  flex-shrink: 0;
+}
+.install-home h2,
+.install-profile h2 {
+  font: 600 0.95rem/1.4 var(--font-body);
+  margin: 0;
+}
+.install-home p,
+.install-profile p,
+.install-reminder p {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin-top: 0.3rem;
+  overflow-wrap: anywhere;
+}
+.install-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.65rem;
+}
+.install-actions :is(button, .text-link) {
+  min-height: 44px;
+  font-size: 0.82rem;
+}
+.install-reminder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.install-reminder .install-actions {
+  margin: 0;
+}
+.install-reminder p {
+  flex: 1 1 15rem;
+  margin: 0;
+}
+.install-profile-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  text-align: start;
+  gap: 0.75rem;
+  min-height: 48px;
+  color: var(--ink);
+}
+.install-profile-button > span:first-of-type {
+  flex: 1;
+  min-width: 0;
+}
+.install-profile-button strong {
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: block;
+}
+.install-profile-button > span > span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.install-profile-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+.install-guide {
+  inset: 0;
+  margin: auto;
+  width: min(28rem, calc(100% - 2rem));
+  max-width: 100%;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.25rem;
+  color: var(--ink);
+  background: var(--surface-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--glass-shadow);
+}
+.install-guide::backdrop {
+  background: rgb(8 15 32 / 0.35);
+}
+.install-guide-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+}
+.install-guide-header h2 {
+  flex: 1;
+  min-width: 0;
+  font: 600 1.1rem/1.4 var(--font-body);
+}
+.install-close {
+  flex: 0 0 44px;
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 1.5rem;
+}
+.install-guide p {
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.install-guide ol {
+  padding-inline-start: 1.4rem;
+  list-style: decimal;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.install-guide li + li {
+  margin-top: 0.6rem;
+}
+.install-native {
+  margin-block: 1rem 0.5rem;
+  min-height: 44px;
+  width: 100%;
+}
+.install-browser-note {
+  margin-top: 1rem;
+}
+.install-manual-label {
+  margin-top: 1rem;
+}
+@media (max-width: 767px) {
+  .install-guide {
+    inset: auto max(0.5rem, env(safe-area-inset-right))
+      max(0.5rem, env(safe-area-inset-bottom))
+      max(0.5rem, env(safe-area-inset-left));
+    margin: 0;
+    width: auto;
+    max-height: calc(100dvh - env(safe-area-inset-top) - 1.5rem);
+    padding: 1rem 1rem max(1rem, env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .install-guide[open] {
+    animation: install-sheet-in 0.16s ease-out;
+  }
+}
+@keyframes install-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

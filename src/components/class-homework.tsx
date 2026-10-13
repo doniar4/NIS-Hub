@@ -1,7 +1,6 @@
 "use client";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import {
-  loadHomework,
   saveHomework,
   deleteHomework,
 } from "@/app/actions/homework";
@@ -11,6 +10,11 @@ import { subjectName } from "@/lib/i18n";
 import { v053Copy } from "@/lib/v053-copy";
 import { useI18n } from "./locale-provider";
 import { SafetyMenu } from "./safety-menu";
+import { TelegramHomeworkCta, TelegramHomeworkLink } from "./telegram-homework-cta";
+import { useHomeworkDay } from "./day-homework-provider";
+import { HomeworkFields } from "./homework-fields";
+import { AssessmentBadge } from "./assessment-badge";
+import { homeworkKind, homeworkBody } from "@/lib/homework-kind";
 export function ClassHomeworkPanel({
   userId,
   date: initialDate,
@@ -25,45 +29,26 @@ export function ClassHomeworkPanel({
   const { locale, t } = useI18n(),
     p = v053Copy(locale);
   const [date, setDate] = useState(initialDate),
-    [rows, setRows] = useState<ClassHomework[]>([]),
     [error, setError] = useState<CommunityError | null>(null),
     [offset, setOffset] = useState(0),
     [revision, setRevision] = useState(0),
     [pending, start] = useTransition(),
-    [loading, setLoading] = useState(hasClass),
     [edit, setEdit] = useState<ClassHomework | null>(null);
-  useEffect(() => {
-    if(!hasClass)return;
-    let active = true;
-    void loadHomework(date, offset).then((r) => {
-      if (!active) return;
-      if ("error" in r) {setError(r.error);setRows([]);}
-      else {
-        setRows(r.data);
-        setError(null);
-      }
-      setLoading(false);
-    }).catch(()=>{if(active){setRows([]);setError("failed");setLoading(false);}});
-    return () => {
-      active = false;
-    };
-  }, [date, offset, revision, hasClass]);
-  useEffect(() => {
-    const refresh = () => {
-      setLoading(true);
-      setRevision((v) => v + 1);
-    };
-    window.addEventListener("nis-homework-change", refresh);
-    return () => window.removeEventListener("nis-homework-change", refresh);
-  }, []);
+  const day=useHomeworkDay(date,hasClass),loading=day.loading,rows=day.rows.slice(offset,offset+20);
+  const displayedError=error??day.error;
   function reload() {
-    setLoading(true);
+    setError(null);
     setRevision((v) => v + 1);
+    window.dispatchEvent(new Event("nis-homework-change"));
   }
   return (
     <section className="surface-card space-y-5 mt-8 homework-panel">
-      <h2 className="section-title">{p.homework}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="section-title">{p.homework}</h2>
+        <TelegramHomeworkLink locale={locale} compact />
+      </div>
       <p>{p.homeworkHint}</p>
+      <TelegramHomeworkCta locale={locale} />
       {!hasClass ? (
         <p>{t.chooseProfileClass}</p>
       ) : (
@@ -77,7 +62,7 @@ export function ClassHomeworkPanel({
               value={date}
               onChange={(e) => {
                 if (e.target.value) {
-                  setLoading(true);
+                  setError(null);
                   setDate(e.target.value);
                   setOffset(0);
                   setEdit(null);
@@ -85,17 +70,18 @@ export function ClassHomeworkPanel({
               }}
             />
           </label>
-          {error && <p role="alert">{p[error]}</p>}
+          {displayedError && <p role="alert">{p[displayedError]}</p>}
           <div aria-busy={loading}>
             {rows.map((row) => (
-              <article key={row.id} className="homework-entry">
+              <article key={row.id} className="homework-entry" data-homework-kind={homeworkKind(row)}>
                 <h3>
                   {subjectName(
                     subjects.find((s) => s.id === row.subject_id),
                     locale,
                   )}
                 </h3>
-                <p className="whitespace-pre-wrap">{row.body}</p>
+                {homeworkKind(row) === "sor" && <AssessmentBadge kind="sor" locale={locale} />}
+                <p className="whitespace-pre-wrap">{homeworkBody(row, locale)}</p>
                 <div className="flex flex-wrap gap-2">
                   {row.created_by === userId ? (
                     <>
@@ -111,7 +97,7 @@ export function ClassHomeworkPanel({
                         onClick={() =>
                           start(async () => {
                             const r = await deleteHomework(row.id);
-                            if ("error" in r) {setError(r.error);setRows([]);}
+                            if ("error" in r) setError(r.error);
                             else reload();
                           })
                         }
@@ -125,7 +111,7 @@ export function ClassHomeworkPanel({
                 </div>
               </article>
             ))}
-            {!loading && !rows.length && !error && <p>{p.none}</p>}
+            {!loading && !rows.length && !displayedError && <p>{p.none}</p>}
           </div>
           {(offset > 0 || rows.length >= 20) && (
             <div className="flex flex-wrap gap-2">
@@ -133,7 +119,6 @@ export function ClassHomeworkPanel({
                 className="button button-secondary"
                 disabled={!offset || loading}
                 onClick={() => {
-                  setLoading(true);
                   setOffset((v) => v - 20);
                 }}
               >
@@ -141,9 +126,8 @@ export function ClassHomeworkPanel({
               </button>
               <button
                 className="button button-secondary"
-                disabled={rows.length < 20 || loading || offset >= 10000}
+                disabled={offset+20>=day.rows.length || loading || offset >= 10000}
                 onClick={() => {
-                  setLoading(true);
                   setOffset((v) => v + 20);
                 }}
               >
@@ -163,8 +147,9 @@ export function ClassHomeworkPanel({
                   subject: f.get("subject"),
                   date,
                   body: f.get("body"),
+                  kind: f.get("kind"),
                 });
-                if ("error" in r) {setError(r.error);setRows([]);}
+                if ("error" in r) setError(r.error);
                 else {
                   setEdit(null);
                   reload();
@@ -198,18 +183,7 @@ export function ClassHomeworkPanel({
               </select>
             </label>
 
-            <label className="block">
-              <span className="field-label">{p.body}</span>
-              <textarea
-                className="field w-full"
-                rows={3}
-                name="body"
-                required
-                maxLength={1000}
-                placeholder={locale === "kk" ? "Үй тапсырмасын, параграф немесе жаттығу нөмірлерін жазыңыз..." : locale === "en" ? "Describe homework, exercises, page numbers..." : "Опишите домашнее задание (номера упражнений, параграф, ссылки)..."}
-                defaultValue={edit?.body ?? ""}
-              />
-            </label>
+            <HomeworkFields edit={edit} disabled={pending} />
 
             <div className="flex items-center justify-end gap-3 pt-2">
               {edit && (

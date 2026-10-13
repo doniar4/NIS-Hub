@@ -22,6 +22,8 @@ export function SafetyMenu({
   message,
   own = false,
   homework,
+  group,
+  groupMessage,
   blocked = false,
   onDone,
 }: {
@@ -30,6 +32,8 @@ export function SafetyMenu({
   message?: string;
   own?: boolean;
   homework?: string;
+  group?: string;
+  groupMessage?: string;
   blocked?: boolean;
   onDone?: () => void;
 }) {
@@ -59,8 +63,8 @@ export function SafetyMenu({
       }
     });
   }
-  const target = message ?? homework ?? peer,
-    kind = message ? "message" : homework ? "homework" : "profile";
+  const target = groupMessage ?? group ?? message ?? homework ?? peer,
+    kind = groupMessage ? "group_message" : group ? "group" : message ? "message" : homework ? "homework" : "profile";
   return (
     <div className="safety-control">
       <ActionMenu label={p.safety}>

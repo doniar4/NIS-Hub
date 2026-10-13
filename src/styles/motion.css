@@ -1,10 +1,14 @@
-@keyframes glass-enter { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes glass-enter { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
 @keyframes glass-pop { from { opacity:0; transform:scale(.985); } to { opacity:1; transform:scale(1); } }
 @media(prefers-reduced-motion:no-preference) {
- .page-content { animation:glass-enter 340ms var(--ease-out) both; }
+ .page-content { animation:glass-enter 340ms var(--ease-out) backwards; }
  .app-sidebar { animation:glass-pop 360ms var(--ease-out) both; }
  .mobile-drawer[open],.action-popover,.notification-popover { animation:glass-pop 220ms var(--ease-out) both; }
  .button:active:not(:disabled),.icon-button:active:not(:disabled) { transform:scale(.98); }
+ .mobile-bottom-link,.conversation-link,.message-action-btn { transition:transform 160ms var(--ease-out); }
+ .mobile-bottom-link:active,.conversation-link:active,.message-action-btn:active:not(:disabled) { transform:scale(.96); }
+ .messages-layout[data-conversation-open="true"] .conversation-panel { animation:glass-enter 260ms var(--ease-out) both; }
+ .mobile-drawer[open] .mobile-drawer-panel { animation:glass-enter 280ms var(--ease-out) both; }
 }
 @media(prefers-reduced-motion:reduce) {
  *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }

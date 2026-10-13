@@ -9,7 +9,7 @@ const origin = process.env.NIS_TEST_ORIGIN ?? "http://127.0.0.1:3100";
 const parsed = new URL(origin);
 if (!["localhost", "127.0.0.1"].includes(parsed.hostname)) throw new Error("Smoke tests only run against localhost.");
 test("protected routes redirect without an authenticated session", async () => {
-  for (const path of ["/profile", "/admin", "/admin/calendar", "/admin/versions", "/admin/tickets", "/support", "/support/00000000-0000-4000-8000-000000000030", "/library", "/schedule", "/books/00000000-0000-4000-8000-000000000030/read"]) {
+  for (const path of ["/profile", "/admin", "/admin/users", "/admin/users/00000000-0000-4000-8000-000000000002", "/admin/activity", "/admin/homework", "/admin/content", "/admin/content/subjects", "/admin/schedule", "/admin/schedule/import", "/admin/schedule/classes", "/admin/schedule/calendar", "/admin/schedule/versions", "/admin/system", "/admin/community", "/admin/calendar", "/admin/versions", "/admin/tickets", "/support", "/support/00000000-0000-4000-8000-000000000030", "/library", "/schedule", "/books/00000000-0000-4000-8000-000000000030/read"]) {
     const response = await request(origin + path, { redirect: "manual" });
     const target = configured ? "/login" : "/setup";
     if (response.status === 307) assert.equal(new URL(response.headers.get("location")!, origin).pathname, target);

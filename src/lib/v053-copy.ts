@@ -29,7 +29,7 @@ const copy = {
     searchHint: "Имя, минимум 2 символа. Показаны только участники NIS Hub.",
     bio: "О себе",
     bioHint:
-      "До 280 символов. Имя, Bio и Top 4 видны вошедшим участникам. Не указывайте личные контакты.",
+      "До 280 символов. Имя, описание и любимые предметы видны вошедшим участникам. Не указывайте личные контакты.",
     none: "Ничего не найдено",
     unavailable: "Профиль недоступен",
     failed: "Не удалось выполнить действие. Повторите позже.",
@@ -62,6 +62,13 @@ const copy = {
     details: "Описание (до 500 символов)",
     sent: "Готово",
     homework: "Домашнее задание класса",
+    homeworkShort: "ДЗ",
+    homeworkExpand: "Показать домашнее задание полностью",
+    telegramHomeworkTitle: "Добавить домашнее задание",
+    telegramHomeworkHint:
+      "Не нашли ДЗ или хотите добавить новое? Используйте Telegram-бота @nis_hub_support_bot. Выберите класс, предмет и дату — задание сразу появится в NIS Hub.",
+    telegramHomeworkOpen: "Открыть Telegram-бота",
+    telegramHomeworkShort: "Добавить через Telegram",
     homeworkHint:
       "Записи участников, не проверены учителем. Видны только вашему текущему классу.",
     due: "На дату",
@@ -114,7 +121,7 @@ const copy = {
     searchHint: "Есім, кемінде 2 таңба. Тек NIS Hub қатысушылары көрсетіледі.",
     bio: "Өзім туралы",
     bioHint:
-      "280 таңбаға дейін. Есім, Bio және Top 4 кірген қатысушыларға көрінеді. Жеке байланыс деректерін жазбаңыз.",
+      "280 таңбаға дейін. Есім, сипаттама және таңдаулы пәндер кірген қатысушыларға көрінеді. Жеке байланыс деректерін жазбаңыз.",
     none: "Ештеңе табылмады",
     unavailable: "Профиль қолжетімсіз",
     failed: "Әрекет орындалмады. Кейінірек қайталаңыз.",
@@ -147,6 +154,13 @@ const copy = {
     details: "Сипаттама (500 таңбаға дейін)",
     sent: "Дайын",
     homework: "Сыныптың үй тапсырмасы",
+    homeworkShort: "ҮТ",
+    homeworkExpand: "Үй тапсырмасын толық көрсету",
+    telegramHomeworkTitle: "Үй тапсырмасын қосу",
+    telegramHomeworkHint:
+      "Үй тапсырмасын таппадыңыз ба немесе жаңасын қосқыңыз келе ме? @nis_hub_support_bot Telegram-ботын пайдаланыңыз. Сыныпты, пәнді және күнді таңдаңыз — тапсырма бірден NIS Hub-та пайда болады.",
+    telegramHomeworkOpen: "Telegram-ботты ашу",
+    telegramHomeworkShort: "Telegram арқылы қосу",
     homeworkHint:
       "Қатысушылардың жазбалары, мұғалім тексермеген. Тек қазіргі сыныбыңызға көрінеді.",
     due: "Күніне",
@@ -232,6 +246,13 @@ const copy = {
     details: "Details (up to 500 characters)",
     sent: "Done",
     homework: "Class homework",
+    homeworkShort: "Homework",
+    homeworkExpand: "Show all homework in full",
+    telegramHomeworkTitle: "Add homework",
+    telegramHomeworkHint:
+      "Can't find homework or want to add an assignment? Use the Telegram bot @nis_hub_support_bot. Choose a class, subject and date — the assignment will appear in NIS Hub immediately.",
+    telegramHomeworkOpen: "Open Telegram bot",
+    telegramHomeworkShort: "Add via Telegram",
     homeworkHint:
       "Student contributions, not teacher verified. Visible only to your current class.",
     due: "Due date",
