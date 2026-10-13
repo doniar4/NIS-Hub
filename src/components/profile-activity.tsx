@@ -65,7 +65,7 @@ export function ProfileActivity({ initial }: { initial: ActivityData | null }) {
         </div>
         {stats && (
           <div
-            className="profile-visit-streak"
+            className="profile-visit-streak glass-surface"
             aria-label={`${c.streak}: ${stats.current.days} ${activityNoun(stats.current.days, c.days, locale)}`}
           >
             <LightningBoltIcon aria-hidden="true" />
@@ -92,7 +92,7 @@ export function ProfileActivity({ initial }: { initial: ActivityData | null }) {
           footer={c.timezone}
         />
       ) : (
-        <div className="profile-activity-unavailable">
+        <div className="profile-activity-unavailable glass-surface">
           <p role="status">{c.unavailable}</p>
           <button
             type="button"

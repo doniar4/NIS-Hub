@@ -1,0 +1,13 @@
+Kazakhstan map sources and attribution
+
+Administrative boundaries as of January 2024:
+geoKZ, https://github.com/arodionoff/geokz
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+Projected and simplified SVG region paths:
+https://github.com/galymorg/new_qazaqstan_GeoJSON
+MIT License: see kazakhstan-map-MIT.txt in this directory.
+
+NIS Hub adaptations: colors, interactive selection, responsive presentation
+and schematic city markers. The map is for school selection and not navigation.

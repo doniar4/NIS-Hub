@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type: "email" });
     if (!error) {
       await markWelcomeComplete();
-      return confirmRedirect("/profile");
+      return confirmRedirect("/onboarding");
     }
   }
   return confirmRedirect("/login?confirmation=failed");

@@ -104,3 +104,20 @@
 .avatar-file-control { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; min-width:0; }
 .avatar-file-control > span { min-width:0; overflow-wrap:anywhere; font-size:.85rem; color:var(--muted); }
 .avatar-crop-preview:focus-visible { outline:3px solid var(--focus-ring); outline-offset:3px; }
+
+.first-visit-guide { margin:0 0 1.5rem; }
+.first-visit-guide-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:1.25rem; }
+.first-visit-guide-heading > div > p { color:var(--accent); font-size:.75rem; margin-bottom:.45rem; }
+.first-visit-guide h2 { font:600 clamp(1.3rem,2vw,1.65rem)/1.2 var(--font-display); letter-spacing:-.025em; }
+.first-visit-guide-heading > div > span { display:block; margin-top:.6rem; max-width:65ch; color:var(--text-secondary); font-size:.85rem; line-height:1.6; }
+.first-visit-count { flex-shrink:0; border:1px solid var(--panel-border); border-radius:9px; padding:.5rem .7rem; color:var(--accent); background:var(--panel-inset); font-size:.75rem; font-variant-numeric:tabular-nums; }
+.first-visit-guide ol { display:flex; flex-wrap:wrap; gap:.65rem; margin:1.15rem 0; padding:0; list-style:none; }
+.first-visit-guide li a { display:flex; align-items:center; gap:.5rem; min-height:44px; padding:.5rem .75rem; border:1px solid var(--line); border-radius:10px; font-size:.78rem; color:var(--text-secondary); }
+.first-visit-guide li a > span { display:grid; place-items:center; width:22px; height:22px; border:1px solid var(--line-strong); border-radius:50%; font-size:.7rem; }
+.first-visit-guide li[data-done="true"] a { color:var(--accent); background:var(--accent-wash); }
+.first-visit-guide li[data-done="true"] a > span { color:var(--button-ink); background:var(--accent); border-color:var(--accent); }
+.first-visit-guide footer { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:1rem; padding-top:.85rem; border-top:1px solid var(--line); }
+.first-visit-guide footer p,.first-visit-class-note,.first-visit-photo-hint { color:var(--text-secondary); font-size:.76rem; line-height:1.65; max-width:65ch; }
+.first-visit-photo-hint { margin:.8rem 0; }
+:is(#profile-name,#profile-class,#profile-subjects,#profile-avatar,#school-settings) { scroll-margin-top:2rem; }
+@media(max-width:560px) { .first-visit-guide-heading { flex-direction:column; gap:.8rem; }.first-visit-guide footer .button { width:100%; justify-content:center; } }

@@ -329,3 +329,10 @@ test("registration requires consent, handles rate limits and does not activate a
   );
   assert.equal(offline.context.marked, 0);
 });
+
+
+test("signup with an immediate session enters school selection before profile settings", async () => {
+  const source = await isolatedAuth();
+  const { actions } = loadAuth(source, { auth: { signUp: async () => ({ data: { user: { id: "fresh-user" }, session: { access_token: "fixture" } }, error: null }) } }, {});
+  await assert.rejects(actions.authenticate("signup", {}, credentials()), /REDIRECT:\/onboarding/);
+});

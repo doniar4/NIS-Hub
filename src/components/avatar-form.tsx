@@ -93,7 +93,7 @@ export function AvatarForm({ url, action, hasAvatar = !!url, hidePreview = false
     });
   }
   const crop = picture && avatarCrop(picture.image.naturalWidth, picture.image.naturalHeight, zoom, x, y);
-  return <section className="surface-card avatar-settings" aria-labelledby="avatar-heading">
+  return <section id="profile-avatar" className="surface-card avatar-settings" aria-labelledby="avatar-heading">
     <h2 id="avatar-heading" className="section-title">{t.avatar}</h2>
     {hasAvatar && !hidePreview && <AvatarPreview key={url ?? "unavailable"} url={url} onRetry={() => router.refresh()} />}
     <p id="avatar-hint" className="my-4 text-sm text-[var(--muted)]">{t.avatarHint}</p>

@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const verified = await supabase.auth.getUser();
     if (verified.error || verified.data.user?.id !== data.user.id) return authRedirect(failure);
     await markWelcomeComplete();
-    return authRedirect("/profile");
+    return authRedirect("/onboarding");
   } catch {
     // Never log the callback URL, one-time code or session material.
     return authRedirect(failure);

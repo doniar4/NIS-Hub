@@ -12,6 +12,9 @@ import { useI18n } from "./locale-provider";
 import { SafetyMenu } from "./safety-menu";
 import { TelegramHomeworkCta, TelegramHomeworkLink } from "./telegram-homework-cta";
 import { useHomeworkDay } from "./day-homework-provider";
+import { HomeworkFields } from "./homework-fields";
+import { AssessmentBadge } from "./assessment-badge";
+import { homeworkKind, homeworkBody } from "@/lib/homework-kind";
 export function ClassHomeworkPanel({
   userId,
   date: initialDate,
@@ -70,14 +73,15 @@ export function ClassHomeworkPanel({
           {displayedError && <p role="alert">{p[displayedError]}</p>}
           <div aria-busy={loading}>
             {rows.map((row) => (
-              <article key={row.id} className="homework-entry">
+              <article key={row.id} className="homework-entry" data-homework-kind={homeworkKind(row)}>
                 <h3>
                   {subjectName(
                     subjects.find((s) => s.id === row.subject_id),
                     locale,
                   )}
                 </h3>
-                <p className="whitespace-pre-wrap">{row.body}</p>
+                {homeworkKind(row) === "sor" && <AssessmentBadge kind="sor" locale={locale} />}
+                <p className="whitespace-pre-wrap">{homeworkBody(row, locale)}</p>
                 <div className="flex flex-wrap gap-2">
                   {row.created_by === userId ? (
                     <>
@@ -143,6 +147,7 @@ export function ClassHomeworkPanel({
                   subject: f.get("subject"),
                   date,
                   body: f.get("body"),
+                  kind: f.get("kind"),
                 });
                 if ("error" in r) setError(r.error);
                 else {
@@ -178,18 +183,7 @@ export function ClassHomeworkPanel({
               </select>
             </label>
 
-            <label className="block">
-              <span className="field-label">{p.body}</span>
-              <textarea
-                className="field w-full"
-                rows={3}
-                name="body"
-                required
-                maxLength={1000}
-                placeholder={locale === "kk" ? "Үй тапсырмасын, параграф немесе жаттығу нөмірлерін жазыңыз..." : locale === "en" ? "Describe homework, exercises, page numbers..." : "Опишите домашнее задание (номера упражнений, параграф, ссылки)..."}
-                defaultValue={edit?.body ?? ""}
-              />
-            </label>
+            <HomeworkFields edit={edit} disabled={pending} />
 
             <div className="flex items-center justify-end gap-3 pt-2">
               {edit && (

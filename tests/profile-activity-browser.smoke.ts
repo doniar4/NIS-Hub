@@ -164,6 +164,7 @@ test("Profile skyline, streak updates, working dock and visible system fonts on 
       }),
       errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
+    await page.clock.setFixedTime(new Date("2026-10-12T10:00:00Z"));
     await page.goto(origin + "/profile");
     const activity = page.locator("#profile-activity"),
       canvas = activity.locator("canvas");

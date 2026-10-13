@@ -3,6 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { safeNext } from "@/lib/validation";
+import { needsSchoolOnboarding } from "@/lib/schools";
 
 export const getViewer = cache(async () => {
   const supabase = await createClient();
@@ -20,6 +21,7 @@ export async function requireViewer(path: string) {
   if (!viewer.configured) redirect("/setup");
   if (!viewer.user) redirect(`/login?next=${encodeURIComponent(safeNext(path))}`);
   if (!viewer.profile) throw new Error("Профиль не создан. Администратору необходимо применить миграцию базы.");
+  if (path !== "/onboarding" && needsSchoolOnboarding(viewer.profile)) redirect("/onboarding");
   return { user: viewer.user, profile: viewer.profile };
 }
 

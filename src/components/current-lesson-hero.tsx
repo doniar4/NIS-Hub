@@ -10,7 +10,7 @@ import { SubjectMotif } from "./subject-motif";
 import { useI18n } from "./locale-provider";
 import { materialKey, type MaterialMap } from "@/lib/schedule-materials";
 import { librarySubjectHref } from "@/lib/book-model";
-import {assessmentCopy} from "@/lib/assessment-copy";
+import { AssessmentBadge } from "./assessment-badge";
 
 interface CurrentLessonHeroProps {
   lessons: WeeklyLesson[];
@@ -180,7 +180,7 @@ export function CurrentLessonHero({
                   {locale === "kk" ? `${lessonNum}-сабақ` : locale === "en" ? `Lesson ${lessonNum}` : `${lessonNum}-й урок`}
                 </span>
                 {room && <span className="status-pill">{room}</span>}
-                {status.lesson.assessment_date&&<span className="status-pill">{assessmentCopy(locale).badge}</span>}
+                {status.lesson.assessment_date&&<AssessmentBadge kind="soch" locale={locale} />}
                 {status.lesson.start_time && status.lesson.end_time && (
                   <span className="status-pill">{status.lesson.start_time.slice(0, 5)}–{status.lesson.end_time.slice(0, 5)}</span>
                 )}

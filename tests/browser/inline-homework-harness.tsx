@@ -11,6 +11,7 @@ import type { WeeklyLesson } from "../../src/lib/database.types";
 export const lessonFixtures: WeeklyLesson[] = [1, 2, 3, 4, 5].flatMap(weekday => [0, 1, 2].map(index => ({
   id: `lesson-${weekday}-${index}`, class_id: classes[0].id, weekday, lesson_start: index + 1, lesson_end: index + 1,
   start_time: "08:30", end_time: "09:10", subject_id: subjects[index].id, teacher: null, room: "246",
+  ...(weekday === 1 && index === 2 ? {assessment_date: "2026-10-05", assessment_label: "Chemistry", assessment_minutes: 40} : {}),
   effective_from: null, effective_to: null, created_at: "", updated_at: "",
 })));
 

@@ -9,6 +9,8 @@ import {tasksCopy} from "@/lib/tasks-copy";
 import {subjectName} from "@/lib/i18n";
 import {useI18n} from "./locale-provider";
 import {TaskDialog} from "./task-dialog";
+import {DateRangePicker,type DateRange} from "./ui/date-range-picker";
+import {taskPeriodCopy,taskPeriodPresets} from "@/lib/task-period";
 
 type Filter="today"|"upcoming"|"completed"|"all";
 type ReminderMode="none"|"due"|"10"|"30"|"60"|"180"|"1440"|"custom";
@@ -243,11 +245,13 @@ function TaskRow({task,subjects,onEdit,onChange,now,compact=false}:{task:Persona
 
 export function TaskCenter({initialTasks,subjects,variant="full",collapsible=false,label}:{initialTasks:PersonalTask[];subjects:SubjectRow[];variant?:"full"|"compact";collapsible?:boolean;label?:string}){
  const {locale}=useI18n(),p=tasksCopy(locale),[tasks,setTasks]=useState(()=>sortedTasks(initialTasks)),[editing,setEditing]=useState<PersonalTask|null|undefined>(undefined),[filter,setFilter]=useState<Filter>("today"),[message,setMessage]=useState(""),[open,setOpen]=useState(false);
+ const [period,setPeriod]=useState<DateRange|null>(null),periodCopy=taskPeriodCopy(locale);
  const [now]=useState(()=>Date.now()),active=tasks.filter(task=>task.status==="active"),completed=tasks.filter(task=>task.status==="completed"),today=dayKey(new Date(now));
  const visible=useMemo(()=>{
   const rows=variant==="compact"?active:filter==="completed"?completed:filter==="all"?tasks:active.filter(task=>filter==="today"?(task.due_at?taskDay(task.due_at)!<=today:false):(task.due_at?taskDay(task.due_at)!>today:true));
-  return sortedTasks(rows).slice(0,variant==="compact"?4:200);
- },[active,completed,filter,tasks,today,variant]);
+  const dated=period&&variant==="full"?rows.filter(task=>{const day=taskDay(task.due_at);return day!==null&&day>=dayKey(period.start)&&day<=dayKey(period.end);}):rows;
+  return sortedTasks(dated).slice(0,variant==="compact"?4:200);
+ },[active,completed,filter,tasks,today,variant,period]);
  const replace=(task:PersonalTask)=>{setTasks(rows=>sortedTasks(rows.some(row=>row.id===task.id)?rows.map(row=>row.id===task.id?task:row):[task,...rows]));setEditing(undefined);setMessage(task.status==="completed"?p.completedMessage:task.status==="archived"?p.archived:p.saved);window.dispatchEvent(new Event("nis-task-change"));window.dispatchEvent(new Event("nis-notifications-change"));};
  useEffect(()=>{
   if(!collapsible)return;
@@ -259,8 +263,9 @@ export function TaskCenter({initialTasks,subjects,variant="full",collapsible=fal
  const body=<>
   {variant==="full"&&<>
    <details className="task-notification-disclosure"><summary><Bell size={15} aria-hidden="true"/><span>{p.browserTitle}</span><ChevronDown size={15} aria-hidden="true" className="task-disclosure-chevron"/></summary><NotificationPreference/></details>
-   <div className="task-filter" role="group" aria-label={p.title}>{(["today","upcoming","completed","all"] as Filter[]).map(item=><button type="button" key={item} aria-pressed={filter===item} onClick={()=>setFilter(item)}>{p[item]}<span>{item==="completed"?completed.length:item==="all"?tasks.length:item==="today"?active.filter(task=>task.due_at&&taskDay(task.due_at)!<=today).length:active.filter(task=>!task.due_at||taskDay(task.due_at)!>today).length}</span></button>)}</div>
+   <div className="task-filter" role="group" aria-label={p.title}>{(["today","upcoming","completed","all"] as Filter[]).map(item=><button type="button" key={item} aria-pressed={filter===item} onClick={()=>{setFilter(item);setPeriod(null);}}>{p[item]}<span>{item==="completed"?completed.length:item==="all"?tasks.length:item==="today"?active.filter(task=>task.due_at&&taskDay(task.due_at)!<=today).length:active.filter(task=>!task.due_at||taskDay(task.due_at)!>today).length}</span></button>)}</div>
   </>}
+  {variant==="full"&&<div className="task-period-controls"><span>{periodCopy.label}</span><DateRangePicker className="task-period-picker" label={periodCopy.label} placeholder={periodCopy.placeholder} locale={locale} weekStartsOn={1} presets={taskPeriodPresets(locale)} value={period} onChange={range=>{setPeriod(range);setFilter("all");}}/>{period&&<button className="task-period-reset" type="button" onClick={()=>setPeriod(null)}>{periodCopy.reset}</button>}</div>}
   {message&&<p className="task-inline-status" role="status"><CheckCircle2 size={15}/>{message}<button type="button" onClick={()=>setMessage("")} aria-label={p.close}>×</button></p>}
   {visible.length?<ul className="personal-task-list">{visible.map(task=><TaskRow key={task.id} task={task} subjects={subjects} now={now} compact={variant==="compact"} onEdit={setEditing} onChange={replace}/>)}</ul>:<div className="task-empty"><span aria-hidden="true"><Clock3 size={23}/></span><strong>{variant==="full"&&tasks.length?p.emptyFiltered:p.empty}</strong><p>{variant==="full"&&tasks.length?p.emptyFiltered:p.emptyHint}</p></div>}
   {variant==="compact"&&<Link className="task-manage-link" href="/profile#tasks"><span>{p.openProfile}</span><ChevronRight size={17}/></Link>}

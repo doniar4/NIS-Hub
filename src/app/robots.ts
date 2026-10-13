@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
       disallow: [
         "/admin", "/api", "/auth", "/books", "/diary", "/forbidden",
         "/friends", "/library", "/liquid-glass", "/login", "/messages",
-        "/people", "/profile", "/schedule", "/setup", "/signup", "/support",
+        "/onboarding", "/people", "/profile", "/schedule", "/setup", "/signup", "/support",
       ],
     },
     sitemap: absoluteSiteUrl("/sitemap.xml"),

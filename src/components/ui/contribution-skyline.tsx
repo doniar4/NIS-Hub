@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import {SceneViewToggle} from "./scene-view-toggle";
 import { skylineCopy, activityNoun } from "@/lib/skyline-copy";
 
 /**
@@ -484,45 +485,6 @@ const quadPath = (
   ctx.closePath();
 };
 
-const GridIcon = () => (
-  <svg
-    viewBox="0 0 16 16"
-    width="14"
-    height="14"
-    aria-hidden="true"
-    style={{ maxWidth: "none" }}
-  >
-    <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" fill="currentColor" />
-    <rect x="9" y="1.5" width="5.5" height="5.5" rx="1" fill="currentColor" />
-    <rect x="1.5" y="9" width="5.5" height="5.5" rx="1" fill="currentColor" />
-    <rect x="9" y="9" width="5.5" height="5.5" rx="1" fill="currentColor" />
-  </svg>
-);
-
-const CubeIcon = () => (
-  <svg
-    viewBox="0 0 16 16"
-    width="14"
-    height="14"
-    aria-hidden="true"
-    style={{ maxWidth: "none" }}
-  >
-    <path
-      d="M8 1.2 14.2 4.6v6.8L8 14.8 1.8 11.4V4.6Z"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M1.8 4.6 8 8l6.2-3.4M8 8v6.8"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
 
 const MUTED = "var(--color-muted-foreground, #737373)";
 
@@ -1616,12 +1578,10 @@ export default function ContributionSkyline({
     <section
       ref={rootRef}
       className={
-        "relative w-full rounded-xl border p-4 font-sans sm:p-5 " + className
+        "glass-surface relative w-full rounded-xl border p-4 font-sans sm:p-5 " + className
       }
       style={{
-        background: "var(--color-background, #ffffff)",
         color: "var(--color-foreground, #171717)",
-        borderColor: "var(--color-border, #e5e5e5)",
       }}
     >
       <header className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
@@ -1636,46 +1596,12 @@ export default function ContributionSkyline({
           )}
         </h3>
         {showToggle && (
-          <div
-            role="group"
-            aria-label={copy.view}
-            className="relative inline-flex rounded-md border p-0.5"
-            style={{ borderColor: "var(--color-border, #e5e5e5)" }}
-          >
-            <span
-              aria-hidden="true"
-              className="absolute top-0.5 bottom-0.5 left-0.5 w-8 rounded transition-transform duration-500 motion-reduce:transition-none"
-              style={{
-                background: "var(--color-foreground, #171717)",
-                transform: is3d ? "translateX(100%)" : "translateX(0)",
-                transitionTimingFunction: ease,
-              }}
-            />
-            {(["2d", "3d"] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                aria-pressed={view === v}
-                aria-label={v === "2d" ? copy.flat : copy.skyline}
-                title={v === "2d" ? copy.flat : copy.skyline}
-                onClick={() => setView(v)}
-                className="relative z-10 grid h-7 w-8 cursor-pointer place-items-center rounded border-0 bg-transparent p-0 transition-colors duration-500 focus-visible:outline-2 focus-visible:outline-offset-2 motion-reduce:transition-none"
-                style={{
-                  color:
-                    view === v ? "var(--color-background, #ffffff)" : MUTED,
-                  outlineColor: "var(--color-foreground, #171717)",
-                }}
-              >
-                {v === "2d" ? <GridIcon /> : <CubeIcon />}
-              </button>
-            ))}
-          </div>
+          <SceneViewToggle view={view} onChange={setView} label={copy.view} flatLabel={copy.flat} volumeLabel={copy.skyline}/>
         )}
       </header>
 
       <div
-        className="relative rounded-lg border"
-        style={{ borderColor: "var(--color-border, #e5e5e5)" }}
+        className="glass-surface skyline-frame relative rounded-lg border"
       >
         <div className="relative px-3 pt-3 sm:px-4 sm:pt-4">
           <div

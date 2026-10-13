@@ -30,7 +30,8 @@
 :is(:root, :root[data-theme]) :is(.surface-card, .empty-state, .dashboard-card, .library-card,
   .library-catalog-card, .glass-surface, .selected-lesson, .profile-reading > section,
   .sms-toolbar, .sms-subject, .sms-connect-shell, .library-filters,
-  .schedule-controls, .schedule-lessons, .reader-controls, .book-details-panel) {
+  .schedule-controls, .schedule-lessons, .reader-controls, .book-details-panel,
+  .legal-prose, .auth-form-inner, [data-optical="panel"]) {
   background: var(--panel-background);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
@@ -250,3 +251,15 @@
   :root { --panel-background: var(--surface-raised); --panel-overlay: var(--surface-raised); }
   :root[data-theme="dark"] { --panel-background: var(--surface); --panel-overlay: var(--surface-elevated); }
 }
+
+/* Shared activity/map view control: grid, cube, sliding solid selection. */
+.scene-view-switch { position:relative; display:inline-flex; flex-shrink:0; padding:2px; border:1px solid var(--line); border-radius:6px; background:transparent; }
+.scene-view-thumb { position:absolute; top:2px; bottom:2px; left:2px; width:32px; border-radius:4px; background:var(--text); transform:translateX(0); transition:transform 500ms cubic-bezier(.65,0,.35,1); pointer-events:none; }
+.scene-view-switch[data-view="3d"] .scene-view-thumb { transform:translateX(100%); }
+.scene-view-switch > button { position:relative; z-index:1; display:grid; place-items:center; width:32px; height:28px; padding:0; border:0; border-radius:4px; background:transparent; color:var(--text-secondary); transition:color 500ms; }
+.scene-view-switch > button[aria-pressed="true"] { color:var(--surface-raised); }
+.scene-view-switch > button:hover { color:var(--accent); }
+.scene-view-switch > button[aria-pressed="true"]:hover { color:var(--surface-raised); }
+.scene-view-switch svg { flex-shrink:0; max-width:none; }
+@media(prefers-reduced-motion:reduce) { .scene-view-thumb,.scene-view-switch > button { transition:none; } }
+[data-motion="paused"] .scene-view-thumb { transition:none; }
