@@ -15,8 +15,11 @@ import {ActivityTracker} from "./activity-tracker";
 import {InstallReminder} from "./install-discovery";
 import {ProfileReminder} from "./profile-reminder";
 import {profileIsIncomplete} from "@/lib/profile-copy";
+import { needsSchoolOnboarding } from "@/lib/schools";
+import { redirect } from "next/navigation";
 export async function SiteShell({children}:{children:ReactNode}){
  const {t}=await getI18n(),viewer=await getViewer();let url:string|null=null;
+ if(viewer.user&&needsSchoolOnboarding(viewer.profile))redirect("/onboarding");
  const incomplete=!!viewer.user&&profileIsIncomplete(viewer.profile);
  if(viewer.user&&viewer.profile?.avatar_path===viewer.user.id+"/avatar.webp"){
   const db=await database();const result=await db.storage.from("avatars").createSignedUrl(viewer.profile.avatar_path,AVATAR_URL_TTL_SECONDS);url=result.data?.signedUrl??null;

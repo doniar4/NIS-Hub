@@ -15,7 +15,7 @@ import {samplePdf} from "./browser/sample-pdf";
 const id="00000000-0000-4000-8000-000000000030";
 test("Liquid Glass: real components, isolated transport, Chromium/WebKit responsive and functional QA",{timeout:480000},async t=>{
   const pdf=process.env.NIS_READER_TEST_PDF?readFileSync(process.env.NIS_READER_TEST_PDF):samplePdf();
-  const bundle=await build({entryPoints:["tests/browser/liquid-glass-harness.tsx"],bundle:true,write:false,format:"esm",platform:"browser",jsx:"automatic",define:{"process.env":JSON.stringify({NODE_ENV:"production"})},plugins: [readerActionBoundary,{name:"isolated-boundaries",setup(api){
+  const bundle=await build({entryPoints:["tests/browser/liquid-glass-harness.tsx"],bundle:true,write:false,outfile:"bundle.js",format:"esm",platform:"browser",jsx:"automatic",define:{"process.env":JSON.stringify({NODE_ENV:"production"})},plugins: [readerActionBoundary,{name:"isolated-boundaries",setup(api){
     api.onResolve({filter:/^next\/navigation$/},()=>({path:"navigation",namespace:"fixture"}));
     api.onResolve({filter:/^@\/lib\/(supabase\/client|community-client)$/},a=>({path:a.path,namespace:"fixture"}));
     api.onResolve({filter:/^@\/app\/actions\//},a=>({path:a.path,namespace:"fixture"}));
@@ -35,12 +35,12 @@ test("Liquid Glass: real components, isolated transport, Chromium/WebKit respons
       return {contents:content,loader:"js"};
     });
   }}]});
-  const css=readdirSync(".next/static/css").filter(n=>n.endsWith(".css")).map(n=>readFileSync(join(".next/static/css",n),"utf8")).join("\n");
+  const css=readdirSync(".next/static/css").filter(n=>n.endsWith(".css")).map(n=>readFileSync(join(".next/static/css",n),"utf8")).join("\n")+(bundle.outputFiles.find(f=>f.path.endsWith(".css"))?.text??"");
   const snapshot=parseGrades(readFileSync("tests/fixtures/sms/grades-semantic.html","utf8"),new Date("2026-09-18T09:00:00Z"));
   const reading={page:1,bookmarks:[] as number[]},calls:{name:string;args:unknown}[]=[];
   const server=createServer(async(req,res)=>{
     const path=new URL(req.url!,"http://localhost").pathname;res.setHeader("Cache-Control","no-store");
-    if(path==="/bundle.js"){res.setHeader("Content-Type","application/javascript");res.end(bundle.outputFiles[0].contents);return;}
+    if(path==="/bundle.js"){res.setHeader("Content-Type","application/javascript");res.end(bundle.outputFiles.find(f=>f.path.endsWith(".js"))!.contents);return;}
     if(path==="/style.css"){res.setHeader("Content-Type","text/css");res.end(css);return;}
     if(path.endsWith(".woff2")){try{res.end(readFileSync(join(".next/static/media",basename(path))));}catch{res.statusCode=404;res.end();}return;}
     if(/^[/]images[/]subjects[/][a-z]+[.]svg$/.test(path)){res.setHeader("Content-Type","image/svg+xml");res.end(readFileSync("public"+path));return;}

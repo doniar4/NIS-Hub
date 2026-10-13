@@ -387,3 +387,10 @@
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
+
+/* The growing range panel must be able to leave the task card. */
+.task-center:has(.task-period-picker[data-open]) { overflow:visible; z-index:40; }
+.task-period-controls { display:flex; flex-wrap:wrap; align-items:center; gap:.65rem; padding:.7rem 0 1rem; }
+.task-period-controls > span { color:var(--text-secondary); font-size:.75rem; }
+.task-period-reset { border:0; background:transparent; color:var(--accent); font-size:.75rem; padding:.6rem; min-height:44px; text-decoration:underline; text-underline-offset:3px; }
+@media(max-width:480px) { .task-period-controls > span { flex-basis:100%; } }

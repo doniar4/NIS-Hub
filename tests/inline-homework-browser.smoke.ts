@@ -57,7 +57,7 @@ test("Inline daily homework: shared requests, day/race/event updates, expansion,
         if (args[0] === "2026-10-08") await new Promise(resolve => setTimeout(resolve, 200));
       } else if (name === "saveHomework") {
         const v = args[0], previous = rows.findIndex(row => row.id === v.id);
-        const row = makeWork(v.id ?? "saved-fixture", v.date, v.body, v.subject);
+        const row = ({...makeWork(v.id ?? "saved-fixture-" + rows.length, v.date, v.body || "СОР", v.subject), kind: v.kind ?? "homework"});
         if (previous >= 0) rows[previous] = row; else rows.push(row);
         value = { ok: true };
       } else if (name === "deleteHomework") { rows = rows.filter(row => row.id !== args[0]); value = { ok: true }; }
@@ -113,6 +113,24 @@ test("Inline daily homework: shared requests, day/race/event updates, expansion,
         await page.locator(".homework-panel textarea").fill("EDITED_HW");
         const beforeEdit = calls.length; await page.locator(".homework-panel form").getByRole("button", { name: "Save", exact: true }).click();
         await expect(first).toContainText("EDITED_HW"); assert.equal(calls.length, beforeEdit + 1);
+        // SOR is a stored category: quick-add needs no manually typed text.
+        await first.locator(".action-menu-trigger").click();
+        await page.getByRole("menuitem", { name: "Add homework", exact: true }).click();
+        await page.getByRole("dialog").getByRole("radio", { name: "SOR", exact: true }).check();
+        await expect(page.getByRole("dialog").locator("textarea")).not.toHaveAttribute("required", "");
+        await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
+        await expect(first).toHaveAttribute("data-assessment-kind", "sor");
+        await expect(first.locator("summary .assessment-badge[data-kind=sor]")).toBeVisible();
+        assert.equal(rows.find(row => row.body === "СОР")?.kind, "sor");
+        // Full editor persists the selected category and preserves its topics.
+        await page.locator(".homework-entry").first().getByRole("button", { name: "Edit", exact: true }).click();
+        await page.locator(".homework-panel").getByRole("radio", { name: "SOR", exact: true }).check();
+        await page.locator(".homework-panel form").getByRole("button", { name: "Save", exact: true }).click();
+        assert.equal(rows.find(row => row.body === "EDITED_HW")?.kind, "sor");
+        await page.locator(".homework-entry").first().getByRole("button", { name: "Edit", exact: true }).click();
+        await expect(page.locator(".homework-panel").getByRole("radio", { name: "SOR", exact: true })).toBeChecked();
+        await expect(page.locator(".lesson-row").nth(2)).toHaveAttribute("data-assessment-kind", "soch");
+        await expect(page.locator(".lesson-row").nth(2).locator(".assessment-badge[data-kind=soch]")).toBeVisible();
         const beforeClassChange = calls.length;
         await page.locator(".schedule-class-select").selectOption(classes[1].id);
         await expect(page.locator(".lesson-inline-homework")).toHaveCount(0);
@@ -141,6 +159,11 @@ test("Inline daily homework: shared requests, day/race/event updates, expansion,
               if (width <= 768) assert.ok(hw.y >= info.y + info.height, "mobile/tablet homework sits below subject info");
               await expect(first.locator(".timetable-materials")).toBeVisible(); await expect(first.locator(".action-menu-trigger")).toBeVisible();
               assert.equal(await first.locator(".lesson-homework-preview").evaluate(el => getComputedStyle(el).webkitLineClamp), "2");
+              if (locale === "en") {
+                await page.emulateMedia({ reducedMotion: "reduce" });
+                assert.equal(await first.evaluate(el => getComputedStyle(el, "::before").animationName), "none");
+                await page.emulateMedia({ reducedMotion: "no-preference" });
+              }
               if (locale === "en" && [390, 1440].includes(width)) await page.screenshot({ path: join(artifacts, `${name}-${width}-${theme}.png`), fullPage: true });
             }
           }

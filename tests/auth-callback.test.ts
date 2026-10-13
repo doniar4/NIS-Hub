@@ -35,7 +35,7 @@ function loadRoute(source: string, client: unknown) {
   return { route: mod.exports.GET, context };
 }
 
-test("PKCE callback establishes a verified session then redirects only to canonical Profile", async () => {
+test("PKCE callback establishes a verified session then redirects only to canonical onboarding", async () => {
   const source = await routeSource("src/app/auth/callback/route.ts");
   let exchanges = 0;
   const user = { id: "fixture-user" };
@@ -48,7 +48,7 @@ test("PKCE callback establishes a verified session then redirects only to canoni
     getUser: async () => ({ data: { user }, error: null }),
   } });
   const result = await route({ nextUrl: new URL("https://nis-hub-ura.vercel.app/auth/callback?code=test-code&next=https://untrusted.example") });
-  assert.equal(result.url, "https://nis-hub-ura.vercel.app/profile");
+  assert.equal(result.url, "https://nis-hub-ura.vercel.app/onboarding");
   assert.equal(result.status, 303);
   assert.equal(result.headers.get("Cache-Control"), "private, no-store");
   assert.equal(result.headers.get("Referrer-Policy"), "no-referrer");
@@ -88,7 +88,7 @@ test("legacy token-hash email confirmation still works and redirects canonically
     return { error: null };
   } } });
   const result = await route({ nextUrl: new URL("https://nis-hub-ura.vercel.app/auth/confirm?token_hash=fixture-hash&type=email&next=https://untrusted.example") });
-  assert.equal(result.url, "https://nis-hub-ura.vercel.app/profile");
+  assert.equal(result.url, "https://nis-hub-ura.vercel.app/onboarding");
   assert.equal(context.marked, 1);
   assert.equal(verified, 1);
   const invalid = await route({ nextUrl: new URL("https://nis-hub-ura.vercel.app/auth/confirm?token_hash=fixture-hash&type=recovery") });

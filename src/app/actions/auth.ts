@@ -98,7 +98,7 @@ export async function authenticate(mode: "login" | "signup", _state: ActionState
         return { error: t.saveError };
     }
     revalidatePath("/", "layout");
-    redirect(safeNext(form.get("next")));
+    redirect(mode === "signup" ? "/onboarding" : safeNext(form.get("next")));
 }
 export async function startSocialSignIn(
     provider: string,

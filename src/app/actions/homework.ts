@@ -29,9 +29,9 @@ export async function loadDailyHomework(date:string):Promise<{data:ClassHomework
  return readHomework(date,0,true);
 }
 export async function saveHomework(input:unknown):Promise<{ok:true}|Failure>{
- const parsed=z.object({id:z.uuid().nullable(),subject:z.uuid(),date:z.iso.date(),body:z.string().trim().min(1).max(1000)}).strict().safeParse(input);
+ const parsed=z.object({id:z.uuid().nullable(),subject:z.uuid(),date:z.iso.date(),body:z.string().trim().max(1000),kind:z.enum(["homework","sor"]).optional()}).strict().refine(v=>v.kind==="sor"||v.body.length>0).safeParse(input);
  if(!parsed.success)return {error:"failed"};
- try{const {supabase}=await actionContext(),v=parsed.data;const {error}=await supabase.rpc("save_class_homework",{p_id:v.id,p_subject:v.subject,p_due:v.date,p_body:v.body});if(error)return communityError(error);revalidatePath("/schedule");return {ok:true};}catch{return {error:"failed"};}
+ try{const {supabase}=await actionContext(),v=parsed.data;const {error}=await supabase.rpc("save_class_homework",{p_id:v.id,p_subject:v.subject,p_due:v.date,p_body:v.body||"СОР",...(v.kind?{p_kind:v.kind}:{})});if(error)return communityError(error);revalidatePath("/schedule");return {ok:true};}catch{return {error:"failed"};}
 }
 export async function deleteHomework(id:string):Promise<{ok:true}|Failure>{
  if(!z.uuid().safeParse(id).success)return {error:"failed"};

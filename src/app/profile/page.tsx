@@ -16,6 +16,11 @@ import { TaskCenter } from "@/components/task-center";
 import { InstallProfileEntry } from "@/components/install-discovery";
 import { ProfileActivity } from "@/components/profile-activity";
 import { getProfileActivity } from "@/lib/profile-activity-query";
+import { SchoolSettings } from "@/components/school-settings";
+import { schoolCopy } from "@/lib/school-copy";
+import {canShowProfileActivity} from "@/lib/profile-completion";
+import {ProfileActivityGate} from "@/components/profile-activity-gate";
+import {FirstVisitGuide} from "@/components/first-visit-guide";
 export default async function ProfilePage() {
   const { t, locale } = await getI18n();
   const pc = profileCopy(locale);
@@ -23,16 +28,18 @@ export default async function ProfilePage() {
   const incomplete = profileIsIncomplete(profile);
   const { classes, subjects } = await getCatalogOptions();
   const supabase = await database();
-  const [{ data: top, error }, tasks, activity] = await Promise.all([
+  const [{ data: top, error }, tasks] = await Promise.all([
     supabase
       .from("profile_top_subjects")
       .select("subject_id,position")
       .eq("profile_id", user.id)
       .order("position"),
     getPersonalTasks(),
-    getProfileActivity(supabase),
   ]);
   if (error) throw new Error("Не удалось загрузить избранные предметы.");
+  const topIds=[1,2,3,4].map(position=>top.find(item=>item.position===position)?.subject_id??"");
+  const complete=canShowProfileActivity(profile,topIds);
+  const activity=complete?await getProfileActivity(supabase):null;
   const avatar =
     profile.avatar_path === `${user.id}/avatar.webp`
       ? await supabase.storage
@@ -56,21 +63,21 @@ export default async function ProfilePage() {
           </p>
         </div>
       </div>
-      <ProfileActivity key={user.id} initial={activity} />
-      <CommunityNav locale={locale} />
+      {!complete&&<FirstVisitGuide profile={profile} top={topIds} locale={locale} classAvailable={classes.some(row=>row.school_id===profile.school_id)}/>}
+      <ProfileActivityGate userId={user.id} complete={complete}>{complete&&<ProfileActivity key={user.id} initial={activity}/>}</ProfileActivityGate>
+      <SchoolSettings key={profile.school_id} schoolId={profile.school_id} hasClass={!!profile.class_id} />
       <div className="profile-settings">
         <ProfileForm
-          classes={classes}
+          key={profile.school_id}
+          classes={profile.school_id ? classes.filter(row => row.school_id === profile.school_id) : classes}
+          classHint={schoolCopy(locale).noClasses}
           subjects={subjects}
           profile={{
             display_name: profile.display_name,
             class_id: profile.class_id,
             bio: profile.bio,
           }}
-          top={[1, 2, 3, 4].map(
-            (position) =>
-              top.find((item) => item.position === position)?.subject_id ?? "",
-          )}
+          top={topIds}
           hasAvatar={!!profile.avatar_path}
         />
         <AvatarForm
@@ -80,6 +87,7 @@ export default async function ProfilePage() {
           hidePreview
         />
       </div>
+      <CommunityNav locale={locale} />
       <div id="profile-tasks">
         {!incomplete ? (
           <TaskCenter

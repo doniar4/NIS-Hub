@@ -39,7 +39,7 @@ export function TopSubjects({ subjects, initial }: { subjects: SubjectRow[]; ini
     });
     dialog.current?.close();
   };
-  return <fieldset ref={root} className="space-y-3">
+  return <fieldset ref={root} id="profile-subjects" className="space-y-3">
     <legend className="section-title mb-3">{t.favouriteSubjects}</legend>
     <p className="text-sm text-[var(--muted)]">{t.topHint}</p>
     {values.map((value, index) => <input key={index} type="hidden" name="subjects" value={value}/>) }

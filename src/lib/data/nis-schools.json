@@ -1,0 +1,338 @@
+{
+  "checked_at": "2026-10-13",
+  "source": "https://schools.nis.edu.kz/ru",
+  "cities": [
+    {
+      "id": "astana",
+      "name_ru": "Астана",
+      "name_kk": "Астана",
+      "name_en": "Astana",
+      "x": 365,
+      "y": 102.3,
+      "region": "KZ71"
+    },
+    {
+      "id": "almaty",
+      "name_ru": "Алматы",
+      "name_kk": "Алматы",
+      "name_en": "Almaty",
+      "x": 457,
+      "y": 267.5,
+      "region": "KZ75"
+    },
+    {
+      "id": "shymkent",
+      "name_ru": "Шымкент",
+      "name_kk": "Шымкент",
+      "name_en": "Shymkent",
+      "x": 341.1,
+      "y": 293.1,
+      "region": "KZ79"
+    },
+    {
+      "id": "oral",
+      "name_ru": "Уральск",
+      "name_kk": "Орал",
+      "name_en": "Oral",
+      "x": 98,
+      "y": 75,
+      "region": "KZ27"
+    },
+    {
+      "id": "aktobe",
+      "name_ru": "Актобе",
+      "name_kk": "Ақтөбе",
+      "name_en": "Aktobe",
+      "x": 158,
+      "y": 104,
+      "region": "KZ15"
+    },
+    {
+      "id": "atyrau",
+      "name_ru": "Атырау",
+      "name_kk": "Атырау",
+      "name_en": "Atyrau",
+      "x": 95,
+      "y": 161,
+      "region": "KZ23"
+    },
+    {
+      "id": "aktau",
+      "name_ru": "Актау",
+      "name_kk": "Ақтау",
+      "name_en": "Aktau",
+      "x": 62,
+      "y": 238,
+      "region": "KZ47"
+    },
+    {
+      "id": "kostanay",
+      "name_ru": "Костанай",
+      "name_kk": "Қостанай",
+      "name_en": "Kostanay",
+      "x": 278,
+      "y": 65,
+      "region": "KZ39"
+    },
+    {
+      "id": "petropavl",
+      "name_ru": "Петропавловск",
+      "name_kk": "Петропавл",
+      "name_en": "Petropavl",
+      "x": 342,
+      "y": 29,
+      "region": "KZ59"
+    },
+    {
+      "id": "kokshetau",
+      "name_ru": "Кокшетау",
+      "name_kk": "Көкшетау",
+      "name_en": "Kokshetau",
+      "x": 344,
+      "y": 65,
+      "region": "KZ11"
+    },
+    {
+      "id": "karaganda",
+      "name_ru": "Караганда",
+      "name_kk": "Қарағанды",
+      "name_en": "Karaganda",
+      "x": 392,
+      "y": 138,
+      "region": "KZ35"
+    },
+    {
+      "id": "pavlodar",
+      "name_ru": "Павлодар",
+      "name_kk": "Павлодар",
+      "name_en": "Pavlodar",
+      "x": 448,
+      "y": 74,
+      "region": "KZ55"
+    },
+    {
+      "id": "semey",
+      "name_ru": "Семей",
+      "name_kk": "Семей",
+      "name_en": "Semey",
+      "x": 484,
+      "y": 108,
+      "region": "KZ10"
+    },
+    {
+      "id": "oskemen",
+      "name_ru": "Усть-Каменогорск",
+      "name_kk": "Өскемен",
+      "name_en": "Oskemen",
+      "x": 528,
+      "y": 125,
+      "region": "KZ63"
+    },
+    {
+      "id": "taldykorgan",
+      "name_ru": "Талдыкорган",
+      "name_kk": "Талдықорған",
+      "name_en": "Taldykorgan",
+      "x": 487,
+      "y": 231,
+      "region": "KZ33"
+    },
+    {
+      "id": "taraz",
+      "name_ru": "Тараз",
+      "name_kk": "Тараз",
+      "name_en": "Taraz",
+      "x": 381,
+      "y": 276,
+      "region": "KZ31"
+    },
+    {
+      "id": "turkistan",
+      "name_ru": "Туркестан",
+      "name_kk": "Түркістан",
+      "name_en": "Turkistan",
+      "x": 318,
+      "y": 268,
+      "region": "KZ61"
+    },
+    {
+      "id": "kyzylorda",
+      "name_ru": "Кызылорда",
+      "name_kk": "Қызылорда",
+      "name_en": "Kyzylorda",
+      "x": 285,
+      "y": 249,
+      "region": "KZ43"
+    }
+  ],
+  "schools": [
+    {
+      "id": "astana-nura",
+      "city_id": "astana",
+      "name_ru": "НИШ Астана-Нура",
+      "name_kk": "НЗМ Астана-Нұра",
+      "name_en": "NIS Astana-Nura",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-astana-nura"
+    },
+    {
+      "id": "astana-ib",
+      "city_id": "astana",
+      "name_ru": "НИШ Астана",
+      "name_kk": "НЗМ Астана",
+      "name_en": "NIS Astana",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-astana"
+    },
+    {
+      "id": "almaty-medeu",
+      "city_id": "almaty",
+      "name_ru": "НИШ Алматы-Медеу",
+      "name_kk": "НЗМ Алматы-Медеу",
+      "name_en": "NIS Almaty-Medeu",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-almaty-medeu"
+    },
+    {
+      "id": "almaty-nauryzbay",
+      "city_id": "almaty",
+      "name_ru": "НИШ Алматы-Наурызбай",
+      "name_kk": "НЗМ Алматы-Наурызбай",
+      "name_en": "NIS Almaty-Nauryzbay",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-almaty-nauryzbay"
+    },
+    {
+      "id": "shymkent-abai",
+      "city_id": "shymkent",
+      "name_ru": "НИШ Шымкент-Абай",
+      "name_kk": "НЗМ Шымкент-Абай",
+      "name_en": "NIS Shymkent-Abai",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-symkent-abai"
+    },
+    {
+      "id": "shymkent-karatau",
+      "city_id": "shymkent",
+      "name_ru": "НИШ Шымкент-Каратау",
+      "name_kk": "НЗМ Шымкент-Қаратау",
+      "name_en": "NIS Shymkent-Karatau",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-symkent-qaratau"
+    },
+    {
+      "id": "oral",
+      "city_id": "oral",
+      "name_ru": "НИШ Уральск",
+      "name_kk": "НЗМ Орал",
+      "name_en": "NIS Oral",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-oral"
+    },
+    {
+      "id": "aktobe",
+      "city_id": "aktobe",
+      "name_ru": "НИШ Актобе",
+      "name_kk": "НЗМ Ақтөбе",
+      "name_en": "NIS Aktobe",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-aqtobe"
+    },
+    {
+      "id": "atyrau",
+      "city_id": "atyrau",
+      "name_ru": "НИШ Атырау",
+      "name_kk": "НЗМ Атырау",
+      "name_en": "NIS Atyrau",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-atyrau"
+    },
+    {
+      "id": "aktau",
+      "city_id": "aktau",
+      "name_ru": "НИШ Актау",
+      "name_kk": "НЗМ Ақтау",
+      "name_en": "NIS Aktau",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-aqtau"
+    },
+    {
+      "id": "kostanay",
+      "city_id": "kostanay",
+      "name_ru": "НИШ Костанай",
+      "name_kk": "НЗМ Қостанай",
+      "name_en": "NIS Kostanay",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-qostanai"
+    },
+    {
+      "id": "petropavl",
+      "city_id": "petropavl",
+      "name_ru": "NIS Петропавловск",
+      "name_kk": "НЗМ Петропавл",
+      "name_en": "NIS Petropavl",
+      "website": "https://schools.nis.edu.kz/ru/school/nis-petropavl"
+    },
+    {
+      "id": "kokshetau",
+      "city_id": "kokshetau",
+      "name_ru": "НИШ Кокшетау",
+      "name_kk": "НЗМ Көкшетау",
+      "name_en": "NIS Kokshetau",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-koksetau"
+    },
+    {
+      "id": "karaganda",
+      "city_id": "karaganda",
+      "name_ru": "НИШ Караганда",
+      "name_kk": "НЗМ Қарағанды",
+      "name_en": "NIS Karaganda",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-qaragandy"
+    },
+    {
+      "id": "pavlodar",
+      "city_id": "pavlodar",
+      "name_ru": "НИШ Павлодар",
+      "name_kk": "НЗМ Павлодар",
+      "name_en": "NIS Pavlodar",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-pavlodar"
+    },
+    {
+      "id": "semey",
+      "city_id": "semey",
+      "name_ru": "НИШ Семей",
+      "name_kk": "НЗМ Семей",
+      "name_en": "NIS Semey",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-semei"
+    },
+    {
+      "id": "oskemen",
+      "city_id": "oskemen",
+      "name_ru": "НИШ Усть-Каменогорск",
+      "name_kk": "НЗМ Өскемен",
+      "name_en": "NIS Oskemen",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-oskemen"
+    },
+    {
+      "id": "taldykorgan",
+      "city_id": "taldykorgan",
+      "name_ru": "НИШ Талдыкорган",
+      "name_kk": "НЗМ Талдықорған",
+      "name_en": "NIS Taldykorgan",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-taldyqorgan"
+    },
+    {
+      "id": "taraz",
+      "city_id": "taraz",
+      "name_ru": "НИШ Тараз",
+      "name_kk": "НЗМ Тараз",
+      "name_en": "NIS Taraz",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-taraz"
+    },
+    {
+      "id": "turkistan",
+      "city_id": "turkistan",
+      "name_ru": "НИШ Туркестан",
+      "name_kk": "НЗМ Түркістан",
+      "name_en": "NIS Turkistan",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-turkistan"
+    },
+    {
+      "id": "kyzylorda",
+      "city_id": "kyzylorda",
+      "name_ru": "НИШ Кызылорда",
+      "name_kk": "НЗМ Қызылорда",
+      "name_en": "NIS Kyzylorda",
+      "website": "https://schools.nis.edu.kz/ru/school/nzm-qyzylorda"
+    }
+  ]
+}
