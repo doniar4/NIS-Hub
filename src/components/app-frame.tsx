@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { flushSync } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import {
   MagnifyingGlassIcon,
@@ -110,12 +111,11 @@ export function AppFrame({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
 
-  useEffect(() => {
-    if (!searchExpanded || !window.matchMedia("(max-width: 767px)").matches)
-      return;
-    const focusTimer = window.setTimeout(() => searchInput.current?.focus(), 0);
-    return () => window.clearTimeout(focusTimer);
-  }, [searchExpanded]);
+  function expandSearch() {
+    // Commit visibility before focusing, while still in the iOS user gesture.
+    flushSync(() => setSearchExpanded(true));
+    searchInput.current?.focus();
+  }
 
   useEffect(() => {
     document.documentElement.dataset.sidebar = snapshot()
@@ -260,7 +260,7 @@ export function AppFrame({
         {t.skip}
       </a>
 
-      <aside id="desktop-navigation" className="app-sidebar">
+      <aside data-lenis-prevent id="desktop-navigation" className="app-sidebar">
         <div className="sidebar-brand-row">
           <Link className="brand-link" href="/" aria-label="NIS Hub">
             <Sprout />
@@ -347,7 +347,15 @@ export function AppFrame({
             aria-label={p.search}
             className="global-search"
             data-expanded={searchExpanded}
-            onFocusCapture={() => setSearchExpanded(true)}
+            onSubmit={(event) => {
+              if (!searchInput.current?.value.trim()) {
+                event.preventDefault();
+                expandSearch();
+              }
+            }}
+            onFocusCapture={(event) => {
+              if ((event.target as EventTarget) === searchInput.current) setSearchExpanded(true);
+            }}
             onBlurCapture={(event) => {
               if (
                 !event.currentTarget.contains(event.relatedTarget) &&
@@ -377,14 +385,16 @@ export function AppFrame({
             />
 
             <button
-              type={searchExpanded ? "submit" : "button"}
+              type="button"
               aria-label={searchExpanded ? p.searchGo : p.search}
               aria-expanded={searchExpanded}
               aria-controls="global-search"
-              onClick={() => {
-                if (!searchExpanded) {
-                  setSearchExpanded(true);
-                  requestAnimationFrame(() => searchInput.current?.focus());
+              onClick={(event) => {
+                if (!searchInput.current?.value.trim()) {
+                  // iOS opens the keyboard only from a synchronous user gesture.
+                  expandSearch();
+                } else {
+                  event.currentTarget.form?.requestSubmit();
                 }
               }}
             >
@@ -457,7 +467,7 @@ export function AppFrame({
         </Dock>
       </div>
 
-      <dialog
+      <dialog data-lenis-prevent
         ref={dialog}
         id="mobile-navigation"
         className="mobile-drawer"

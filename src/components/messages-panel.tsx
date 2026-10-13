@@ -686,6 +686,7 @@ function Conversation({
 
       <ol
         ref={list}
+        data-lenis-prevent
         className="message-history flex-1 overflow-y-auto px-4 py-2 space-y-3"
         aria-label={p.messages}
         tabIndex={0}

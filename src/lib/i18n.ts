@@ -4,6 +4,8 @@ export type Locale = typeof locales[number];
 export const LOCALE_COOKIE = "nis-locale";
 export function parseLocale(value: unknown): Locale { return value === "kk" || value === "en" ? value : "ru"; }
 const translations = {
+  favouriteSubjects: ["Любимые предметы", "Таңдаулы пәндер", "Favourite subjects"],
+  close: ["Закрыть", "Жабу", "Close"],
   importTitle: ["Ручной импорт расписания","Кестені қолмен импорттау","Manual timetable import"],
   importHint: ["Разрешённый JSON версии 1: до 256 КиБ и 500 уроков. Проверьте все строки. Импорт добавляет или обновляет слоты, но не удаляет пропущенные уроки. Формат описан в docs/schedule-source-research.md.","Рұқсатты 1-нұсқалы JSON: 256 КиБ және 500 сабаққа дейін. Барлық жолды тексеріңіз. Импорт слоттарды қосады не жаңартады, файлда жоқ сабақтарды жоймайды. Формат: docs/schedule-source-research.md.","Authorised version 1 JSON: up to 256 KiB and 500 lessons. Review all rows. Import adds or updates slots; omitted lessons are not deleted. Format: docs/schedule-source-research.md."],
   importFile: ["JSON-файл расписания","Кестенің JSON файлы","Timetable JSON file"],
@@ -476,7 +478,7 @@ const translations = {
     "Create your personal learning space."
   ],
   "email": [
-    "Email",
+    "Электронная почта",
     "Email",
     "Email"
   ],
@@ -740,6 +742,12 @@ const translations = {
     "Шарттармен және құпиялық саясатымен танысыңыз.",
     "Read the terms and privacy notice."
   ],
+  signupEmailLimit: [
+    "Сервис временно исчерпал лимит писем подтверждения. Попробуйте позже или войдите через Google / Apple, если кнопка доступна. Если ошибка повторяется, сообщите администрации.",
+    "Растау хаттарының уақытша лимиті аяқталды. Кейінірек қайталаңыз немесе батырмасы бар болса Google / Apple арқылы кіріңіз. Қате қайталанса, әкімшілікке хабарласыңыз.",
+    "The confirmation email service has reached its sending limit. Try later or use Google / Apple if available. If this persists, contact the administrator."
+  ],
+  authRetryIn: ["Повторить через {seconds} сек.", "{seconds} секундтан кейін қайталау", "Retry in {seconds}s"],
   "tooManyAttempts": [
     "Слишком много попыток. Подождите и попробуйте снова.",
     "Әрекет тым көп. Күтіп, қайталаңыз.",
@@ -801,9 +809,9 @@ const translations = {
     "Avatar"
   ],
   "avatarHint": [
-    "JPEG, PNG или WebP до 2 МБ, без анимации. Квадратный WebP 256×256 заменяет прежний файл. Между заменами — 60 секунд.",
-    "Анимациясыз, 2 МБ-қа дейінгі JPEG, PNG немесе WebP. 256×256 WebP ескі файлды ауыстырады. Ауыстыру аралығы — 60 секунд.",
-    "Non-animated JPEG, PNG or WebP up to 2 MiB. A 256×256 WebP replaces the previous file. Wait 60 seconds between replacements."
+    "Выберите изображение до 20 МБ: JPG, JPEG, PNG, WebP, GIF, AVIF или другой формат, который открывает браузер. Переместите и увеличьте кадр. Между заменами — 60 секунд.",
+    "20 МБ-қа дейінгі JPG, JPEG, PNG, WebP, GIF, AVIF немесе браузер ашатын басқа суретті таңдаңыз. Кадрды жылжытып, үлкейтіңіз. Ауыстыру аралығы — 60 секунд.",
+    "Choose an image up to 20 MiB: JPG, JPEG, PNG, WebP, GIF, AVIF or another format your browser can open. Move and zoom the crop. Wait 60 seconds between replacements."
   ],
   "avatarUpload": [
     "Сохранить аватар",

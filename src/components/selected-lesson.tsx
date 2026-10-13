@@ -36,7 +36,7 @@ export function SelectedLesson({lesson, subjects, date, grade = null, materials 
         </dl>
         {!!lesson.subject_id&&<><div className="selected-lesson-actions">
           <Link prefetch={false} className="button" href={href}>{t.openMaterial} <span aria-hidden="true">↗</span></Link>
-          <Link prefetch={false} className="button button-secondary" href={studyHref(href)}>AI Study <span aria-hidden="true">✦</span></Link>
+          <Link prefetch={false} className="button button-secondary" href={studyHref(href)}>{c.study} <span aria-hidden="true">✦</span></Link>
         </div>
         <p className="study-source-hint">{c.studyHint}</p></>}
       </>}

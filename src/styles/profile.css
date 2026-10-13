@@ -91,3 +91,16 @@
  .profile-contribution-skyline .skyline-stat-value-line { flex-direction:column; align-items:flex-start; gap:.35rem; }
  .profile-contribution-skyline .skyline-stat-unit { font-size:.75rem; line-height:1.4; }
 }
+
+.avatar-editor-fields { display: grid; gap: 1rem; min-width: 0; }
+.avatar-crop-preview { position: relative; width: min(100%, 280px); aspect-ratio: 1; overflow: hidden; background: #fff; border: 1px solid var(--line-strong); border-radius: var(--radius); touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+.avatar-crop-preview:active { cursor: grabbing; }
+.avatar-crop-preview img { position: absolute; max-width: none; pointer-events: none; object-fit: fill; }
+.avatar-crop-guide { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgb(255 255 255 / .8); box-shadow: 0 0 0 80px rgb(0 0 0 / .24); pointer-events: none; }
+.avatar-crop-control { display: grid; gap: .4rem; font-size: .9rem; }
+.avatar-crop-control input { width: 100%; min-height: 32px; accent-color: var(--accent); }
+.avatar-editor-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.avatar-editor-actions .button { min-height: 44px; }
+.avatar-file-control { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; min-width:0; }
+.avatar-file-control > span { min-width:0; overflow-wrap:anywhere; font-size:.85rem; color:var(--muted); }
+.avatar-crop-preview:focus-visible { outline:3px solid var(--focus-ring); outline-offset:3px; }

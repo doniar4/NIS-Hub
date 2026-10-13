@@ -81,7 +81,7 @@ export function TaskDialog({
   }, []);
 
   return createPortal(
-    <dialog
+    <dialog data-lenis-prevent
       ref={dialog}
       className="task-dialog"
       aria-labelledby={id}

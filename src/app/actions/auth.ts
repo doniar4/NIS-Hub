@@ -59,8 +59,10 @@ export async function authenticate(mode: "login" | "signup", _state: ActionState
                 status: diagnosticStatus(result.error.status),
             });
 
-            if (result.error.status === 429)
-                return { error: t.tooManyAttempts };
+            if (result.error.code === "over_email_send_rate_limit")
+                return { error: t.signupEmailLimit, retryAfterSeconds: 60 };
+            if (result.error.status === 429 || result.error.code === "over_request_rate_limit")
+                return { error: t.tooManyAttempts, retryAfterSeconds: 60 };
             if (result.error.code === "email_not_confirmed")
                 return { error: t.confirmEmail };
             return { error: mode === "login" ? t.loginError : t.signupError };

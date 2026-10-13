@@ -108,12 +108,12 @@ test("Mobile Schedule scroll layers: no gray WebGL resize frame in WebKit/Chromi
           for (const width of [390, 320]) {
             await page.setViewportSize({ width, height: 844 });
             await page.evaluate(() => window.scrollTo(0, 0));
-            const surfaces = await page.locator(".app-topbar, .mobile-bottom-nav, .app-topbar .global-search, .app-topbar .theme-switch, .app-topbar select.field, .app-topbar .mobile-menu").evaluateAll(elements => elements.map(el => {
+            const surfaces = await page.locator(".app-topbar, .mobile-bottom-nav .app-dock, .app-topbar .global-search, .app-topbar .theme-switch, .app-topbar select.field, .app-topbar .mobile-menu").evaluateAll(elements => elements.map(el => {
               const s = getComputedStyle(el);
               return { className: el.className, blur: s.backdropFilter, prefixed: s.getPropertyValue("-webkit-backdrop-filter") };
             }));
             for (const s of surfaces) {
-              if (["app-topbar", "mobile-bottom-nav", "global-search"].includes(s.className))
+              if (["app-topbar", "app-dock", "global-search"].includes(s.className))
                 assert.match(s.blur, /blur\(/, `${s.className}: existing glass remains enabled`);
             }
             // Normal scroll, fast frame-to-frame direction changes, both edges.

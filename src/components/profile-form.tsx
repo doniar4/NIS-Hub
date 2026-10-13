@@ -35,6 +35,7 @@ export function ProfileForm({ classes, subjects, profile, top, hasAvatar }: {
   const saved = useRef("");
   const baselineReady = useRef(false);
   const timer = useRef<number | undefined>(undefined);
+  const inFlight = useRef(false);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
@@ -53,9 +54,11 @@ export function ProfileForm({ classes, subjects, profile, top, hasAvatar }: {
   const save = useCallback(() => {
     const el = form.current;
     window.clearTimeout(timer.current);
+    if (inFlight.current) return;
     if (!el || snapshot(el) === saved.current) return;
     if (!el.checkValidity()) { el.reportValidity(); return; }
     const sent = snapshot(el), data = new FormData(el);
+    inFlight.current = true;
     setStatus("saving");
     setError("");
     start(async () => {
@@ -68,7 +71,7 @@ export function ProfileForm({ classes, subjects, profile, top, hasAvatar }: {
       } catch {
         setError(t.saveError);
         setStatus("error");
-      }
+      } finally { inFlight.current = false; }
     });
   }, [t.saveError]);
 
@@ -80,6 +83,13 @@ export function ProfileForm({ classes, subjects, profile, top, hasAvatar }: {
       if (el && el.checkValidity()) save();
     }, delay);
   }, [save]);
+
+  useEffect(() => {
+    if (status !== "dirty" || pending) return;
+    // Edits made during a slow save must be sent after that save completes.
+    schedule(2000);
+    return () => window.clearTimeout(timer.current);
+  }, [status, pending, schedule]);
 
   useEffect(() => {
     const el = form.current;
@@ -134,6 +144,7 @@ export function ProfileForm({ classes, subjects, profile, top, hasAvatar }: {
 
   return (
     <form
+      data-lenis-prevent
       id="profile-form"
       ref={form}
       className="surface-card profile-form space-y-6"

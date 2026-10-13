@@ -14,6 +14,8 @@ export function TopSubjects({ subjects, initial }: { subjects: SubjectRow[]; ini
     subjects.some(subject => subject.id === initial[index]) && initial.indexOf(initial[index]) === index ? initial[index] : ""));
   const copy = locale === "ru"
     ? { choose: "Выбрать", change: "Изменить", remove: "Убрать", dialog: "Выберите предмет", dialogHint: "Предмет появится в этой позиции вашего профиля." }
+    : locale === "kk"
+    ? { choose: "Таңдау", change: "Өзгерту", remove: "Алып тастау", dialog: "Пәнді таңдаңыз", dialogHint: "Пән профиліңіздің осы орнында көрсетіледі." }
     : { choose: "Choose", change: "Change", remove: "Remove", dialog: "Choose a subject", dialogHint: "The subject will be shown in this position on your profile." };
   const root = useRef<HTMLFieldSetElement>(null);
   const firstRender = useRef(true);
@@ -38,7 +40,7 @@ export function TopSubjects({ subjects, initial }: { subjects: SubjectRow[]; ini
     dialog.current?.close();
   };
   return <fieldset ref={root} className="space-y-3">
-    <legend className="section-title mb-3">Top 4</legend>
+    <legend className="section-title mb-3">{t.favouriteSubjects}</legend>
     <p className="text-sm text-[var(--muted)]">{t.topHint}</p>
     {values.map((value, index) => <input key={index} type="hidden" name="subjects" value={value}/>) }
     <div className="top-subject-slots">
@@ -55,14 +57,14 @@ export function TopSubjects({ subjects, initial }: { subjects: SubjectRow[]; ini
         </div>;
       })}
     </div>
-    <dialog ref={dialog} className="top-subject-dialog" aria-labelledby="top-subject-dialog-title" onClose={() => setActiveSlot(null)}>
+    <dialog data-lenis-prevent ref={dialog} className="top-subject-dialog" aria-labelledby="top-subject-dialog-title" onClose={() => setActiveSlot(null)}>
       <div className="top-subject-dialog-header">
         <div>
-          <p className="eyebrow">Top 4 · {activeSlot === null ? "" : activeSlot + 1}</p>
+          <p className="eyebrow">{t.favouriteSubjects} · {activeSlot === null ? "" : activeSlot + 1}</p>
           <h2 id="top-subject-dialog-title">{copy.dialog}</h2>
           <p>{copy.dialogHint}</p>
         </div>
-        <button type="button" className="icon-button" aria-label="Close" onClick={() => dialog.current?.close()}>×</button>
+        <button type="button" className="icon-button" aria-label={t.close} onClick={() => dialog.current?.close()}>×</button>
       </div>
       <div className="top-subject-modal-grid">
         {subjects.map(subject => <button key={subject.id} type="button" className="top-subject-modal-option" onClick={() => chooseSubject(subject.id)}>

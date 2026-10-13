@@ -43,6 +43,7 @@ export default async function ProfilePage() {
     <SiteShell>
       <div className="profile-heading surface-card">
         <ProfilePortrait
+          key={avatar?.data?.signedUrl ?? "no-avatar"}
           url={avatar?.data?.signedUrl ?? null}
           name={profile.display_name ?? ""}
         />

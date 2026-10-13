@@ -208,22 +208,24 @@ const Velaris = ({
     let raf: number;
     let elapsed = 0;
     let previous = 0;
+    const flat = new Float32Array(colors.slice(0, 4).flatMap(hexToRgb));
+    gl.uniform1f(locs.grain, grain);
+    gl.uniform3f(locs.bg, ...hexToRgb(bg));
+    gl.uniform3fv(locs.colors, flat);
     const render = (now: number) => {
-      elapsed += previous ? Math.min((now - previous) / 1000, 0.05) : 0;
+      const delta = previous ? Math.min((now - previous) / 1000, 0.05) : 1 / 60;
+      elapsed += delta;
       previous = now;
 
       // Silky inertia damping for parallax
-      currentParallaxX += (targetParallaxX - currentParallaxX) * 0.05;
-      currentParallaxY += (targetParallaxY - currentParallaxY) * 0.05;
+      const damping = 1 - Math.pow(0.95, delta * 60);
+      currentParallaxX += (targetParallaxX - currentParallaxX) * damping;
+      currentParallaxY += (targetParallaxY - currentParallaxY) * damping;
 
       gl.uniform2f(locs.res, canvas.width, canvas.height);
       gl.uniform1f(locs.time, elapsed * speed);
-      gl.uniform1f(locs.grain, grain);
-      gl.uniform3f(locs.bg, ...hexToRgb(bg));
       gl.uniform2f(locs.parallax, currentParallaxX, currentParallaxY);
 
-      const flat = new Float32Array(colors.slice(0, 4).flatMap(hexToRgb));
-      gl.uniform3fv(locs.colors, flat);
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       hasRendered = true;

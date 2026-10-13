@@ -35,9 +35,9 @@ export function ReaderWorkspace({children,inspector,information}:{children:React
       <button ref={trigger} className="button button-secondary" aria-expanded={open} aria-controls="ai-study" onClick={()=>setOpen(!open)}>{c.openStudy} <span aria-hidden="true">✦</span></button>
     </div>
     <div className="reader-main">{children}</div>
-    <dialog ref={dialog} id="ai-study" className="reader-inspector" aria-label="AI Study" onCancel={event=>{event.preventDefault();close();}}
+    <dialog data-lenis-prevent ref={dialog} id="ai-study" className="reader-inspector" aria-label={c.study} onCancel={event=>{event.preventDefault();close();}}
       onClick={event=>{if(event.target!==event.currentTarget)return;const rect=event.currentTarget.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)close();}}>
-      <header className="inspector-heading"><div className="inspector-brand"><MagicWandIcon aria-hidden="true"/><h2>AI Study</h2></div><button className="icon-button" aria-label={c.close} onClick={close}>×</button></header>
+      <header className="inspector-heading"><div className="inspector-brand"><MagicWandIcon aria-hidden="true"/><h2>{c.study}</h2></div><button className="icon-button" aria-label={c.close} onClick={close}>×</button></header>
       {inspector}
     </dialog>
   </section>;

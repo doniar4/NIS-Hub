@@ -7,7 +7,7 @@ const optionalInt = (min: number, max: number) => z.union([z.literal(""), z.coer
 const tags = z.string().max(500).transform(value => [...new Set(value.split(",").map(tag => tag.trim()).filter(Boolean))].slice(0, 20));
 export const dateSchema = z.iso.date("Укажите существующую дату.");
 export const pageSchema = z.coerce.number().int().min(1).max(100000);
-export const credentialsSchema = z.object({ email: z.email("Проверьте email.").max(254), password: z.string().min(8, "Минимум 8 символов.").max(128) });
+export const credentialsSchema = z.object({ email: z.string().trim().pipe(z.email("Проверьте email.").max(254)), password: z.string().min(8, "Минимум 8 символов.").max(128) });
 export const profileSchema = z.object({
   bio: z.string().trim().max(280).default(""),
   display_name: z.string().trim().min(1, "Введите имя.").max(60),

@@ -21,7 +21,7 @@ type AuthModule = {
 async function isolatedAuth() {
   const fixtures: Record<string, string> = {
     "@/lib/i18n-server":
-      'export async function getI18n(){return {t:{invalidInput:"invalid",termsRequired:"terms",authNotConfigured:"not configured",tooManyAttempts:"rate limit",confirmEmail:"confirm email",loginError:"login failed",signupError:"signup failed",saveError:"save failed",checkEmail:"check email before sign-in",oauthError:"oauth failed",logoutError:"logout failed"}}}',
+      'export async function getI18n(){return {t:{invalidInput:"invalid",termsRequired:"terms",authNotConfigured:"not configured",tooManyAttempts:"rate limit",signupEmailLimit:"email sending limit",confirmEmail:"confirm email",loginError:"login failed",signupError:"signup failed",saveError:"save failed",checkEmail:"check email before sign-in",oauthError:"oauth failed",logoutError:"logout failed"}}}',
     "@/lib/supabase/server":
       "export async function createClient(){return globalThis.fixtureClient}",
     "@/lib/env":
@@ -309,7 +309,7 @@ test("registration requires consent, handles rate limits and does not activate a
   );
   assert.equal(
     (await throttled.actions.authenticate("signup", {}, credentials())).error,
-    "rate limit",
+    "email sending limit",
   );
   assert.equal(throttled.context.marked, 0);
   const offline = loadAuth(

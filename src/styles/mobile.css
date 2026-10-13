@@ -1,6 +1,9 @@
 /* Focused mobile refinements for the current Liquid Glass interface. */
 
 @media (max-width: 767px) {
+  html { scroll-padding-top: calc(5.5rem + env(safe-area-inset-top)); scroll-padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+  .app-main :is(input, textarea, select, button, [tabindex]) { scroll-margin-block: 6rem; }
+  .app-main :is(input.field, textarea.field, select.field) { font-size: 16px; }
   .app-frame, .app-content, .app-canvas, .app-main, .page-content { min-width: 0; }
   .app-content { min-height: 100dvh; }
   .app-topbar {

@@ -40,7 +40,7 @@ export async function uploadAvatar(_state: ActionState, form: FormData): Promise
     const seconds = await remaining();
     return { error: seconds ? cooldownMessage(seconds) : t.avatarUploadError };
   }
-  revalidatePath("/profile");
+  revalidatePath("/", "layout");
   if (result === "profileFailed") return { error: t.avatarPartial };
   return { success: t.avatarSaved };
 }

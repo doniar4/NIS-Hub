@@ -69,7 +69,7 @@ export function InstallGuide({
           ? t.desktopNote
           : null;
   return createPortal(
-    <dialog
+    <dialog data-lenis-prevent
       ref={dialog}
       className="install-guide"
       aria-labelledby={id}
