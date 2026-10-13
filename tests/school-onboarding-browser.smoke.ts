@@ -76,12 +76,57 @@ test("School onboarding: map first, persistent school/profile steps, change-scho
     }
     assert.equal(await page.locator('.kz-view-switch .scene-view-thumb').evaluate(el=>getComputedStyle(el).width),'32px');
     await expect(page.locator('.kz-view-switch').getByRole('button',{name:'3D',exact:true})).toHaveAttribute('aria-pressed','true');
+    const stage = page.locator('.kz-map-stage'), mapCamera = page.locator('.kz-map-camera');
+    const defaultProjection = await mapCamera.evaluate(el => getComputedStyle(el).transform);
+    const initialWall = await page.locator('.kz-relief-light').first().getAttribute('d');
+    // Dragging from a city rotates the camera without selecting that city.
+    const astana = page.locator('.kz-map').getByRole('button',{name:'Астана',exact:true});
+    const cityBox = await astana.boundingBox(); assert.ok(cityBox);
+    await page.mouse.move(cityBox.x + cityBox.width / 2, cityBox.y + cityBox.height / 2);
+    await page.mouse.down(); await page.mouse.move(cityBox.x + cityBox.width / 2 + 110, cityBox.y + cityBox.height / 2 - 40,{steps:10});
+    await expect(page.locator('.kz-school-picker')).toHaveAttribute('data-rotating','true');
+    await page.mouse.up();
+    await expect(page.locator('.kz-school-picker')).not.toHaveAttribute('data-rotating','true');
+    await expect(page.getByRole('radio')).toHaveCount(0);
+    await expect.poll(() => mapCamera.evaluate(el => getComputedStyle(el).transform)).not.toBe(defaultProjection);
+    assert.notEqual(await page.locator('.kz-relief-light').first().getAttribute('d'),initialWall);
+    await page.screenshot({path:join(out,'rotated-map.png'),fullPage:true});
+    // City labels remain upright through a camera rotation.
+    const matrices = await page.locator('.kz-city-upright').first().evaluate(el => {
+      const camera = new DOMMatrix(getComputedStyle(document.querySelector('.kz-map-camera')!).transform);
+      const inverse = new DOMMatrix(getComputedStyle(el).transform);
+      return camera.multiply(inverse).toFloat64Array().slice(0,6);
+    });
+    assert.ok(Math.abs(matrices[1])<.00001 && Math.abs(matrices[4])<.00001);
+    await page.getByRole('button',{name:'Сбросить вид карты',exact:true}).click();
+    await expect.poll(() => mapCamera.evaluate(el => getComputedStyle(el).transform)).toBe(defaultProjection);
+    await stage.focus(); await stage.press('ArrowRight');
+    await expect.poll(() => mapCamera.evaluate(el => getComputedStyle(el).transform)).not.toBe(defaultProjection);
+    await stage.press('Home');
+    await expect.poll(() => mapCamera.evaluate(el => getComputedStyle(el).transform)).toBe(defaultProjection);
+    // Real touch events follow the same gesture path, including cancellation.
+    const touch = await page.context().newCDPSession(page), box = await stage.boundingBox(); assert.ok(box);
+    const touchPoint = {x:box.x+box.width/2,y:box.y+box.height/2,id:1};
+    await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[touchPoint]});
+    await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{...touchPoint,x:touchPoint.x+90,y:touchPoint.y+45}]});
+    await expect(page.locator('.kz-school-picker')).toHaveAttribute('data-rotating','true');
+    await touch.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});
+    await expect(page.locator('.kz-school-picker')).not.toHaveAttribute('data-rotating','true');
+    await expect.poll(() => mapCamera.evaluate(el => getComputedStyle(el).transform)).not.toBe(defaultProjection);
+    await touch.detach();
+    await page.getByRole('button',{name:'Сбросить вид карты',exact:true}).click();
+    await expect.poll(() => mapCamera.evaluate(el => getComputedStyle(el).transform)).toBe(defaultProjection);
     await page.locator('.kz-view-switch').getByRole('button',{name:'2D',exact:true}).click();
     await expect(page.locator('.kz-school-picker')).toHaveAttribute('data-mode','2d');
+    await expect.poll(() => mapCamera.evaluate(el => { const m=new DOMMatrix(getComputedStyle(el).transform); return m.b===0 && m.c===0; })).toBe(true);
+    const flatProjection = await mapCamera.evaluate(el => getComputedStyle(el).transform);
+    await page.mouse.move(box.x+box.width/2,box.y+box.height/2); await page.mouse.down();
+    await page.mouse.move(box.x+box.width/2+60,box.y+box.height/2-30,{steps:5}); await page.mouse.up();
+    assert.equal(await mapCamera.evaluate(el=>getComputedStyle(el).transform),flatProjection);
     await page.locator('.kz-view-switch').getByRole('button',{name:'3D',exact:true}).click();
     await page.getByRole('button',{name:'Приблизить карту',exact:true}).click();
     await expect(page.locator('.kz-zoom-controls')).toContainText('120%');
-    await page.getByRole('button',{name:'Сбросить масштаб',exact:true}).click();
+    await page.getByRole('button',{name:'Сбросить вид карты',exact:true}).click();
     await expect(page.locator('.kz-zoom-controls')).toContainText('100%');
     await page.locator('.kz-map').getByRole("button",{name:"Астана",exact:true}).focus();
     await page.locator('.kz-map').getByRole("button",{name:"Астана",exact:true}).press("Enter");

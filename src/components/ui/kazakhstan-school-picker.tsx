@@ -1,10 +1,10 @@
 "use client";
 
-import { useId, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import { CheckIcon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { Minus, Plus, RotateCcw } from "lucide-react";
 import {SceneViewToggle} from "./scene-view-toggle";
-import {kazakhstanRelief} from "@/lib/kazakhstan-relief";
+import {createKazakhstanRelief, defaultMapCamera, mapProjection, type MapCamera} from "@/lib/kazakhstan-relief";
 import regions from "@/lib/data/kazakhstan-regions.json";
 import { cityById, nisCities, schoolLabel, schoolsInCity, schoolCatalogSource } from "@/lib/schools";
 import { schoolCopy } from "@/lib/school-copy";
@@ -18,9 +18,75 @@ export function KazakhstanSchoolPicker({ value, onChange, disabled = false }: {
   const { locale } = useI18n(), p = schoolCopy(locale), id = useId();
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<"2d" | "3d">("3d"), [zoom, setZoom] = useState(1);
+  const [camera, setCamera] = useState(defaultMapCamera), [dragging, setDragging] = useState(false);
+  const drag = useRef<{pointer: number; x: number; y: number; camera: MapCamera; moved: boolean} | null>(null);
+  const suppressClick = useRef(false), frame = useRef<number | null>(null), pendingCamera = useRef(camera);
+  const stage = useRef<HTMLDivElement>(null);
+  const [stageSize, setStageSize] = useState({width: 0, height: 0});
+  useEffect(() => {
+    const element = stage.current;
+    if (!element) return;
+    const observer = new ResizeObserver(() => setStageSize({width: element.clientWidth, height: element.clientHeight}));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  const projection = useMemo(() => mapProjection(camera), [camera]);
+  const fitScale = stageSize.width ? Math.min(
+    (stageSize.width - 16) * 648 / (2 * projection.halfWidth * stageSize.width),
+    (stageSize.height - 24) * 648 / (2 * projection.halfHeight * stageSize.width),
+  ) : 1;
+  const relief = useMemo(() => createKazakhstanRelief(camera), [camera]);
+  const rotationHint = locale === "kk" ? "Картаны сүйреп айналдырыңыз немесе бағыттау пернелерін басыңыз"
+    : locale === "en" ? "Drag to rotate, or use the arrow keys"
+    : "Вращайте карту перетаскиванием или стрелками на клавиатуре";
+  useEffect(() => () => { if (frame.current !== null) cancelAnimationFrame(frame.current); }, []);
+  function updateCamera(next: MapCamera) {
+    pendingCamera.current = next;
+    if (frame.current === null) frame.current = requestAnimationFrame(() => {
+      frame.current = null;
+      setCamera(pendingCamera.current);
+    });
+  }
+  function endRotation(event: PointerEvent<HTMLDivElement>) {
+    if (drag.current?.pointer !== event.pointerId) return;
+    drag.current = null;
+    setDragging(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+  function beginRotation(event: PointerEvent<HTMLDivElement>) {
+    if (mode !== "3d" || disabled || !event.isPrimary || event.button !== 0 || drag.current) return;
+    suppressClick.current = false;
+    drag.current = {pointer: event.pointerId, x: event.clientX, y: event.clientY, camera: pendingCamera.current, moved: false};
+  }
+  function rotate(event: PointerEvent<HTMLDivElement>) {
+    const start = drag.current;
+    if (!start || start.pointer !== event.pointerId) return;
+    const x = event.clientX - start.x, y = event.clientY - start.y;
+    if (!start.moved && Math.hypot(x, y) < 6) return;
+    if (!start.moved) {
+      start.moved = true;
+      suppressClick.current = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      setDragging(true);
+    }
+    const sensitivity = 180 / Math.max(300, event.currentTarget.clientWidth);
+    updateCamera({yaw: start.camera.yaw + x * sensitivity, elevation: Math.min(75, Math.max(20, start.camera.elevation - y * .18))});
+  }
+  function rotateWithKeys(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget || mode !== "3d" || disabled) return;
+    const step = event.shiftKey ? 2 : 10, current = pendingCamera.current;
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home"].includes(event.key)) {
+      event.preventDefault();
+      updateCamera(event.key === "Home" ? defaultMapCamera : {
+        yaw: current.yaw + (event.key === "ArrowRight" ? step : event.key === "ArrowLeft" ? -step : 0),
+        elevation: Math.min(75, Math.max(20, current.elevation + (event.key === "ArrowUp" ? step : event.key === "ArrowDown" ? -step : 0))),
+      });
+    }
+  }
+  function resetMap() { setZoom(1); updateCamera(defaultMapCamera); }
   const controls = locale === "kk" ? {view:"Карта көрінісі",in:"Жақындату",out:"Алыстату",reset:"Картаны қалпына келтіру"}
     : locale === "en" ? {view:"Map view",in:"Zoom in",out:"Zoom out",reset:"Reset map"}
-    : {view:"Вид карты",in:"Приблизить карту",out:"Отдалить карту",reset:"Сбросить масштаб"};
+    : {view:"Вид карты",in:"Приблизить карту",out:"Отдалить карту",reset:"Сбросить вид карты"};
   const city = cityById(value.city), schools = schoolsInCity(value.city);
   const search = query.trim().toLocaleLowerCase();
   const visibleCities = nisCities.filter(row => !search || [row.name_ru, row.name_kk, row.name_en]
@@ -33,7 +99,8 @@ export function KazakhstanSchoolPicker({ value, onChange, disabled = false }: {
   function activate(event: KeyboardEvent<SVGGElement>, cityId: string) {
     if (["Enter", " "].includes(event.key)) { event.preventDefault(); selectCity(cityId); }
   }
-  return <div className="kz-school-picker" data-mode={mode} aria-busy={disabled}>
+  return <div className="kz-school-picker" data-mode={mode} data-rotating={dragging || undefined} aria-busy={disabled}
+    style={{"--kz-camera": projection.matrix, "--kz-upright": projection.upright, "--kz-fit-scale": fitScale} as CSSProperties}>
     <div className="kz-map-pane glass-surface">
       <div className="kz-map-caption"><span>{locale === "kk" ? "Қазақстан" : locale === "en" ? "Kazakhstan" : "Казахстан"}</span><span>{p.network}</span></div>
       <div className="kz-map-toolbar">
@@ -41,11 +108,15 @@ export function KazakhstanSchoolPicker({ value, onChange, disabled = false }: {
           <button type="button" aria-label={controls.out} disabled={zoom<=1} onClick={()=>setZoom(z=>Math.max(1,z-.2))}><Minus size={16}/></button>
           <span aria-live="polite">{Math.round(zoom*100)}%</span>
           <button type="button" aria-label={controls.in} disabled={zoom>=1.8} onClick={()=>setZoom(z=>Math.min(1.8,z+.2))}><Plus size={16}/></button>
-          <button type="button" aria-label={controls.reset} disabled={zoom===1} onClick={()=>setZoom(1)}><RotateCcw size={15}/></button>
+          <button type="button" aria-label={controls.reset} disabled={disabled || (zoom===1 && camera.yaw===45 && camera.elevation===34)} onClick={resetMap}><RotateCcw size={15}/></button>
         </div>
         <SceneViewToggle className="kz-view-switch" view={mode} onChange={setMode} label={controls.view}/>
       </div>
-      <div className="kz-map-stage glass-surface">
+      <div ref={stage} className="kz-map-stage glass-surface" role="group" aria-label={p.map}
+        tabIndex={mode === "3d" && !disabled ? 0 : undefined} aria-describedby={mode === "3d" ? `${id}-map-hint` : undefined}
+        onPointerDown={beginRotation} onPointerMove={rotate} onPointerUp={endRotation} onPointerCancel={endRotation}
+        onLostPointerCapture={endRotation} onPointerLeave={event => { if (!drag.current?.moved) endRotation(event); }}
+        onKeyDown={rotateWithKeys} onClickCapture={event => { if (suppressClick.current && event.detail !== 0) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false; } }}>
         <div className="kz-map-camera">
         <svg className="kz-map" viewBox="-14 -18 648 380" data-selection={!!value.city || undefined} role="group" aria-label={p.map}>
           <defs>
@@ -57,8 +128,8 @@ export function KazakhstanSchoolPicker({ value, onChange, disabled = false }: {
             </linearGradient>
           </defs>
           <g className="kz-map-world" style={{transform:`translate(${city?.x ?? 310}px, ${city?.y ?? 170}px) scale(${zoom}) translate(${-1*(city?.x ?? 310)}px, ${-1*(city?.y ?? 170)}px)`}}>
-          <g className="kz-map-shadow" aria-hidden="true" transform="translate(0 18)" filter={`url(#${id}-shadow)`}>{regions.map(region=><use key={region.pcode} href={`#${id}-${region.pcode}`}/>)}</g>
-          <g className="kz-map-depth" aria-hidden="true">{kazakhstanRelief.map(region=><g key={region.pcode}>
+          <g className="kz-map-shadow" aria-hidden="true" transform={`translate(${projection.offsetX} ${projection.offsetY})`} filter={`url(#${id}-shadow)`}>{regions.map(region=><use key={region.pcode} href={`#${id}-${region.pcode}`}/>)}</g>
+          <g className="kz-map-depth" aria-hidden="true">{relief.map(region=><g key={region.pcode}>
             <path className="kz-relief-light" d={region.light}/><path className="kz-relief-shade" d={region.shade}/>
           </g>)}</g>
           <g className="kz-regions" aria-hidden="true">
@@ -90,7 +161,7 @@ export function KazakhstanSchoolPicker({ value, onChange, disabled = false }: {
         </svg>
         </div>
       </div>
-      <p className="kz-map-hint">{p.chooseCityHint}</p>
+      <p className="kz-map-hint" id={`${id}-map-hint`}>{p.chooseCityHint}{mode === "3d" && <> · {rotationHint}</>}</p>
       <div className="kz-city-controls">
         <label className="kz-city-select"><span className="field-label">{p.city}</span>
           <select className="field" value={value.city} onChange={event => selectCity(event.target.value)} disabled={disabled}>

@@ -204,7 +204,7 @@
 /* Keep the country itself large instead of shrinking the SVG to fit a wide column. */
 .kz-map-stage { height:clamp(270px,34vw,490px); padding:0; }
 .kz-map-camera { position:absolute; left:0; top:50%; width:100%; transform:translateY(-50%) scale(.83); }
-.kz-school-picker[data-mode="3d"] .kz-map-camera { transform:translateY(-50%) matrix(.707107,.395409,-.707107,.395409,0,0) scale(.93); }
+.kz-school-picker[data-mode="3d"] .kz-map-camera { transform:translateY(-50%) var(--kz-camera, matrix(.707107,.395409,-.707107,.395409,0,0)) scale(min(.93,var(--kz-fit-scale,1))); }
 .kz-map { max-height:none; }
 @media(min-width:900px) and (max-height:820px) {
  .onboarding-experience > .public-header { padding-block:.5rem; }
@@ -212,18 +212,18 @@
  .school-onboarding-heading > p { display:none; }
  .kz-map-stage { height:320px; }
  .kz-map-camera { top:47%; transform:translateY(-50%) scale(.60); }
- .kz-school-picker[data-mode="3d"] .kz-map-camera { top:54%; transform:translateY(-50%) matrix(.707107,.395409,-.707107,.395409,0,0) scale(.70); }
+ .kz-school-picker[data-mode="3d"] .kz-map-camera { top:54%; transform:translateY(-50%) var(--kz-camera, matrix(.707107,.395409,-.707107,.395409,0,0)) scale(min(.70,var(--kz-fit-scale,1))); }
 }
 @media(max-width:680px) {
  .kz-map-stage { height:auto; aspect-ratio:1.6; }
  .kz-map-camera { transform:translateY(-50%) scale(.97); }
- .kz-school-picker[data-mode="3d"] .kz-map-camera { transform:translateY(-50%) matrix(.707107,.395409,-.707107,.395409,0,0) scale(.97); }
+ .kz-school-picker[data-mode="3d"] .kz-map-camera { transform:translateY(-50%) var(--kz-camera, matrix(.707107,.395409,-.707107,.395409,0,0)) scale(min(.97,var(--kz-fit-scale,1))); }
 }
 
 .kz-relief-light { fill:color-mix(in srgb,var(--kz-pin) 55%,var(--surface-raised)); }
 .kz-relief-shade { fill:color-mix(in srgb,var(--kz-pin) 80%,var(--surface-raised)); }
 .kz-city-upright { transform-origin:0 0; transition:transform 700ms cubic-bezier(.22,1,.36,1); }
-.kz-school-picker[data-mode="3d"] .kz-city-upright { transform:matrix(.707107,-.707107,1.26451,1.26451,0,0); }
+.kz-school-picker[data-mode="3d"] .kz-city-upright { transform:var(--kz-upright, matrix(.707107,-.707107,1.26451,1.26451,0,0)); }
 .kz-city-column { opacity:0; transition:opacity 450ms ease; pointer-events:none; }
 .kz-school-picker[data-mode="3d"] .kz-city-column { opacity:1; }
 .kz-column-left { fill:color-mix(in srgb,var(--kz-pin) 72%,var(--surface-raised)); }
@@ -241,3 +241,9 @@
  .kz-city[data-selected] .kz-city-label { font-size:26px; }
 }
 @media(prefers-reduced-motion:reduce) { .kz-city-upright,.kz-city-column,.kz-city-marker { transition:none; } }
+
+.kz-school-picker[data-mode="3d"] .kz-map-stage { cursor:grab; touch-action:none; user-select:none; }
+.kz-map-stage:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.kz-school-picker[data-rotating] .kz-map-stage,.kz-school-picker[data-rotating] .kz-city { cursor:grabbing; }
+/* The projected walls and labels update together, without lag behind the pointer. */
+.kz-school-picker[data-mode="3d"] :is(.kz-map-camera,.kz-city-upright) { transition:none; }
