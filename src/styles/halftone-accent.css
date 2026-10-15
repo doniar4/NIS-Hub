@@ -1,0 +1,51 @@
+/* A small patch of the reference shader, reserved for assessment preparation. */
+.ai-study-panel .study-mode[data-halftone],
+.ai-study-panel .ai-study-action-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.halftone-accent {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: .23;
+  background: radial-gradient(circle, #b18cff 1px, #3d46e8 1.4px, #0b1026 1.8px);
+  background-size: 5px 5px;
+  mask-image: linear-gradient(110deg, transparent 46%, #000 100%);
+  transition: opacity 180ms ease;
+}
+
+.halftone-accent canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+.halftone-accent canvas[data-ready="true"] { opacity: 1; }
+
+.ai-study-panel .study-mode[data-halftone] { border-color: color-mix(in srgb, #8274c4 38%, var(--line)); }
+.ai-study-panel .study-mode[data-halftone]:hover .halftone-accent { opacity: .32; }
+.ai-study-panel .study-mode[data-halftone][data-selected="true"] .halftone-accent { opacity: .38; }
+.ai-study-panel .study-mode[data-halftone][data-selected="true"] { border-color: var(--accent); }
+.ai-study-panel .ai-study-action-btn .halftone-accent {
+  opacity: .48;
+  mask-image: linear-gradient(100deg, transparent 62%, #000 100%);
+}
+.ai-study-panel .ai-study-action-btn:hover:not(:disabled) .halftone-accent { opacity: .65; }
+.ai-study-panel .ai-study-action-btn:disabled .halftone-accent { opacity: .16; }
+.ai-study-panel .study-mode:has(input:disabled) .halftone-accent { opacity: .12; }
+
+:root[data-theme="dark"] .study-mode[data-halftone] .halftone-accent { opacity: .4; }
+:root[data-theme="dark"] .study-mode[data-halftone][data-selected="true"] .halftone-accent { opacity: .52; }
+
+@media (prefers-reduced-motion: reduce) {
+  .halftone-accent { transition: none; }
+}
+@media (forced-colors: active) {
+  .halftone-accent { display: none; }
+}

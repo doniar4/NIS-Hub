@@ -1,5 +1,6 @@
 "use client";
 import { ArrowRightIcon, MagicWandIcon } from "@radix-ui/react-icons";
+import { HalftoneAccent } from "./ui/halftone-accent";
 
 export function AiGenerateButton({
   pending,
@@ -18,6 +19,7 @@ export function AiGenerateButton({
         disabled={pending || disabled}
         aria-busy={pending}
       >
+        <HalftoneAccent paused={pending || disabled} />
         <MagicWandIcon className="ai-wand-icon" aria-hidden="true" />
         <span className="ai-btn-label">{label}</span>
         {!pending && (

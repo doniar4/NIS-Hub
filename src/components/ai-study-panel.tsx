@@ -21,6 +21,7 @@ import { AiGenerateButton } from "./ai-generate-button";
 import { StudyAnswerForm } from "./study-answer-form";
 import { MAX_STUDY_PAGE, studyRangeEnd } from "@/lib/study-range";
 import { communityCopy } from "@/lib/community-copy";
+import { HalftoneAccent } from "./ui/halftone-accent";
 
 const labels = {
   ru: {
@@ -329,6 +330,7 @@ export function AiStudyPanel({
                           key={value}
                           className="study-mode"
                           data-selected={mode === value}
+                          data-halftone={value === "sor" || value === "soch" ? "true" : undefined}
                         >
                           <input
                             type="radio"
@@ -340,6 +342,7 @@ export function AiStudyPanel({
                               setOutcome(null);
                             }}
                           />
+                          {(value === "sor" || value === "soch") && <HalftoneAccent paused={pending} />}
                           <Icon
                             className="study-mode-icon"
                             aria-hidden="true"

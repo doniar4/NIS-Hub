@@ -233,9 +233,9 @@
   width: 100%;
   min-height: 48px;
   border-radius: 12px !important;
-  background: var(--accent-solid) !important;
+  background: var(--study-action-fill, var(--accent-solid)) !important;
   border: 1px solid transparent !important;
-  color: var(--button-ink) !important;
+  color: var(--study-action-ink, var(--button-ink)) !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -248,9 +248,14 @@
   .ai-study-panel
   .ai-btn-frame
   .button.ai-study-action-btn:hover:not(:disabled) {
-  background: var(--accent-solid-hover) !important;
+  background: var(--study-action-hover, var(--accent-solid-hover)) !important;
   border-color: transparent !important;
   box-shadow: none !important;
+}
+:root[data-theme="dark"] .ai-study-panel .ai-study-action-btn {
+  --study-action-fill: #244c78;
+  --study-action-hover: #2d5b8b;
+  --study-action-ink: #f2f6ff;
 }
 .ai-study-panel .ai-study-action-btn::before {
   content: none;
